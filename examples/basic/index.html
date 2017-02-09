@@ -2,13 +2,27 @@
   <head>
     <title>A-Frame Tangram Component - Basic</title>
     <meta name="description" content="Basic example for Tangram component."></meta>
+
+
+    <!--<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css" />-->
+
     <script src="../build.js"></script>
+    <script src="https://mapzen.com/tangram/0.10/tangram.min.js"></script>
   </head>
   <body>
+  <div id="map"></div>    
     <a-scene>
-      <a-assets></a-assets>
-      <a-entity tangram=""></a-entity>
+      <a-assets>
+        
+        
+      </a-assets>
+
+
+      <a-entity tangram-heightmap="map: #map"></a-entity>
+
+
     </a-scene>
+      
 
     <!-- GitHub Corner. -->
     <a href="https://github.com/mattrei/aframe-tangram-component" class="github-corner">

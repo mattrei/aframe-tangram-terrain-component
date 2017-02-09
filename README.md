@@ -1,4 +1,4 @@
-## aframe-tangram-component
+## WIP!!! aframe-tangram-component
 
 A Tangram component for A-Frame.
 
