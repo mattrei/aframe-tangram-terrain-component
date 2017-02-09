@@ -10,15 +10,16 @@
     <script src="https://mapzen.com/tangram/0.10/tangram.min.js"></script>
   </head>
   <body>
-  <div id="map"></div>    
+  <div id="heightMap" style="width: 1024; height: 1024; position: fixed; left: 99999px; top=0;"></div>          
+  <div id="orthoMap" style="width: 1024; height: 1024; position: fixed; left: 99999px; top=0;"></div>          
     <a-scene>
       <a-assets>
-        
+  
         
       </a-assets>
 
 
-      <a-entity tangram-heightmap="map: #map"></a-entity>
+      <a-entity tangram-heightmap="map: #heightMap"></a-entity>
 
 
     </a-scene>

@@ -17,6 +17,9 @@ AFRAME.registerComponent('tangram-heightmap', {
     schema: {
         map: {
             type: "selector"
+        },
+        heightMap: {
+            type: "selector"
         }
     },
 
@@ -30,7 +33,7 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         this.terrainData = []
 
-        var map = L.map(this.data.map, {
+        var heightMap = L.map(this.data.heightMap, {
             "keyboardZoomOffset": .05,
             "inertiaDeceleration": 10000,
             "zoomSnap": .001
@@ -67,7 +70,7 @@ AFRAME.registerComponent('tangram-heightmap', {
 
 
         // setView expects format ([lat, long], zoom)
-        map.setView(map_start_location.slice(0, 3), map_start_location[2]);
+        heightMap.setView(map_start_location.slice(0, 3), map_start_location[2]);
 
 
         layer.on('init', _ => {
@@ -89,7 +92,7 @@ AFRAME.registerComponent('tangram-heightmap', {
             this.tempCanvas = tempCanvas
             console.log("inititated " + this.worldWidth + " "  + this.worldHeight)
         });
-        layer.addTo(map);
+        layer.addTo(heightMap);
 
         //map.setView([40.70531887544228, -74.00976419448853], 8);
 
