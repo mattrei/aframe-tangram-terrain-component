@@ -1,0 +1,112 @@
+sources:
+    elevation:
+        type: Raster
+        url: https://tile.mapzen.com/mapzen/terrain/v1/terrarium/{z}/{x}/{y}.png?api_key=mapzen-sfnfVzq
+        max_zoom: 15
+    osm: 
+        type: TopoJSON
+        url: https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson?api_key=mapzen-sfnfVzq
+        max_zoom: 16
+styles: 
+    hillshade:
+        base: raster
+        shaders:
+            uniforms:
+                # set desired visible elevation range
+                u_max: 8900. # everest = 8848
+                u_min: 0. # sea level
+                # u_min: -11000. # challenger deep = -10916
+            blocks:
+                global: |
+                    float unpack(vec4 h) {
+                        // unpack data to range [-32768, 32768], the range in the raw data
+                        // "* 255." is necessary because each the GPU reads each channel as a range from 0 - 1
+                        // and we want it in a range from 0-255, as it was encoded in the raster image
+                        return (h.r * 256. + h.g + h.b / 256.) * 255. - 32768.;
+                    }
+                color: |
+                    // unpack color and remove offset
+                    float height = unpack(color);
+
+                    // normalize to [0. - 1.]
+                    float new_value = (height - u_min)/(u_max - u_min);
+
+                    color.rgb = vec3(new_value);
+                    color.a = 1.0;
+    togglelines:
+        base: lines
+        blend: overlay
+        shaders:
+            uniforms:
+                u_alpha: .0
+            blocks:
+                color:
+                    color.a *= u_alpha;
+    toggletext:
+        base: text
+        blend: overlay
+        shaders:
+            uniforms:
+                u_alpha: .0
+            blocks:
+                color:
+                    color.a *= u_alpha;
+
+layers:
+    terrain:
+        data: { source: elevation, layer: _default }
+        draw:
+            hillshade:
+                order: 0
+    water:
+        data: { source: osm }
+        draw:
+            toggletext:
+                buffer: 30px
+                font:
+                    family: Arial
+                    size: 10px
+                    fill: [0, .5, .5]
+        ocean:
+            filter:
+                kind: ocean
+            draw:
+                togglelines:
+                    order: 1
+                    width: 1.5px
+                    color: [0, 1, 1]
+        other:
+            filter:
+                not:
+                    kind: ocean
+            draw:
+                togglelines:
+                    order: 1
+                    width: .5px
+                    color: [0, .5, .5]
+    boundaries:
+        data: { source: osm }
+        country:
+            filter:
+                kind: country
+            draw:
+                togglelines:
+                    order: 2
+                    width: 1px
+                    color: [0, 1, 1]
+        state:
+            filter:
+                kind: state
+            draw:
+                togglelines:
+                    order: 2
+                    width: 1px
+                    color: [0, .5, .5]
+    places:
+        data: { source: osm }
+        draw:
+            toggletext:
+                font:
+                    family: Arial
+                    size: 10px
+                    fill: cyan

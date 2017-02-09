@@ -13,12 +13,9 @@ var tempFactor = 1; // size of tempCanvas relative to main canvas: 1/n
 /**
  * Tangram component for A-Frame.
  */
-AFRAME.registerComponent('tangram-heightmap', {
+AFRAME.registerGeometry('tangram-heightmap-geometry', {
     schema: {
         map: {
-            type: "selector"
-        },
-        heightMap: {
             type: "selector"
         },
         heightScale: {
@@ -26,9 +23,7 @@ AFRAME.registerComponent('tangram-heightmap', {
         }
     },
 
-    multiple: false,
-
-    init: function() {
+    init: function(data) {
         this.enabled = true
         this.analysed = false
         this.analysing = false
@@ -36,12 +31,9 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         this.terrainData = []
 
-        this._initHeightMap()
+        this.heightScale = data.heightScale
 
-    },
-    _initHeightMap: function() {
-
-        var map = L.map(this.data.heightMap, {
+        var map = L.map(data.map, {
             "keyboardZoomOffset": .05,
             "inertiaDeceleration": 10000,
             "zoomSnap": .001
@@ -86,9 +78,6 @@ AFRAME.registerComponent('tangram-heightmap', {
             });
             this.scene_loaded = true;
             var tempCanvas = document.createElement("canvas");
-            // document.body.appendChild(tempCanvas);
-            // tempCanvas.style.position = "absolute";
-            // tempCanvas.style.zIndex = 10000;
             tempCanvas.width = this.worldWidth = scene.canvas.width / tempFactor;
             tempCanvas.height = this.worldHeight = scene.canvas.height / tempFactor;
 
@@ -97,15 +86,16 @@ AFRAME.registerComponent('tangram-heightmap', {
         });
         layer.addTo(map);
 
+
+        var geometry = new THREE.Geometry();
+        this.geometry = geometry
         //map.setView([40.70531887544228, -74.00976419448853], 8);
 
         //map.on("movestart", function (e) { moving = true; });
         //map.on("moveend", function (e) { moveend(e) });
 
     },
-    _initMap: function() {
 
-    },
     _expose: function() {
         this.analysing = true;
         if (this.scene_loaded) {
@@ -202,39 +192,12 @@ AFRAME.registerComponent('tangram-heightmap', {
         for (var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
             // only set y values
 
-            vertices[j + 1] = data[i] / SCALE_FACTOR * this.data.heightScale;
+            vertices[j + 1] = data[i] / SCALE_FACTOR * this.heightScale;
             //console.log(vertices[j+1])
         }
         geometry.computeFaceNormals();
 
 
-        var texture = new THREE.CanvasTexture(this.tempCanvas);
-        texture.wrapS = THREE.ClampToEdgeWrapping;
-        texture.wrapT = THREE.ClampToEdgeWrapping;
-
-
-        var mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
-            map: texture
-        }));
-
-
-        this.creating = false
-        this.el.setObject3D('mesh', mesh)
-        console.log("Created terrain")
-
-    },
-
-    update: function(oldData) {},
-
-    remove: function() {},
-
-    // tick: function (t) { },
-
-    pause: function() {
-        this.enabled = false
-    },
-
-    play: function() {
-        this.enabled = true
+        this.geometry = geometry;
     }
 });
