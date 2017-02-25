@@ -8,21 +8,58 @@
 
     <script src="../build.js"></script>
     <script src="https://mapzen.com/tangram/0.10/tangram.min.js"></script>
+    <script src="//cdn.rawgit.com/donmccurdy/aframe-physics-system/v1.2.1/dist/aframe-physics-system.min.js"></script>
+
+    <script src="./collider-check.js"></script>
+    <script src="./add-markers.js"></script>
   </head>
   <body>
-  <div id="heightMap" style="width: 1024; height: 1024; position: fixed; left: 9999px; top=0;"></div>
-  <div id="map" style="width: 1024; height: 1024; position: fixed; left: 99999px; top=0;"></div> 
-    <a-scene>
+  <div id="heightMap" style="width: 64; height: 64; position: fixed; left: 9999px; top=0;"></div>
+  <div id="map" style="width: 64; height: 64; position: fixed; left: 99999px; top=0;"></div> 
+    <a-scene >
       <a-assets>
-  
+        <a-asset-item id="geo-markers" src="markers.geojson" />
         
       </a-assets>
+ 
+      <a-entity id="terrain" visible="true"  class="interactive" 
+      
+      tangram-heightmap="heightMap: #heightMap; map: #map; zoomLevel: 8;
+      markers: #geo-markers;" 
+      
+      static-body="shape: heightfield;"
 
+      class="collidable" 
 
-      <a-entity visible="true" tangram-heightmap="heightMap: #heightMap"></a-entity>
+      add-markers="geojson: #geo-markers;"
+      >
+      
+      <!-- material="src: #heightMap; side: double;" -->  
+      <!-- geometry="primitive: plane; height: 20; width: 20; segmentsHeight: 64; segmentsWidth: 64;"  -->
+
+      </a-entity>
       <!--<a-entity geometry="primitive: tangram-heightmap-geometry; map: #heightMap;"
         material="wireframe:true; color: red;"
         ></a-entity>-->
+
+
+      <a-entity id="player"  collider-check="heightmap: #terrain;">
+
+        <a-camera id="camera" user-height="0" wasd-controls-enabled="true" look-controls-enabled="true" 
+        >
+
+
+          <a-cursor></a-cursor>
+
+<!--
+        <a-entity raycaster="objects: .collidable"  position="0 -0.9 0" rotation="90 0 0"></a-entity>
+        -->
+
+        </a-camera>
+        
+
+        
+      </a-entity>
 
 
     </a-scene>

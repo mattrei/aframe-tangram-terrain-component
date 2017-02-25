@@ -1,0 +1,136 @@
+sources:
+    osm:
+        type: TopoJSON
+        url: https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson?api_key=mapzen-QF1osLn
+        max_zoom: 16
+        rasters: [normals]
+    normals:
+        type: Raster
+        url: https://tile.mapzen.com/mapzen/terrain/v1/normal/{z}/{x}/{y}.png?api_key=mapzen-QF1osLn
+        max_zoom: 15
+    austria:
+        type: Raster
+        url: https://maps1.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/{x}/{y}/{z}.jpeg
+        max_zoom: 15
+
+styles:
+    terrain-envmap:
+        base: raster
+        raster: normal
+        lighting: false
+        shaders:
+            uniforms:
+                u_scale: .15
+                u_envmap: https://tangrams.github.io/terrain-demos/img/imhof5.jpg
+            blocks:
+                global: |
+                    // Simplified view-independent environment map
+                    vec4 applyEnvmap (in sampler2D _tex, in vec3 _normal) {
+                        const vec3 eye = vec3(0.,0.,-1.);
+                        vec3 r = reflect(eye, _normal);
+                        r.z += 1.0;
+                        float m = 2. * length(r);
+                        vec2 uv = r.xy / m + .5;
+                        return texture2D(_tex, uv);
+                    }
+                color: |
+                    normal.z *= u_scale;
+                    normal = normalize(normal);
+                    color = applyEnvmap(u_envmap, normal);
+    fadeterrain:
+        base: raster
+        mix: terrain-envmap
+        shaders:
+            blocks:
+                color: |
+                    color = color*vec4(1.5);
+
+    dots:
+        base: lines
+        dash: [1, 2]
+    fadelines:
+        base: lines
+        blend: multiply
+    fadetext:
+        base: text
+        blend: overlay
+    fadepolys:
+        base: polygons
+        blend: add
+
+scene:
+    background:
+        color: "#859f9b"
+
+layers:
+    aerial_aust:
+        data: { source: austria }
+        draw:
+            _terainStyle:
+                style: raster
+                order: 100
+    terrain:
+        data: { source: normals, layer: _default }
+        draw:
+            terrain-envmap:
+                order: 0
+    earth:
+        data: { source: osm }
+        draw:
+            lines:
+                order: 2
+                color: [.3, .3, .3]
+                width: 1px
+
+    places:
+        data: { source: osm}
+        filter:
+            kind: [city]
+        draw:
+            text:
+                font:
+                    fill: white
+                    size: 16px
+                    stroke: { color: '#444', width: 4px}
+    boundaries:
+        data: { source: osm }
+        draw:
+            dots:
+                color: [.75, .75, .75]
+                width: 1px
+    water:
+        data: { source: osm }
+        draw:
+            fadeterrain:
+                color: white
+                order: 4
+            lines:
+                order: 3
+                color: [.3, .3, .3]
+                width: .3px
+    roads:
+        data: { source: osm }
+        draw:
+            fadelines:
+                order: 3
+                color: [[10, [.9, .9, .9]], [18, white]]
+                width: [[13, 1.5px], [15, 5]]
+        labels:
+            filter: {$zoom: {min: 10}}
+            draw:
+                fadetext:
+                    buffer: 10px
+                    font:
+                        size: function() {return 30 - (20 - $zoom)}
+                        family: Lucida Grande
+                        fill: function() {return [1, 1, 1, $zoom/15.];}
+                        stroke:
+                            color: function() {return [0, 0, 0, $zoom/15.];}
+                            width: 1px
+    buildings:
+        data: {source: osm}
+        draw:
+            fadelines:
+                order: 10
+                color: [.95, .95, .95]
+                width: 2px
