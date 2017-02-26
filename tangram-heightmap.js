@@ -36,16 +36,19 @@ AFRAME.registerComponent('tangram-heightmap', {
             default: [47.7671, 15.8056], // Schneeberg
             type: 'array',
         },
+        /**
+            [0] southwest
+            [1] northeast
+        */
         maxBounds: {
             default: [
                 [
-                    15.78632354736328,
-                    47.8094654494779
-
+                    47.71068560344829,
+                    15.732078552246092
                 ],
                 [
-                    15.899620056152342,
-                    47.743248278403215
+                    47.80312425148172,
+                    15.910263061523438
                 ]
             ],
             //[[0, 0], [0, 0]],
@@ -79,11 +82,7 @@ AFRAME.registerComponent('tangram-heightmap', {
 
 
         this._initHeightMap()
-            //this._initMap()
-
-
         
-
     },
     _initMap: function() {
         var data = this.data
@@ -110,6 +109,7 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         // setView expects format ([lat, long], zoom)
         map.setView(data.center, data.zoomLevel);
+        map.setMaxBounds(data.maxBounds)
         map.fitBounds(data.maxBounds);
 
 
@@ -144,6 +144,7 @@ AFRAME.registerComponent('tangram-heightmap', {
             "inertiaDeceleration": 10000,
             "zoomSnap": .001
         });
+        this._heightMap = map
 
         var layer = Tangram.leafletLayer({
             scene: 'heightScene.yaml', // TODO make configurable
@@ -176,19 +177,19 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         // setView expects format ([lat, long], zoom)
         map.setView(data.center, data.zoomLevel);
-        //map.fitBounds(data.maxBounds);
+        map.setMaxBounds(data.maxBounds)
+        map.fitBounds(data.maxBounds)
 
+/*
         var loader = new THREE.FileLoader();
         loader.load(data.markers, file => {
             const geojson = JSON.parse(file)
             var geojsonLayer = L.geoJSON(geojson) //.addTo(map);
             map.fitBounds(geojsonLayer.getBounds());
-
-
             console.log(this.project(15.814647674560547,
               47.77682884663196))
         })
-
+*/
 
 
 
@@ -329,18 +330,17 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         const SCALE_FACTOR = 20
 
-        const zoomScaleFactor = this.data.heightScale * this.data.zoomLevel * 0.2
+        const zoomScaleFactor = this.data.heightScale * (this._heightMap.getZoom() * 0.15)
 
 
-        console.log("Creating terrain")
         this.creating = true
+        
         var worldWidth = this.worldWidth //this.heightMapCanvas.width
         var worldDepth = this.worldHeight //this.heightMapCanvas.height
 
         //console.log(worldWidth + " " + worldDepth)
 
         var data = this.terrainData
-            // https://github.com/mrdoob/three.js/blob/master/examples/webgl_geometry_terrain_raycast.html
 
         // TODO geometry widht
         var width = WIDTH
@@ -348,18 +348,18 @@ AFRAME.registerComponent('tangram-heightmap', {
 
 
         //const geometry = this.el.components.geometry.geometry
-        var geometry = new THREE.PlaneBufferGeometry(width, height, worldWidth - 1, worldDepth - 1);
-        geometry.rotateX(-Math.PI / 2);
-
+        var geometry = new THREE.PlaneBufferGeometry(
+            width, height, 
+            worldWidth - 1, worldDepth - 1)
+        //geometry.rotateX(-Math.PI / 2);
 
         var vertices = geometry.attributes.position.array;
         for (var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
-            // only set y values
-
-            vertices[j + 1] = data[i] / SCALE_FACTOR * zoomScaleFactor;
-            //console.log(vertices[j+1])
+            // only set z values (note: planes are not standing by default)
+            vertices[j + 2] = data[i] / SCALE_FACTOR * zoomScaleFactor;
         }
         geometry.computeFaceNormals();
+        geometry.computeBoundingBox();
 
 
 
@@ -371,16 +371,19 @@ AFRAME.registerComponent('tangram-heightmap', {
         var mesh = new THREE.Mesh(geometry,
             new THREE.MeshBasicMaterial({
                 map: texture,
-                wireframe: true
+                wireframe: false
             }));
 
-        mesh.position.y = 0
+        //mesh.position.y = 0
 
 
         this.creating = false
         this.el.setObject3D('mesh', mesh)
 
         this.el.emit(MAP_LOADED_EVENT);
+
+        console.log("Created terrain")
+        //this._initMap()
 
     },
 
@@ -389,7 +392,6 @@ AFRAME.registerComponent('tangram-heightmap', {
     remove: function() {},
 
     tick: function(delta, time) {
-
     },
 
     pause: function() {
@@ -400,8 +402,6 @@ AFRAME.registerComponent('tangram-heightmap', {
         this.enabled = true
     },
     project(lat, long) {
-        console.log("Mat " + lat)
-
         // The position (origin at top-left corner) in pixel space
         const {
             x: pxX,
@@ -411,16 +411,6 @@ AFRAME.registerComponent('tangram-heightmap', {
         var width = WIDTH
         var height = HEIGHT
 
-
-        const {
-            x: poX,
-            y: poY
-        } = this._heightMap.getPixelOrigin()
-        console.log(this._heightMap.getPixelOrigin())
-        console.log(this._heightMap.getPixelBounds())
-        console.log(this._heightMap.getPixelWorldBounds())
-        console.log(this._heightMap.getBounds())
-
         // The 3D world size of the entity
         /*
         const {
@@ -428,14 +418,14 @@ AFRAME.registerComponent('tangram-heightmap', {
             height: elHeight
         } = this.el.components.geometry.data;
         */
-        console.log(pxX + poX + ' ' + pxY + poY)
+        console.log(pxX + ' ' + pxY)
 
 
         return {
-            x: (pxX - poX / this.data.pxToWorldRatio) - (width / 2),
+            x: (pxX / this.data.pxToWorldRatio) - (width / 2),
             // y-coord is inverted (positive up in world space, positive down in
             // pixel space)
-            y: -(pxY - poY / this.data.pxToWorldRatio) + (height / 2),
+            y: -(pxY / this.data.pxToWorldRatio) + (height / 2),
             z: 0, // TODO :)
         };
 

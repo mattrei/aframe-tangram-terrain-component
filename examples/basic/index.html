@@ -14,8 +14,8 @@
     <script src="./add-markers.js"></script>
   </head>
   <body>
-  <div id="heightMap" style="width: 64; height: 64; position: fixed; left: 9999px; top=0;"></div>
-  <div id="map" style="width: 64; height: 64; position: fixed; left: 99999px; top=0;"></div> 
+  <div id="heightMap" style="width: 128; height: 128; position: fixed; left: 9999px; top=0;"></div>
+  <div id="map" style="width: 4096; height: 4096; position: fixed; left: 99999px; top=0;"></div> 
     <a-scene >
       <a-assets>
         <a-asset-item id="geo-markers" src="markers.geojson" />
@@ -24,14 +24,15 @@
  
       <a-entity id="terrain" visible="true"  class="interactive" 
       
-      tangram-heightmap="heightMap: #heightMap; map: #map; zoomLevel: 8;
+      tangram-heightmap="heightMap: #heightMap; map: #map; 
+      zoomLevel: 8;
       markers: #geo-markers;" 
       
-      static-body="shape: heightfield;"
 
       class="collidable" 
 
       add-markers="geojson: #geo-markers;"
+      rotation="-90 0 0"
       >
       
       <!-- material="src: #heightMap; side: double;" -->  

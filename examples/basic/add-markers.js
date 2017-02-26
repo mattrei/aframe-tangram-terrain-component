@@ -19,7 +19,8 @@ AFRAME.registerComponent('add-markers', {
             
             geojson.features.map(f => {
                 var coord = f.geometry.coordinates
-                var position = this.heightMap.project(coord[0], coord[1])
+                // lat lng
+                var position = this.heightMap.project(coord[1], coord[0])
                 console.log(position)
 
                 var marker = this.addMarker()
@@ -46,7 +47,7 @@ AFRAME.registerComponent('add-markers', {
             y: 0,
             z: 0.25
         });
-        point.setAttribute('color', '#f00');
+        point.setAttribute('color', '#ff0000');
         marker.appendChild(point);
 
         this.el.appendChild(marker);
