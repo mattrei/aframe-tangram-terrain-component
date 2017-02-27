@@ -11,8 +11,41 @@ const MAP_LOADED_EVENT = 'map-loaded';
 var tempFactor = 1; // size of heightMapCanvas relative to main canvas: 1/n
 
 
-const WIDTH = 10
-const HEIGHT = 10
+const WIDTH = 50
+const HEIGHT = 50
+
+const SCHNEEBERG = [
+                [
+                    47.71068560344829,
+                    15.732078552246092
+                ],
+                [
+                    47.80312425148172,
+                    15.910263061523438
+                ]
+            ]
+
+const GROSSGLOCKNER = [
+                [
+                    47.05807780212467,
+                    12.608699798583984,
+          
+                ],
+                [
+                    47.12878286652481,
+                    12.805938720703123,
+                    
+                ]
+            ]
+
+const mapOptions = {
+            "keyboardZoomOffset": .05,
+            "inertiaDeceleration": 10000,
+            "zoomSnap": .001,
+            "zoomAnimation": false,
+            "fadeAnimation": false,
+            "markerZoomAnimation": false,
+        }
 
 /**
  * Tangram component for A-Frame.
@@ -30,7 +63,7 @@ AFRAME.registerComponent('tangram-heightmap', {
             type: "selector"
         },
         heightScale: {
-            default: 1
+            default: 3
         },
         center: {
             default: [47.7671, 15.8056], // Schneeberg
@@ -41,6 +74,8 @@ AFRAME.registerComponent('tangram-heightmap', {
             [1] northeast
         */
         maxBounds: {
+            default: GROSSGLOCKNER,
+            /*
             default: [
                 [
                     47.71068560344829,
@@ -51,12 +86,14 @@ AFRAME.registerComponent('tangram-heightmap', {
                     15.910263061523438
                 ]
             ],
+            */
             //[[0, 0], [0, 0]],
             type: 'array',
             parse: value => {
                 return value
             },
         },
+        // only needed if center is specified
         zoomLevel: {
             default: 11.5
         },
@@ -87,11 +124,7 @@ AFRAME.registerComponent('tangram-heightmap', {
     _initMap: function() {
         var data = this.data
 
-        var map = L.map(this.data.map, {
-            "keyboardZoomOffset": .05,
-            "inertiaDeceleration": 10000,
-            "zoomSnap": .001
-        });
+        var map = L.map(this.data.map, mapOptions);
 
         var layer = Tangram.leafletLayer({
             scene: 'scene.yaml', // TODO make configurable
@@ -139,11 +172,7 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         var data = this.data
 
-        var map = L.map(this.data.heightMap, {
-            "keyboardZoomOffset": .05,
-            "inertiaDeceleration": 10000,
-            "zoomSnap": .001
-        });
+        var map = L.map(this.data.heightMap, mapOptions);
         this._heightMap = map
 
         var layer = Tangram.leafletLayer({
@@ -203,12 +232,12 @@ AFRAME.registerComponent('tangram-heightmap', {
             this.scene_loaded = true;
             var heightMapCanvas = document.createElement("canvas");
             // document.body.appendChild(heightMapCanvas);
-            // heightMapCanvas.style.position = "absolute";
-            // heightMapCanvas.style.zIndex = 10000;
+            heightMapCanvas.style.position = "fixed";
+            heightMapCanvas.style.left = "9999px";
             heightMapCanvas.width = this.worldWidth = scene.canvas.width / tempFactor;
             heightMapCanvas.height = this.worldHeight = scene.canvas.height / tempFactor;
 
-            this.scene = scene
+            
             this.heightMapCanvas = heightMapCanvas
         });
         layer.addTo(map);
@@ -216,6 +245,7 @@ AFRAME.registerComponent('tangram-heightmap', {
         //map.on("movestart", function (e) { moving = true; });
         //map.on("moveend", function (e) { moveend(e) });
         this._heightMap = map
+        this.scene = scene
 
         
 
@@ -328,11 +358,6 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         if (!this.analysed || this.creating) return
 
-        const SCALE_FACTOR = 20
-
-        const zoomScaleFactor = this.data.heightScale * (this._heightMap.getZoom() * 0.15)
-
-
         this.creating = true
         
         var worldWidth = this.worldWidth //this.heightMapCanvas.width
@@ -356,7 +381,7 @@ AFRAME.registerComponent('tangram-heightmap', {
         var vertices = geometry.attributes.position.array;
         for (var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
             // only set z values (note: planes are not standing by default)
-            vertices[j + 2] = data[i] / SCALE_FACTOR * zoomScaleFactor;
+            vertices[j + 2] = this._scale(data[i])
         }
         geometry.computeFaceNormals();
         geometry.computeBoundingBox();
@@ -371,7 +396,7 @@ AFRAME.registerComponent('tangram-heightmap', {
         var mesh = new THREE.Mesh(geometry,
             new THREE.MeshBasicMaterial({
                 map: texture,
-                wireframe: false
+                wireframe: true
             }));
 
         //mesh.position.y = 0
@@ -385,6 +410,13 @@ AFRAME.registerComponent('tangram-heightmap', {
         console.log("Created terrain")
         //this._initMap()
 
+    },
+    _scale: function(value) {
+
+        const SCALE_FACTOR = 20
+        const zoomScaleFactor = this.data.heightScale * (this._heightMap.getZoom() * 0.15)
+
+        return  value / SCALE_FACTOR * zoomScaleFactor;
     },
 
     update: function(oldData) {},
@@ -403,13 +435,28 @@ AFRAME.registerComponent('tangram-heightmap', {
     },
     project(lat, long) {
         // The position (origin at top-left corner) in pixel space
-        const {
+        let {
             x: pxX,
             y: pxY
         } = this._heightMap.latLngToLayerPoint([lat, long]);
 
         var width = WIDTH
         var height = HEIGHT
+
+        
+        var data = this.terrainData
+
+
+        const idx = this.scene.canvas.width * pxY + pxX
+        var z = this._scale(data[idx])
+
+/*
+        for (var i = 0; i < heightMapCanvas.height * heightMapCanvas.width * 4; i += 4) {
+        for (var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
+            // only set z values (note: planes are not standing by default)
+            vertices[j + 2] = data[i] / SCALE_FACTOR * zoomScaleFactor;
+        }
+        */
 
         // The 3D world size of the entity
         /*
@@ -418,7 +465,14 @@ AFRAME.registerComponent('tangram-heightmap', {
             height: elHeight
         } = this.el.components.geometry.data;
         */
-        console.log(pxX + ' ' + pxY)
+
+
+        pxX /= this.scene.canvas.width
+        pxY /= this.scene.canvas.height
+
+        pxX *= width
+        pxY *= height
+
 
 
         return {
@@ -426,7 +480,7 @@ AFRAME.registerComponent('tangram-heightmap', {
             // y-coord is inverted (positive up in world space, positive down in
             // pixel space)
             y: -(pxY / this.data.pxToWorldRatio) + (height / 2),
-            z: 0, // TODO :)
+            z: z, 
         };
 
     },
@@ -447,5 +501,10 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         // Return the long / lat of that pixel on the map
         return this._mapInstance.unproject([pxX, pxY]).toArray();
+    },
+
+    // return the north latitude of the map
+    getNorthLat() {
+        return this._heightMap.getBounds().getNorth()
     }
 });
