@@ -10,6 +10,8 @@ const heightmapStyle = require('./heightmap-style.yaml');
 const defaultMapStyle = require('./simple-style.yaml');
 require('leaflet')
 
+
+const HEIGHTMAP_LOADED_EVENT = 'heightmap-loaded';
 const MAP_LOADED_EVENT = 'map-loaded';
 
 var tempFactor = 1; // size of heightMapCanvas relative to main canvas: 1/n
@@ -79,7 +81,7 @@ function getCanvasContainerAssetElement(id, width, height, left) {
     return element;
 }
 
-function processMapboxCanvasElement(mapboxInstance, canvasContainer) {
+function processCanvasElement(canvasContainer) {
     const canvas = canvasContainer.querySelector('canvas');
     canvas.setAttribute('id', cuid());
     canvas.setAttribute('crossorigin', 'anonymous');
@@ -102,6 +104,7 @@ function processStyle(style) {
 AFRAME.registerComponent('tangram', {
     dependencies: [
         'geometry',
+        'material'
     ],
 
     schema: {
@@ -190,20 +193,30 @@ AFRAME.registerComponent('tangram', {
 
         var _canvasContainerId = cuid();
         const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId, 
-            4096, 4096, 99999);    
+            128, 128, 0);    
         var map = L.map(canvasContainer, mapOptions);
 
-        const sceneStyle = processStyle(this.data.style);
+        
 
+        const sceneStyle = processStyle(this.data.style);
 
         var layer = Tangram.leafletLayer({
             scene: sceneStyle,
             attribution: '',
             postUpdate: _ => {
                 if (this.enabled) {
-                    if (!this.creatingMap) {
-                        this._createMap()
-                    }
+                    console.log("PU")
+                    //if (!this.creatingMap) {
+                        //this._createMap()
+                        const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
+                        // Pointing this aframe entity to that canvas as its source
+                        console.log(_canvasContainerId)
+                        console.log(canvasId)
+                        this.el.setAttribute('material', 'src', `#${canvasId}`);
+
+                        console.log(this.el)
+                        this.el.emit(MAP_LOADED_EVENT);
+                    //}
                 }
             }
         });
@@ -224,12 +237,20 @@ AFRAME.registerComponent('tangram', {
                 view_complete: function() {}
             });
             this.mapScene_loaded = true;
+
+
+            console.log("INITIATED")
+            processCanvasElement(canvasContainer)
+
+/*TODO
             var mapCanvas = document.createElement("canvas");
             mapCanvas.width = this.worldWidth = scene.canvas.width / tempFactor;
             mapCanvas.height = this.worldHeight = scene.canvas.height / tempFactor;
 
             this.mapScene = scene
             this.mapCanvas = mapCanvas
+*/
+            
         });
         layer.addTo(map);
 
@@ -415,6 +436,7 @@ AFRAME.registerComponent('tangram', {
 
 
         var mesh = this.el.getObject3D('mesh')
+        console.log(mesh)
         mesh.material.map = texture
         mesh.material.needsUpdate = true
 
@@ -474,7 +496,7 @@ AFRAME.registerComponent('tangram', {
         this.creating = false
         this.el.setObject3D('mesh', mesh)
 
-        this.el.emit(MAP_LOADED_EVENT);
+        this.el.emit(HEIGHTMAP_LOADED_EVENT);
 
         console.log("Created terrain")
             //this._initMap()
