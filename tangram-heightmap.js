@@ -4,6 +4,8 @@ if (typeof AFRAME === 'undefined') {
     throw new Error('Component attempted to register before AFRAME was available.');
 }
 
+const defaultMapStyle = require('./heightmap.yaml');
+console.log(defaultMapStyle)
 require('leaflet')
 
 const MAP_LOADED_EVENT = 'map-loaded';
@@ -176,7 +178,7 @@ AFRAME.registerComponent('tangram-heightmap', {
         this._heightMap = map
 
         var layer = Tangram.leafletLayer({
-            scene: 'heightScene.yaml', // TODO make configurable
+            scene: defaultMapStyle, //'heightScene.yaml',
             attribution: '',
             postUpdate: _ => {
                 if (this.enabled) {
