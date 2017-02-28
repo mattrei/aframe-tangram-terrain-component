@@ -44,13 +44,22 @@ const GROSSGLOCKNER = [
     ]
 ]
 
-const mapOptions = {
-    "keyboardZoomOffset": .05,
-    "inertiaDeceleration": 10000,
-    "zoomSnap": .001,
+const leafletOptions = {
+    "preferCanvas": true,
+    "keyboard": false,
+    "scrollWheelZoom": true,
+    "tap": false,
+    "touchZoom": false,
+    "zoomControl": false,
+    "attributionControl": false,
+    "doubleClickZoom": false,
+    "trackResize": false,
+    "boxZoom": false,
+    "dragging": false,
     "zoomAnimation": false,
     "fadeAnimation": false,
     "markerZoomAnimation": false,
+
 }
 
 
@@ -89,11 +98,11 @@ function processCanvasElement(canvasContainer) {
 
 function processStyle(style) {
 
-  if (!style) {
-    return defaultMapStyle;
-  }
+    if (!style) {
+        return defaultMapStyle;
+    }
 
-  return JSON.parse(style);
+    return JSON.parse(style);
 
 }
 
@@ -166,8 +175,18 @@ AFRAME.registerComponent('tangram', {
             type: 'int',
             default: 64
         },
-        segmentsHeight: {default: 64, min: 8, max: 512, type: 'int'},
-        segmentsWidth: {default: 64, min: 8, max: 512, type: 'int'},
+        segmentsHeight: {
+            default: 64,
+            min: 8,
+            max: 512,
+            type: 'int'
+        },
+        segmentsWidth: {
+            default: 64,
+            min: 8,
+            max: 512,
+            type: 'int'
+        },
     },
 
     multiple: false,
@@ -192,11 +211,20 @@ AFRAME.registerComponent('tangram', {
         var data = this.data
 
         var _canvasContainerId = cuid();
-        const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId, 
-            128, 128, 0);    
-        var map = L.map(canvasContainer, mapOptions);
+        const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId,
+            128, 128, 0);
 
-        
+        const options = Object.assign({
+                renderer: L.canvas({
+                    padding: 0.
+                })
+            },
+            leafletOptions)
+
+        var map = L.map(canvasContainer,
+            options);
+
+
 
         const sceneStyle = processStyle(this.data.style);
 
@@ -206,16 +234,12 @@ AFRAME.registerComponent('tangram', {
             postUpdate: _ => {
                 if (this.enabled) {
                     console.log("PU")
-                    //if (!this.creatingMap) {
+                        //if (!this.creatingMap) {
                         //this._createMap()
-                        const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
-                        // Pointing this aframe entity to that canvas as its source
-                        console.log(_canvasContainerId)
-                        console.log(canvasId)
-                        this.el.setAttribute('material', 'src', `#${canvasId}`);
+                    const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
+                    this.el.setAttribute('material', 'src', `#${canvasId}`);
 
-                        console.log(this.el)
-                        this.el.emit(MAP_LOADED_EVENT);
+                    this.el.emit(MAP_LOADED_EVENT);
                     //}
                 }
             }
@@ -238,19 +262,17 @@ AFRAME.registerComponent('tangram', {
             });
             this.mapScene_loaded = true;
 
-
-            console.log("INITIATED")
             processCanvasElement(canvasContainer)
 
-/*TODO
-            var mapCanvas = document.createElement("canvas");
-            mapCanvas.width = this.worldWidth = scene.canvas.width / tempFactor;
-            mapCanvas.height = this.worldHeight = scene.canvas.height / tempFactor;
+            /*TODO
+                        var mapCanvas = document.createElement("canvas");
+                        mapCanvas.width = this.worldWidth = scene.canvas.width / tempFactor;
+                        mapCanvas.height = this.worldHeight = scene.canvas.height / tempFactor;
 
-            this.mapScene = scene
-            this.mapCanvas = mapCanvas
-*/
-            
+                        this.mapScene = scene
+                        this.mapCanvas = mapCanvas
+            */
+
         });
         layer.addTo(map);
 
@@ -261,10 +283,10 @@ AFRAME.registerComponent('tangram', {
         var data = this.data
 
         var _canvasContainerId = cuid();
-        const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId, 
+        const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId,
             data.segmentsWidth, data.segmentsHeight, 9999);
 
-        var map = L.map(canvasContainer, mapOptions);
+        var map = L.map(canvasContainer, leafletOptions);
         this._heightMap = map
 
         var layer = Tangram.leafletLayer({
