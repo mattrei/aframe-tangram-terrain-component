@@ -8,14 +8,12 @@
 
     <script src="../build.js"></script>
     <script src="https://mapzen.com/tangram/0.10/tangram.min.js"></script>
-    <script src="//cdn.rawgit.com/donmccurdy/aframe-physics-system/v1.2.1/dist/aframe-physics-system.min.js"></script>
 
     <script src="./collider-check.js"></script>
     <script src="./add-markers.js"></script>
     <script src="./map-look-controls.js"></script>
   </head>
   <body>
-  <div id="heightMap" style="width: 128; height: 128; position: fixed; left: 9999px; top=0;"></div>
   <div id="map" style="width: 4096; height: 4096; position: fixed; left: 99999px; top=0;"></div> 
     <a-scene >
       <a-assets>
@@ -25,7 +23,7 @@
  
       <a-entity id="terrain" visible="true"  class="interactive" 
       
-      tangram-heightmap="heightMap: #heightMap; map: #map; 
+      tangram="map: #map; 
       zoomLevel: 8;
       markers: #geo-markers;" 
       
@@ -35,15 +33,8 @@
       add-markers="geojson: #geo-markers;"
       rotation="-90 0 0"
       >
-      
-      <!-- material="src: #heightMap; side: double;" -->  
-      <!-- geometry="primitive: plane; height: 20; width: 20; segmentsHeight: 64; segmentsWidth: 64;"  -->
 
       </a-entity>
-      <!--<a-entity geometry="primitive: tangram-heightmap-geometry; map: #heightMap;"
-        material="wireframe:true; color: red;"
-        ></a-entity>-->
-
 
       <a-entity id="player"  collider-check="heightmap: #terrain;">
 

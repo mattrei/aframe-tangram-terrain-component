@@ -1,7 +1,7 @@
 var setProperty = AFRAME.utils.entity.setComponentProperty;
 
 AFRAME.registerComponent('add-markers', {
-    dependencies: ['tangram-heightmap'],
+    dependencies: ['tangram'],
     schema: {
         geojson: {
             type: "asset",
@@ -11,7 +11,7 @@ AFRAME.registerComponent('add-markers', {
 
         var data = this.data
 
-        this.heightMap = this.el.components['tangram-heightmap']
+        this.heightMap = this.el.components['tangram']
         this.el.addEventListener("map-loaded", e => {
             console.log("map-loaed")
             var loader = new THREE.FileLoader();
