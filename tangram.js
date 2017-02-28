@@ -6,7 +6,8 @@ if (typeof AFRAME === 'undefined') {
 
 const cuid = require('cuid')
 
-const defaultMapStyle = require('./heightmap.yaml');
+const heightmapStyle = require('./heightmap-style.yaml');
+const defaultMapStyle = require('./simple-style.yaml');
 require('leaflet')
 
 const MAP_LOADED_EVENT = 'map-loaded';
@@ -51,7 +52,7 @@ const mapOptions = {
 }
 
 
-function getCanvasContainerAssetElement(id, width, height) {
+function getCanvasContainerAssetElement(id, width, height, left) {
 
     let element = document.querySelector(`#${id}`);
 
@@ -68,7 +69,7 @@ function getCanvasContainerAssetElement(id, width, height) {
     // the element (or its parent) are hidden. `position: fixed` means it can be
     // calculated correctly.
     element.style.position = 'fixed';
-    element.style.left = '99999px';
+    element.style.left = `${left}px`;
     element.style.top = '0';
 
     if (!document.body.contains(element)) {
@@ -84,6 +85,16 @@ function processMapboxCanvasElement(mapboxInstance, canvasContainer) {
     canvas.setAttribute('crossorigin', 'anonymous');
 }
 
+function processStyle(style) {
+
+  if (!style) {
+    return defaultMapStyle;
+  }
+
+  return JSON.parse(style);
+
+}
+
 
 /**
  * Tangram component for A-Frame.
@@ -94,8 +105,13 @@ AFRAME.registerComponent('tangram', {
     ],
 
     schema: {
-        map: {
-            type: "selector"
+        style: {
+            type: "asset",
+            default: ''
+        },
+        asHeightMap: {
+            type: 'boolean',
+            default: true
         },
         heightScale: {
             default: 3
@@ -162,18 +178,26 @@ AFRAME.registerComponent('tangram', {
 
         this.terrainData = []
 
-
-        this._canvasContainerId = cuid();
-        this._initHeightMap()
+        if (this.data.asHeightMap) {
+            this._initHeightMap()
+        } else {
+            this._initMap()
+        }
 
     },
     _initMap: function() {
         var data = this.data
 
-        var map = L.map(this.data.map, mapOptions);
+        var _canvasContainerId = cuid();
+        const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId, 
+            4096, 4096, 99999);    
+        var map = L.map(canvasContainer, mapOptions);
+
+        const sceneStyle = processStyle(this.data.style);
+
 
         var layer = Tangram.leafletLayer({
-            scene: 'scene.yaml', // TODO make configurable
+            scene: sceneStyle,
             attribution: '',
             postUpdate: _ => {
                 if (this.enabled) {
@@ -201,9 +225,6 @@ AFRAME.registerComponent('tangram', {
             });
             this.mapScene_loaded = true;
             var mapCanvas = document.createElement("canvas");
-            // document.body.appendChild(heightMapCanvas);
-            // heightMapCanvas.style.position = "absolute";
-            // heightMapCanvas.style.zIndex = 10000;
             mapCanvas.width = this.worldWidth = scene.canvas.width / tempFactor;
             mapCanvas.height = this.worldHeight = scene.canvas.height / tempFactor;
 
@@ -218,15 +239,15 @@ AFRAME.registerComponent('tangram', {
 
         var data = this.data
 
-        const canvasContainer = getCanvasContainerAssetElement(this._canvasContainerId, 
-            data.segmentsWidth, data.segmentsHeight);
-        this.canvasContainer = canvasContainer
+        var _canvasContainerId = cuid();
+        const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId, 
+            data.segmentsWidth, data.segmentsHeight, 9999);
 
         var map = L.map(canvasContainer, mapOptions);
         this._heightMap = map
 
         var layer = Tangram.leafletLayer({
-            scene: defaultMapStyle, //'heightScene.yaml',
+            scene: heightmapStyle, //'heightScene.yaml',
             attribution: '',
             postUpdate: _ => {
                 if (this.enabled) {

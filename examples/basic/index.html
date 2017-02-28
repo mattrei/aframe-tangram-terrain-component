@@ -14,29 +14,30 @@
     <script src="./map-look-controls.js"></script>
   </head>
   <body>
-  <div id="map" style="width: 4096; height: 4096; position: fixed; left: 99999px; top=0;"></div> 
     <a-scene >
       <a-assets>
         <a-asset-item id="geo-markers" src="assets/markers.geojson" />
+        <a-asset-item id="yaml-austria" src="assets/austria-satellite.yaml" />
         <img id="img-compass-wheel" src="assets/compass-wheel.png" />
       </a-assets>
  
-      <a-entity id="terrain" visible="true"  class="interactive" 
+ <!--
+      <a-entity id="terrain" visible="true"
       
-      tangram="map: #map; 
+      tangram="
+      asHeightMap: true;
       zoomLevel: 8;
       markers: #geo-markers;" 
-      
-
-      class="collidable" 
 
       add-markers="geojson: #geo-markers;"
       rotation="-90 0 0"
       >
 
       </a-entity>
-
       <a-entity id="player"  collider-check="heightmap: #terrain;">
+-->
+
+      <a-entity id="player">
 
         <a-camera id="camera" user-height="0.4" wasd-controls-enabled="true" look-controls-enabled="true" 
         >
@@ -45,12 +46,14 @@
           <a-entity geometry="primitive: box; height: 0.5; width: 0.1; depth: 0.05" material="color: #FCB514" position="0 0 0"></a-entity>
           <a-image map-look-controls="#camera" src="#img-compass-wheel"></a-image>
         </a-entity>
+        <a-entity position="0 2 3" rotaiton="-90 0 0">
+          <a-entity geometry="primitive: plane; width: 3; height: 3;"
+          tangram="asHeightMap: false;"
+          >
+          </a-entity>
+        </a-entity>
 
           <a-cursor></a-cursor>
-
-<!--
-        <a-entity raycaster="objects: .collidable"  position="0 -0.9 0" rotation="90 0 0"></a-entity>
-        -->
 
         </a-camera>
         
