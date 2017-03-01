@@ -93,7 +93,7 @@ function getCanvasContainerAssetElement(id, width, height, left) {
 function processCanvasElement(canvasContainer) {
     const canvas = canvasContainer.querySelector('canvas');
     canvas.setAttribute('id', cuid());
-    canvas.setAttribute('crossorigin', 'anonymous');
+    canvas.setAttribute('crossOrigin', 'anonymous');
 }
 
 function processStyle(style) {
@@ -102,8 +102,7 @@ function processStyle(style) {
         return defaultMapStyle;
     }
 
-    return JSON.parse(style);
-
+    return style;
 }
 
 
@@ -214,10 +213,15 @@ AFRAME.registerComponent('tangram', {
         const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId,
             128, 128, 0);
 
-        const options = Object.assign({
-                renderer: L.canvas({
-                    padding: 0.
+
+        const renderer = L.canvas({
+                    padding: 0.,
+                    pane: 'mapPane'
                 })
+
+        
+        const options = Object.assign({
+                renderer 
             },
             leafletOptions)
 
@@ -233,19 +237,20 @@ AFRAME.registerComponent('tangram', {
             attribution: '',
             postUpdate: _ => {
                 if (this.enabled) {
-                    console.log("PU")
                         //if (!this.creatingMap) {
                         //this._createMap()
-                    const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
-                    this.el.setAttribute('material', 'src', `#${canvasId}`);
+                    
 
                     this.el.emit(MAP_LOADED_EVENT);
                     //}
+                    layer.redraw()
                 }
             }
         });
 
         var scene = layer.scene
+
+
 
         // setView expects format ([lat, long], zoom)
         map.setView(data.center, data.zoomLevel);
@@ -258,24 +263,18 @@ AFRAME.registerComponent('tangram', {
             scene.subscribe({
                 // will be triggered when tiles are finished loading
                 // and also manually by the moveend event
-                view_complete: function() {}
+                view_complete: () => {
+                }
             });
             this.mapScene_loaded = true;
 
             processCanvasElement(canvasContainer)
-
-            /*TODO
-                        var mapCanvas = document.createElement("canvas");
-                        mapCanvas.width = this.worldWidth = scene.canvas.width / tempFactor;
-                        mapCanvas.height = this.worldHeight = scene.canvas.height / tempFactor;
-
-                        this.mapScene = scene
-                        this.mapCanvas = mapCanvas
-            */
+            
+            const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
+            this.el.setAttribute('material', 'src', `#${canvasId}`);
 
         });
         layer.addTo(map);
-
 
     },
     _initHeightMap: function() {
@@ -605,14 +604,18 @@ AFRAME.registerComponent('tangram', {
             height: elHeight
         } = this.el.components.geometry.data;
 
+        var width = WIDTH
+        var height = HEIGHT
+
         // Converting back to pixel space
-        const pxX = (x + (elWidth / 2)) * this.data.pxToWorldRatio;
+        const pxX = (x + (width / 2)) * this.data.pxToWorldRatio;
         // y-coord is inverted (positive up in world space, positive down in
         // pixel space)
-        const pxY = ((elHeight / 2) - y) * this.data.pxToWorldRatio;
+        const pxY = ((height / 2) - y) * this.data.pxToWorldRatio;
 
-        // Return the long / lat of that pixel on the map
-        return this._mapInstance.unproject([pxX, pxY]).toArray();
+        // Return the lat / long of that pixel on the map
+        var latLng = this._heightMap.layerPointToLatLng([pxX, pxY])
+        return [latLng.lat, latLng.lng]
     },
 
     // return the north latitude of the map

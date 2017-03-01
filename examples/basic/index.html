@@ -12,9 +12,10 @@
     <script src="./collider-check.js"></script>
     <script src="./add-markers.js"></script>
     <script src="./map-look-controls.js"></script>
+    <script src="./set-map-position.js"></script>
   </head>
   <body>
-    <a-scene >
+    <a-scene debug>
       <a-assets>
         <a-asset-item id="geo-markers" src="assets/markers.geojson" />
         <a-asset-item id="yaml-austria" src="assets/austria-satellite.yaml" />
@@ -22,7 +23,7 @@
         <img id="img-compass-wheel" src="assets/compass-wheel.png" />
       </a-assets>
  
- <!--
+ 
       <a-entity id="terrain" visible="true"
       
       tangram="
@@ -36,9 +37,7 @@
 
       </a-entity>
       <a-entity id="player"  collider-check="heightmap: #terrain;">
--->
 
-      <a-entity id="player">
 
         <a-camera id="camera" user-height="0.4" wasd-controls-enabled="true" look-controls-enabled="true" 
         >
@@ -49,9 +48,12 @@
         </a-entity>
         <a-entity id="hud-map" position="0 2 -5" rotation="0 0 0">
           <a-entity geometry="primitive: plane; width: 3; height: 3;"
+          
+          material="color: #00ffff; shader: flat; side: front; transparent: true;"
+          set-map-position="heightmap: #terrain"
           tangram="asHeightMap: false;"
-          material="color: #00ffff; shader: flat; side: both; transparent: true;"
           >
+          <!---->
           </a-entity>
         </a-entity>
 

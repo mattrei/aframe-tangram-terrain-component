@@ -18,7 +18,6 @@ AFRAME.registerComponent('collider-check', {
     tick: function(delta, time) {
 
 		var camera = this.data.camera.object3D
-
     	var heightmap = this.data.heightmap.object3D
 
 		this.position.copy(camera.position)
