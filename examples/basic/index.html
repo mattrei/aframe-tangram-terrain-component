@@ -12,7 +12,7 @@
     <script src="./collider-check.js"></script>
     <script src="./add-markers.js"></script>
     <script src="./map-look-controls.js"></script>
-    <script src="./set-map-position.js"></script>
+    <script src="./set-marker-on-map.js"></script>
   </head>
   <body>
     <a-scene debug>
@@ -21,6 +21,7 @@
         <a-asset-item id="yaml-austria" src="assets/austria-satellite.yaml" />
         <a-asset-item id="yaml-walkabout-style" src="assets/walkabout-style.yaml" />
         <img id="img-compass-wheel" src="assets/compass-wheel.png" />
+        <img id="img-arrow" src="assets/mini_arrow.png" />
       </a-assets>
  
  
@@ -28,7 +29,8 @@
       
       tangram="
       asHeightMap: true;
-      zoomLevel: 8;
+      center: 47.7671, 15.8056;
+      zoom: 8;
       markers: #geo-markers;" 
 
       add-markers="geojson: #geo-markers;"
@@ -47,13 +49,19 @@
           <a-image map-look-controls="#camera" src="#img-compass-wheel"></a-image>
         </a-entity>
         <a-entity id="hud-map" position="0 2 -5" rotation="0 0 0">
-          <a-entity geometry="primitive: plane; width: 3; height: 3;"
+          <a-entity geometry="primitive: plane; width: 4; height: 4;"
           
-          material="color: #00ffff; shader: flat; side: front; transparent: true;"
-          set-map-position="heightmap: #terrain"
-          tangram="asHeightMap: false;"
+          material="color: #ffffff; shader: flat; side: front; transparent: true;"
+          set-marker-on-map="heightmap: #terrain; marker: #my-marker;"
+          tangram="
+          asHeightMap: false;
+          center: 47.7671, 15.8056;
+          zoom: 13;
+          style: #yaml-walkabout-style;
+          "
+
           >
-          <!---->
+            <a-image id="my-marker" transparent="true" src="#img-arrow" width="0.2" height="0.2" position="0 0 0.2"></a-image>
           </a-entity>
         </a-entity>
 

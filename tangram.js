@@ -13,6 +13,8 @@ require('leaflet')
 
 const HEIGHTMAP_LOADED_EVENT = 'heightmap-loaded';
 const MAP_LOADED_EVENT = 'map-loaded';
+const MAP_MOVE_END_EVENT = 'map-moveend';
+
 
 var tempFactor = 1; // size of heightMapCanvas relative to main canvas: 1/n
 
@@ -75,7 +77,7 @@ function getCanvasContainerAssetElement(id, width, height, left) {
     element.style.width = `${width}px`;
     element.style.height = `${height}px`;
 
-    // This is necessary because mapbox-gl uses the offsetWidth/Height of the
+    // This is necessary because leaflet like mapbox-gl uses the offsetWidth/Height of the
     // container element to calculate the canvas size.  But those values are 0 if
     // the element (or its parent) are hidden. `position: fixed` means it can be
     // calculated correctly.
@@ -128,7 +130,7 @@ AFRAME.registerComponent('tangram', {
             default: 3
         },
         center: {
-            default: [47.7671, 15.8056], // Schneeberg
+            default: [0, 0], //[47.7671, 15.8056], // Schneeberg
             type: 'array',
         },
         /**
@@ -136,28 +138,21 @@ AFRAME.registerComponent('tangram', {
             [1] northeast
         */
         maxBounds: {
-            default: GROSSGLOCKNER,
-            /*
-            default: [
-                [
-                    47.71068560344829,
-                    15.732078552246092
-                ],
-                [
-                    47.80312425148172,
-                    15.910263061523438
-                ]
-            ],
-            */
-            //[[0, 0], [0, 0]],
+            default: undefined,
             type: 'array',
             parse: value => {
                 return value
             },
         },
-        // only needed if center is specified
-        zoomLevel: {
-            default: 11.5
+        fitBounds: {
+            default: undefined, //GROSSGLOCKNER,
+            type: 'array',
+            parse: value => {
+                return value
+            },
+        },
+        zoom: {
+            default: 13
         },
         // TODO
         pxToWorldRatio: {
@@ -196,6 +191,8 @@ AFRAME.registerComponent('tangram', {
         this.analysing = false
         this.creating = false
         this.creatingMap = false
+        this._mapInstance = null
+        this._scene = null
 
         this.terrainData = []
 
@@ -203,6 +200,50 @@ AFRAME.registerComponent('tangram', {
             this._initHeightMap()
         } else {
             this._initMap()
+        }
+
+    },
+    update: function(oldData) {
+        // Nothing changed
+        if (AFRAME.utils.deepEqual(oldData, this.data)) {
+            return;
+        }
+        // Everything after this requires a map instance
+        if (!this._mapInstance) {
+            return;
+        }
+
+        if (!AFRAME.utils.deepEqual(oldData.maxBounds, this.data.maxBounds)) {
+            var bounds = L.latLngBounds(this.data.maxBounds);
+            console.log("max bounds")
+            this._mapInstance.setMaxBounds(bounds)
+        }
+
+        var moved = false;
+        if (!AFRAME.utils.deepEqual(oldData.center, this.data.center)) {
+            moved = true
+
+            console.log("panning to ")
+            console.log(this.data.center)
+            this._mapInstance.panTo(this.data.center, {
+                animate: false
+            })
+            this._mapInstance.setZoom(this.data.zoom)
+
+        }
+
+        if (!AFRAME.utils.deepEqual(oldData.fitBounds, this.data.fitBounds)) {
+            moved = true
+            var bounds = L.latLngBounds(this.data.fitBounds);
+            console.log("fitting bounds")
+            this._mapInstance.fitBounds(bounds)
+        }
+
+        if (moved) {
+            // A way to signal when these async actions have completed
+            this._mapInstance.once('moveend', e => {
+                this.el.emit(MAP_MOVE_END_EVENT);
+            });
         }
 
     },
@@ -215,13 +256,13 @@ AFRAME.registerComponent('tangram', {
 
 
         const renderer = L.canvas({
-                    padding: 0.,
-                    pane: 'mapPane'
-                })
+            padding: 0.,
+            pane: 'mapPane'
+        })
 
-        
+
         const options = Object.assign({
-                renderer 
+                renderer
             },
             leafletOptions)
 
@@ -236,45 +277,29 @@ AFRAME.registerComponent('tangram', {
             scene: sceneStyle,
             attribution: '',
             postUpdate: _ => {
-                if (this.enabled) {
-                        //if (!this.creatingMap) {
-                        //this._createMap()
-                    
-
-                    this.el.emit(MAP_LOADED_EVENT);
-                    //}
-                    layer.redraw()
-                }
+                this.el.emit(MAP_LOADED_EVENT);
             }
         });
 
-        var scene = layer.scene
-
-
-
-        // setView expects format ([lat, long], zoom)
-        map.setView(data.center, data.zoomLevel);
-        map.setMaxBounds(data.maxBounds)
-        map.fitBounds(data.maxBounds);
-
-
+        var scene = this._scene = layer.scene
         layer.on('init', _ => {
             // resetViewComplete();
             scene.subscribe({
                 // will be triggered when tiles are finished loading
                 // and also manually by the moveend event
-                view_complete: () => {
-                }
+                view_complete: () => {}
             });
             this.mapScene_loaded = true;
 
             processCanvasElement(canvasContainer)
-            
+
             const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
             this.el.setAttribute('material', 'src', `#${canvasId}`);
 
         });
         layer.addTo(map);
+
+        this._mapInstance = map
 
     },
     _initHeightMap: function() {
@@ -292,35 +317,33 @@ AFRAME.registerComponent('tangram', {
             scene: heightmapStyle, //'heightScene.yaml',
             attribution: '',
             postUpdate: _ => {
-                if (this.enabled) {
-                    // three stages:
-                    // 1) start analysis
-                    if (!this.analysing && !this.analysed) {
-                        //console.log("EXPOSING")
-                        this._expose()
-                    }
-                    // 2) continue analysis
-                    else if (this.analysing && !this.analysed) {
-                        //console.log("START")
-                        this._start_analysis();
-                        this.analysed = false
-                    }
-                    /*else if (this.analysed) {
-                                           // reset after next update (however that might be done)
-                                           //console.log("ANALYSED")
-                                           this._createTerrain()
-                                           this.analysed = false
-                                       }*/
+                // three stages:
+                // 1) start analysis
+                if (!this.analysing && !this.analysed) {
+                    //console.log("EXPOSING")
+                    this._expose()
                 }
+                // 2) continue analysis
+                else if (this.analysing && !this.analysed) {
+                    //console.log("START")
+                    this._start_analysis();
+                    this.analysed = false
+                }
+                /*else if (this.analysed) {
+                                       // reset after next update (however that might be done)
+                                       //console.log("ANALYSED")
+                                       this._createTerrain()
+                                       this.analysed = false
+                                   }*/
             }
         });
 
-        var scene = layer.scene
+        var scene = this._scene = layer.scene
 
         // setView expects format ([lat, long], zoom)
-        map.setView(data.center, data.zoomLevel);
-        map.setMaxBounds(data.maxBounds)
-        map.fitBounds(data.maxBounds)
+        //map.setView(data.center, data.zoomLevel);
+        //map.setMaxBounds(data.maxBounds)
+        //map.fitBounds(data.maxBounds)
 
         /*
                 var loader = new THREE.FileLoader();
@@ -356,9 +379,8 @@ AFRAME.registerComponent('tangram', {
         //map.on("movestart", function (e) { moving = true; });
         //map.on("moveend", function (e) { moveend(e) });
         this._heightMap = map
-        this.scene = scene
 
-
+        this._mapInstance = map
 
     },
     _expose: function() {
@@ -376,7 +398,7 @@ AFRAME.registerComponent('tangram', {
     _start_analysis: function() {
 
         // based on https://github.com/tangrams/heightmapper/blob/gh-pages/main.js
-        var scene = this.scene
+        var scene = this._scene
         var heightMapCanvas = this.heightMapCanvas
         var ctx = heightMapCanvas.getContext("2d");
         ctx.clearRect(0, 0, heightMapCanvas.width, heightMapCanvas.height);
@@ -531,25 +553,17 @@ AFRAME.registerComponent('tangram', {
         return value / SCALE_FACTOR * zoomScaleFactor;
     },
 
-    update: function(oldData) {},
 
     remove: function() {},
 
     tick: function(delta, time) {},
 
-    pause: function() {
-        this.enabled = false
-    },
-
-    play: function() {
-        this.enabled = true
-    },
     project(lat, long) {
         // The position (origin at top-left corner) in pixel space
         let {
             x: pxX,
             y: pxY
-        } = this._heightMap.latLngToLayerPoint([lat, long]);
+        } = this._mapInstance.latLngToLayerPoint([lat, long]);
 
         var width = WIDTH
         var height = HEIGHT
@@ -558,8 +572,8 @@ AFRAME.registerComponent('tangram', {
         var data = this.terrainData
 
 
-        const idx = this.scene.canvas.width * pxY + pxX
-        var z = this._scale(data[idx])
+        const idx = this._scene.canvas.width * pxY + pxX
+        var z = this.data.useHeightMap ? this._scale(data[idx]) : 0
 
         /*
                 for (var i = 0; i < heightMapCanvas.height * heightMapCanvas.width * 4; i += 4) {
@@ -578,8 +592,8 @@ AFRAME.registerComponent('tangram', {
         */
 
 
-        pxX /= this.scene.canvas.width
-        pxY /= this.scene.canvas.height
+        pxX /= this._scene.canvas.width
+        pxY /= this._scene.canvas.height
 
         pxX *= width
         pxY *= height
@@ -614,12 +628,15 @@ AFRAME.registerComponent('tangram', {
         const pxY = ((height / 2) - y) * this.data.pxToWorldRatio;
 
         // Return the lat / long of that pixel on the map
-        var latLng = this._heightMap.layerPointToLatLng([pxX, pxY])
-        return [latLng.lat, latLng.lng]
+        var latLng = this._mapInstance.layerPointToLatLng([pxX, pxY])
+        return {
+            lat: latLng.lat,
+            lon: latLng.lng
+        }
     },
 
     // return the north latitude of the map
     getNorthLat() {
-        return this._heightMap.getBounds().getNorth()
+        return this._mapInstance.getBounds().getNorth()
     }
 });
