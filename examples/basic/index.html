@@ -27,11 +27,13 @@
  
       <a-entity id="terrain" visible="true"
       
+      geometry="primitive: heightmap-plane; width: 10; height: 10; segmentsWidth: 64; segmentsHeight: 64;"
+
       tangram="
       asHeightMap: true;
       center: 47.7671, 15.8056;
       zoom: 8;
-      markers: #geo-markers;" 
+      " 
 
       add-markers="geojson: #geo-markers;"
       rotation="-90 0 0"
@@ -49,7 +51,9 @@
           <a-image map-look-controls="#camera" src="#img-compass-wheel"></a-image>
         </a-entity>
         <a-entity id="hud-map" position="0 2 -5" rotation="0 0 0">
-          <a-entity geometry="primitive: plane; width: 4; height: 4;"
+          <a-entity 
+
+          geometry="primitive: plane; width: 2; height: 2;"
           
           material="color: #ffffff; shader: flat; side: front; transparent: true;"
           set-marker-on-map="heightmap: #terrain; marker: #my-marker;"

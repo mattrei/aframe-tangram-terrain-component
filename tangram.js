@@ -18,10 +18,6 @@ const MAP_MOVE_END_EVENT = 'map-moveend';
 
 var tempFactor = 1; // size of heightMapCanvas relative to main canvas: 1/n
 
-
-const WIDTH = 50
-const HEIGHT = 50
-
 const SCHNEEBERG = [
     [
         47.71068560344829,
@@ -154,33 +150,12 @@ AFRAME.registerComponent('tangram', {
         zoom: {
             default: 13
         },
-        // TODO
         pxToWorldRatio: {
-            default: 1 //100
+            default: 100
         },
         markers: {
             type: "asset"
-        },
-        width: {
-            type: 'int',
-            default: 64
-        },
-        height: {
-            type: 'int',
-            default: 64
-        },
-        segmentsHeight: {
-            default: 64,
-            min: 8,
-            max: 512,
-            type: 'int'
-        },
-        segmentsWidth: {
-            default: 64,
-            min: 8,
-            max: 512,
-            type: 'int'
-        },
+        }
     },
 
     multiple: false,
@@ -215,27 +190,18 @@ AFRAME.registerComponent('tangram', {
 
         if (!AFRAME.utils.deepEqual(oldData.maxBounds, this.data.maxBounds)) {
             var bounds = L.latLngBounds(this.data.maxBounds);
-            console.log("max bounds")
             this._mapInstance.setMaxBounds(bounds)
         }
 
         var moved = false;
         if (!AFRAME.utils.deepEqual(oldData.center, this.data.center)) {
             moved = true
-
-            console.log("panning to ")
-            console.log(this.data.center)
-            this._mapInstance.panTo(this.data.center, {
-                animate: false
-            })
-            this._mapInstance.setZoom(this.data.zoom)
-
+            this._mapInstance.setView(this.data.center, this.data.zoom)
         }
 
         if (!AFRAME.utils.deepEqual(oldData.fitBounds, this.data.fitBounds)) {
             moved = true
             var bounds = L.latLngBounds(this.data.fitBounds);
-            console.log("fitting bounds")
             this._mapInstance.fitBounds(bounds)
         }
 
@@ -246,13 +212,20 @@ AFRAME.registerComponent('tangram', {
             });
         }
 
+        console.log("after update")
+
     },
     _initMap: function() {
         var data = this.data
 
+        const geomComponent = this.el.components.geometry;
+        var width = geomComponent.data.width * this.data.pxToWorldRatio
+        var height = geomComponent.data.height * this.data.pxToWorldRatio
+
         var _canvasContainerId = cuid();
+        // TODO
         const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId,
-            128, 128, 0);
+            width, height, 0);
 
 
         const renderer = L.canvas({
@@ -306,12 +279,15 @@ AFRAME.registerComponent('tangram', {
 
         var data = this.data
 
+        const geomComponent = this.el.components.geometry;
+        var width = geomComponent.data.segmentsWidth
+        var height = geomComponent.data.segmentsHeight
+
         var _canvasContainerId = cuid();
         const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId,
-            data.segmentsWidth, data.segmentsHeight, 9999);
+            width, height, 500);
 
         var map = L.map(canvasContainer, leafletOptions);
-        this._heightMap = map
 
         var layer = Tangram.leafletLayer({
             scene: heightmapStyle, //'heightScene.yaml',
@@ -340,24 +316,6 @@ AFRAME.registerComponent('tangram', {
 
         var scene = this._scene = layer.scene
 
-        // setView expects format ([lat, long], zoom)
-        //map.setView(data.center, data.zoomLevel);
-        //map.setMaxBounds(data.maxBounds)
-        //map.fitBounds(data.maxBounds)
-
-        /*
-                var loader = new THREE.FileLoader();
-                loader.load(data.markers, file => {
-                    const geojson = JSON.parse(file)
-                    var geojsonLayer = L.geoJSON(geojson) //.addTo(map);
-                    map.fitBounds(geojsonLayer.getBounds());
-                    console.log(this.project(15.814647674560547,
-                      47.77682884663196))
-                })
-        */
-
-
-
         layer.on('init', _ => {
             // resetViewComplete();
             scene.subscribe({
@@ -367,20 +325,19 @@ AFRAME.registerComponent('tangram', {
             });
             this.scene_loaded = true;
 
-            var heightMapCanvas = document.createElement("canvas");
-            heightMapCanvas.width = this.worldWidth = scene.canvas.width / tempFactor;
-            heightMapCanvas.height = this.worldHeight = scene.canvas.height / tempFactor;
-
+            var heightMapCanvas = document.createElement("canvas")
+            heightMapCanvas.width = scene.canvas.width / tempFactor
+            heightMapCanvas.height = scene.canvas.height / tempFactor
 
             this.heightMapCanvas = heightMapCanvas
         });
         layer.addTo(map);
 
-        //map.on("movestart", function (e) { moving = true; });
-        //map.on("moveend", function (e) { moveend(e) });
         this._heightMap = map
-
         this._mapInstance = map
+
+    },
+    _createHeightMap: function() {
 
     },
     _expose: function() {
@@ -399,16 +356,17 @@ AFRAME.registerComponent('tangram', {
 
         // based on https://github.com/tangrams/heightmapper/blob/gh-pages/main.js
         var scene = this._scene
-        var heightMapCanvas = this.heightMapCanvas
-        var ctx = heightMapCanvas.getContext("2d");
-        ctx.clearRect(0, 0, heightMapCanvas.width, heightMapCanvas.height);
+        var canvas = this.heightMapCanvas
+        console.log(canvas.width)
 
+        var ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // redraw canvas smaller in testing canvas, for speed
         ctx.drawImage(scene.canvas, 0, 0, scene.canvas.width / tempFactor, scene.canvas.height / tempFactor);
 
         // get all the pixels
-        var pixels = ctx.getImageData(0, 0, heightMapCanvas.width, heightMapCanvas.height);
+        var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
         var val;
         var counts = {};
@@ -419,7 +377,7 @@ AFRAME.registerComponent('tangram', {
         // only check every 4th pixel (vary with browser size)
         // var stride = Math.round(img.height * img.width / 1000000);
         // 4 = only sample the red value in [R, G, B, A]
-        for (var i = 0; i < heightMapCanvas.height * heightMapCanvas.width * 4; i += 4) {
+        for (var i = 0; i < canvas.height * canvas.width * 4; i += 4) {
             val = pixels.data[i];
             var alpha = pixels.data[i + 3];
             if (alpha === 0) { // empty pixel, skip to the next one
@@ -456,12 +414,6 @@ AFRAME.registerComponent('tangram', {
 
         console.log("Creating map")
         this.creatingMap = true
-        var worldWidth = this.worldWidth //this.heightMapCanvas.width
-        var worldDepth = this.worldHeight //this.heightMapCanvas.height
-
-        var width = worldWidth
-        var height = worldDepth
-
 
         var scene = this.mapScene
         var mapCanvas = this.mapCanvas
@@ -491,35 +443,34 @@ AFRAME.registerComponent('tangram', {
     _createTerrain: function() {
 
         if (!this.analysed || this.creating) return
-
         this.creating = true
-
-        var worldWidth = this.worldWidth //this.heightMapCanvas.width
-        var worldDepth = this.worldHeight //this.heightMapCanvas.height
-
-        //console.log(worldWidth + " " + worldDepth)
 
         var data = this.terrainData
 
-        // TODO geometry widht
-        var width = WIDTH
-        var height = HEIGHT
+        console.log("Creating terrain")
+        const {
+            width: elWidth,
+            height: elHeight,
+            segmentsWidth: elSegmentsWidth,
+            segmentsHeight: elSegmentsHeight
+        } = this.el.components.geometry.data;
+        
+        //var geometry = this.el.components.geometry.geometry
+        //var vertices = geometry.getAttribute('position')//geometry.attributes.position.array;
 
-
-        //const geometry = this.el.components.geometry.geometry
-        var geometry = new THREE.PlaneBufferGeometry(
-                width, height,
-                worldWidth - 1, worldDepth - 1)
-            //geometry.rotateX(-Math.PI / 2);
-
+        geometry = new THREE.PlaneBufferGeometry(
+                elWidth, elHeight,
+                elSegmentsWidth -1, elSegmentsHeight -1)
         var vertices = geometry.attributes.position.array;
+        //https://stackoverflow.com/questions/37927031/how-to-update-the-topology-of-a-geometry-efficiently-in-threejs
         for (var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
             // only set z values (note: planes are not standing by default)
             vertices[j + 2] = this._scale(data[i])
+            //geometry.attributes.position.setZ(j , this._scale(data[i]))
         }
+        //geometry.attributes.position.needsUpdate = true;
         geometry.computeFaceNormals();
         geometry.computeBoundingBox();
-
 
 
         var texture = new THREE.CanvasTexture(this.heightMapCanvas);
@@ -533,9 +484,6 @@ AFRAME.registerComponent('tangram', {
                 wireframe: true
             }));
 
-        //mesh.position.y = 0
-
-
         this.creating = false
         this.el.setObject3D('mesh', mesh)
 
@@ -548,9 +496,10 @@ AFRAME.registerComponent('tangram', {
     _scale: function(value) {
 
         const SCALE_FACTOR = 20
-        const zoomScaleFactor = this.data.heightScale * (this._heightMap.getZoom() * 0.15)
+        const zoomScaleFactor = this.data.heightScale * (this._heightMap.getZoom() * 0.015)
 
-        return value / SCALE_FACTOR * zoomScaleFactor;
+        var height = value / SCALE_FACTOR * zoomScaleFactor;
+        return height ? height : 0
     },
 
 
@@ -559,14 +508,17 @@ AFRAME.registerComponent('tangram', {
     tick: function(delta, time) {},
 
     project(lat, long) {
+
         // The position (origin at top-left corner) in pixel space
         let {
             x: pxX,
             y: pxY
         } = this._mapInstance.latLngToLayerPoint([lat, long]);
 
-        var width = WIDTH
-        var height = HEIGHT
+        const {
+            width: elWidth,
+            height: elHeight
+        } = this.el.components.geometry.data;
 
 
         var data = this.terrainData
@@ -575,36 +527,19 @@ AFRAME.registerComponent('tangram', {
         const idx = this._scene.canvas.width * pxY + pxX
         var z = this.data.useHeightMap ? this._scale(data[idx]) : 0
 
-        /*
-                for (var i = 0; i < heightMapCanvas.height * heightMapCanvas.width * 4; i += 4) {
-                for (var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
-                    // only set z values (note: planes are not standing by default)
-                    vertices[j + 2] = data[i] / SCALE_FACTOR * zoomScaleFactor;
-                }
-                */
-
-        // The 3D world size of the entity
-        /*
-        const {
-            width: elWidth,
-            height: elHeight
-        } = this.el.components.geometry.data;
-        */
-
 
         pxX /= this._scene.canvas.width
         pxY /= this._scene.canvas.height
 
-        pxX *= width
-        pxY *= height
-
+        pxX *= elWidth
+        pxY *= elHeight
 
 
         return {
-            x: (pxX / this.data.pxToWorldRatio) - (width / 2),
+            x: (pxX / this.data.pxToWorldRatio) - (elWidth / 2),
             // y-coord is inverted (positive up in world space, positive down in
             // pixel space)
-            y: -(pxY / this.data.pxToWorldRatio) + (height / 2),
+            y: -(pxY / this.data.pxToWorldRatio) + (elHeight / 2),
             z: z,
         };
 
@@ -618,14 +553,11 @@ AFRAME.registerComponent('tangram', {
             height: elHeight
         } = this.el.components.geometry.data;
 
-        var width = WIDTH
-        var height = HEIGHT
-
         // Converting back to pixel space
-        const pxX = (x + (width / 2)) * this.data.pxToWorldRatio;
+        const pxX = (x + (elWidth / 2)) * this.data.pxToWorldRatio;
         // y-coord is inverted (positive up in world space, positive down in
         // pixel space)
-        const pxY = ((height / 2) - y) * this.data.pxToWorldRatio;
+        const pxY = ((elHeight / 2) - y) * this.data.pxToWorldRatio;
 
         // Return the lat / long of that pixel on the map
         var latLng = this._mapInstance.layerPointToLatLng([pxX, pxY])
@@ -640,3 +572,28 @@ AFRAME.registerComponent('tangram', {
         return this._mapInstance.getBounds().getNorth()
     }
 });
+
+
+AFRAME.registerGeometry('heightmap-plane', {
+  schema: {
+    height: {default: 1, min: 0},
+    width: {default: 1, min: 0},
+    segmentsWidth: {default: 64, min: 8, max: 4096, type: 'int'},
+    segmentsHeight: {default: 64, min: 8, max: 4096, type: 'int'}
+  },
+  init: function (data) {
+    this.geometry = new THREE.PlaneGeometry(data.width, data.height, 
+        data.segmentsWidth - 1, data.segmentsHeight - 1)
+  }
+});
+
+        /*
+                var loader = new THREE.FileLoader();
+                loader.load(data.markers, file => {
+                    const geojson = JSON.parse(file)
+                    var geojsonLayer = L.geoJSON(geojson) //.addTo(map);
+                    map.fitBounds(geojsonLayer.getBounds());
+                    console.log(this.project(15.814647674560547,
+                      47.77682884663196))
+                })
+        */
