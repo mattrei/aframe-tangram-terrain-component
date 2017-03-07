@@ -27,12 +27,13 @@
  
       <a-entity id="terrain" visible="true"
       
-      geometry="primitive: heightmap-plane; width: 10; height: 10; segmentsWidth: 64; segmentsHeight: 64;"
+      geometry="width: 50; height: 50; segmentsWidth: 100; segmentsHeight: 100;"
 
       tangram="
       asHeightMap: true;
       center: 47.7671, 15.8056;
-      zoom: 8;
+      zoom: 9;
+      pxToWorldRatio: 1;
       " 
 
       add-markers="geojson: #geo-markers;"
@@ -50,22 +51,25 @@
           <a-entity geometry="primitive: box; height: 0.5; width: 0.1; depth: 0.05" material="color: #FCB514" position="0 0 0"></a-entity>
           <a-image map-look-controls="#camera" src="#img-compass-wheel"></a-image>
         </a-entity>
-        <a-entity id="hud-map" position="0 2 -5" rotation="0 0 0">
+        <a-entity id="hud-map" position="0 2 -6" rotation="0 0 0">
           <a-entity 
 
-          geometry="primitive: plane; width: 2; height: 2;"
+          geometry="primitive: plane; width: 3; height: 2;"
           
           material="color: #ffffff; shader: flat; side: front; transparent: true;"
+
           set-marker-on-map="heightmap: #terrain; marker: #my-marker;"
+
           tangram="
           asHeightMap: false;
           center: 47.7671, 15.8056;
-          zoom: 13;
+          zoom: 14;
           style: #yaml-walkabout-style;
+          pxToWorldRatio: 100;
           "
 
           >
-            <a-image id="my-marker" transparent="true" src="#img-arrow" width="0.2" height="0.2" position="0 0 0.2"></a-image>
+            <a-image id="my-marker" transparent="true" src="#img-arrow" width="0.2" height="0.2" position="0 0 1"></a-image>
           </a-entity>
         </a-entity>
 

@@ -123,9 +123,10 @@ AFRAME.registerComponent('tangram', {
             default: true
         },
         heightScale: {
-            default: 3
+            default: 1
         },
         center: {
+            // lat lon
             default: [0, 0], //[47.7671, 15.8056], // Schneeberg
             type: 'array',
         },
@@ -333,7 +334,6 @@ AFRAME.registerComponent('tangram', {
         });
         layer.addTo(map);
 
-        this._heightMap = map
         this._mapInstance = map
 
     },
@@ -459,7 +459,7 @@ AFRAME.registerComponent('tangram', {
         //var vertices = geometry.getAttribute('position')//geometry.attributes.position.array;
 
         geometry = new THREE.PlaneBufferGeometry(
-                elWidth, elHeight,
+                elWidth * this.data.pxToWorldRatio, elHeight * this.data.pxToWorldRatio,
                 elSegmentsWidth -1, elSegmentsHeight -1)
         var vertices = geometry.attributes.position.array;
         //https://stackoverflow.com/questions/37927031/how-to-update-the-topology-of-a-geometry-efficiently-in-threejs
@@ -495,10 +495,15 @@ AFRAME.registerComponent('tangram', {
     },
     _scale: function(value) {
 
-        const SCALE_FACTOR = 20
-        const zoomScaleFactor = this.data.heightScale * (this._heightMap.getZoom() * 0.015)
+        const {
+            width: elWidth,
+            segmentsWidth: elSegmentsWidth,
+        } = this.el.components.geometry.data;
 
-        var height = value / SCALE_FACTOR * zoomScaleFactor;
+        const densityFactor = elWidth / elSegmentsWidth
+        const zoomScaleFactor = this._mapInstance.getZoom()
+
+        var height = (value * 0.05) * zoomScaleFactor * densityFactor * this.data.heightScale;
         return height ? height : 0
     },
 
@@ -521,18 +526,17 @@ AFRAME.registerComponent('tangram', {
         } = this.el.components.geometry.data;
 
 
-        var data = this.terrainData
-
-
         const idx = this._scene.canvas.width * pxY + pxX
-        var z = this.data.useHeightMap ? this._scale(data[idx]) : 0
+        var z = this.data.asHeightMap ? this._scale(this.terrainData[idx]) : 0
 
 
-        pxX /= this._scene.canvas.width
-        pxY /= this._scene.canvas.height
+        if (this.data.asHeightMap) {
+            pxX /= this._scene.canvas.width
+            pxY /= this._scene.canvas.height
 
-        pxX *= elWidth
-        pxY *= elHeight
+            pxX *= elWidth
+            pxY *= elHeight
+        }
 
 
         return {
@@ -553,39 +557,49 @@ AFRAME.registerComponent('tangram', {
             height: elHeight
         } = this.el.components.geometry.data;
 
-        // Converting back to pixel space
-        const pxX = (x + (elWidth / 2)) * this.data.pxToWorldRatio;
-        // y-coord is inverted (positive up in world space, positive down in
-        // pixel space)
-        const pxY = ((elHeight / 2) - y) * this.data.pxToWorldRatio;
+        if (this.data.asHeightMap) {
 
-        // Return the lat / long of that pixel on the map
-        var latLng = this._mapInstance.layerPointToLatLng([pxX, pxY])
-        return {
-            lat: latLng.lat,
-            lon: latLng.lng
+
+            const pxX = (x + (elWidth / 2)) * this.data.pxToWorldRatio;
+            // y-coord is inverted (positive up in world space, positive down in
+            // pixel space)
+            const pxY = ((elHeight / 2) - y) * this.data.pxToWorldRatio;
+
+
+            var nx = pxX / elWidth
+            var ny = pxY / elHeight
+
+            nx *= this._scene.canvas.width
+            ny *= this._scene.canvas.height
+            console.log(pxX + ' ' + pxY + '|' + nx + ' ' + ny)
+
+            // Return the lat / long of that pixel on the map
+            var latLng = this._mapInstance.layerPointToLatLng([nx, ny])
+            console.log(latLng.lat + ' ' + latLng.lng)
+            return {
+                lat: latLng.lat,
+                lon: latLng.lng
+            }
+
+        } else {
+            // Converting back to pixel space
+            const pxX = (x + (elWidth / 2)) * this.data.pxToWorldRatio;
+            // y-coord is inverted (positive up in world space, positive down in
+            // pixel space)
+            const pxY = ((elHeight / 2) - y) * this.data.pxToWorldRatio;
+
+            // Return the lat / long of that pixel on the map
+            var latLng = this._mapInstance.layerPointToLatLng([pxX, pxY])
+            return {
+                lat: latLng.lat,
+                lon: latLng.lng
+            }
         }
-    },
 
-    // return the north latitude of the map
-    getNorthLat() {
-        return this._mapInstance.getBounds().getNorth()
+
     }
 });
 
-
-AFRAME.registerGeometry('heightmap-plane', {
-  schema: {
-    height: {default: 1, min: 0},
-    width: {default: 1, min: 0},
-    segmentsWidth: {default: 64, min: 8, max: 4096, type: 'int'},
-    segmentsHeight: {default: 64, min: 8, max: 4096, type: 'int'}
-  },
-  init: function (data) {
-    this.geometry = new THREE.PlaneGeometry(data.width, data.height, 
-        data.segmentsWidth - 1, data.segmentsHeight - 1)
-  }
-});
 
         /*
                 var loader = new THREE.FileLoader();

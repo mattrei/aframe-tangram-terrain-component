@@ -24,8 +24,8 @@ AFRAME.registerComponent('set-marker-on-map', {
         var position = this.camera.position.clone()
         var nextPosition = position.clone().sub(this.getForward())
 
-        var latLon =  heightMap.unproject(position.x, position.z)
-        var nextLatLon =  heightMap.unproject(nextPosition.x, nextPosition.z) 
+        var latLon =  heightMap.unproject(position.x, -position.z)
+        var nextLatLon =  heightMap.unproject(nextPosition.x, -nextPosition.z) 
 
         var azimuth = Math.atan2(-(nextLatLon.lon - latLon.lon), nextLatLon.lat - latLon.lat);
         
@@ -52,7 +52,6 @@ AFRAME.registerComponent('set-marker-on-map', {
         var zaxis = new THREE.Vector3()
 
         return function() {
-            //this.camera.matrixWorld.extractBasis(xaxis, yaxis, zaxis)
             this.camera.getWorldDirection(zaxis)
             return zaxis
         }
