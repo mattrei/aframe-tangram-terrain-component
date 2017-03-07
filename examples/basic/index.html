@@ -34,6 +34,7 @@
       center: 47.7671, 15.8056;
       zoom: 9;
       pxToWorldRatio: 1;
+      wireframe: true;
       " 
 
       add-markers="geojson: #geo-markers;"
@@ -57,14 +58,14 @@
 
           geometry="primitive: plane; width: 3; height: 2;"
           
-          material="color: #ffffff; shader: flat; side: front; transparent: true;"
+          material="color: #ffffff; shader: flat; side: front; transparent: false;"
 
           set-marker-on-map="heightmap: #terrain; marker: #my-marker;"
 
           tangram="
           asHeightMap: false;
           center: 47.7671, 15.8056;
-          zoom: 12;
+          zoom: 13;
           style: #yaml-walkabout-style;
           pxToWorldRatio: 100;
           "

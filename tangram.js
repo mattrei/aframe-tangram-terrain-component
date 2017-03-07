@@ -60,6 +60,7 @@ const leafletOptions = {
 
 }
 
+const LEFT_OFFSET_PX = 99999
 
 function getCanvasContainerAssetElement(id, width, height, left) {
 
@@ -228,7 +229,7 @@ AFRAME.registerComponent('tangram', {
 
         var _canvasContainerId = cuid();
         const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId,
-            width, height, 0);
+            width, height, LEFT_OFFSET_PX);
 
 
         const renderer = L.canvas({
@@ -296,7 +297,7 @@ AFRAME.registerComponent('tangram', {
 
         var _canvasContainerId = cuid();
         const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId,
-            width, height, 1000);
+            width, height, LEFT_OFFSET_PX);
 
         var map = L.map(canvasContainer, leafletOptions);
 
