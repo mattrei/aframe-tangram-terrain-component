@@ -51,6 +51,7 @@
           <a-entity geometry="primitive: box; height: 0.5; width: 0.1; depth: 0.05" material="color: #FCB514" position="0 0 0"></a-entity>
           <a-image map-look-controls="#camera" src="#img-compass-wheel"></a-image>
         </a-entity>
+        <
         <a-entity id="hud-map" position="0 2 -6" rotation="0 0 0">
           <a-entity 
 
@@ -63,15 +64,17 @@
           tangram="
           asHeightMap: false;
           center: 47.7671, 15.8056;
-          zoom: 14;
+          zoom: 12;
           style: #yaml-walkabout-style;
           pxToWorldRatio: 100;
           "
 
           >
-            <a-image id="my-marker" transparent="true" src="#img-arrow" width="0.2" height="0.2" position="0 0 1"></a-image>
+            <a-image id="my-marker" src="#img-arrow" transparent="true" width="0.2" height="0.2" position="0 0 0.01">
+            </a-image>
           </a-entity>
         </a-entity>
+        
 
           <a-cursor></a-cursor>
 
