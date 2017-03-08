@@ -1,7 +1,7 @@
 var setProperty = AFRAME.utils.entity.setComponentProperty;
 
 AFRAME.registerComponent('add-markers', {
-    dependencies: ['tangram'],
+    dependencies: ['tangram-map'],
     schema: {
         geojson: {
             type: "asset",
@@ -11,7 +11,7 @@ AFRAME.registerComponent('add-markers', {
 
         var data = this.data
 
-        this.heightMap = this.el.components['tangram']
+        this.heightMap = this.el.components['tangram-heightmap']
         this.el.addEventListener("map-loaded", e => {
             console.log("map-loaed")
             var loader = new THREE.FileLoader();
@@ -20,15 +20,15 @@ AFRAME.registerComponent('add-markers', {
                 
                 geojson.features.map(f => {
                     var coord = f.geometry.coordinates
-                    // lat lng
-                    var position = this.heightMap.project(coord[1], coord[0])
+                    // lng lat
+                    var position = this.heightMap.project(coord[0], coord[1])
 
                     var marker = this.addMarker()
 
                     setProperty(marker, 'position', position);
                 })
                 
-                //console.log(this.heightMap.project(15.814647674560547, 47.77682884663196))
+                //console.log(this.heightMap.project(47.77682884663196, 15.814647674560547))
             })
             
         })

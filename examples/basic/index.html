@@ -7,21 +7,38 @@
     <script src="https://mapzen.com/tangram/0.10/tangram.min.js"></script>
   </head>
   <body>
-    <a-scene debug>
+    <a-scene>
       <a-assets>
+        <a-asset-item id="yaml-austria" src="assets/austria-satellite.yaml" />
       </a-assets>
  
  
         <a-entity 
-          position="0 1 -4"
+          position="-2 1 -4"
           geometry="primitive: plane; width: 3; height: 2;"
           
-          material="color: #00ffff; shader: flat; side: both; transparent: false;"
+          material="color: #ffffff; shader: flat; side: both; transparent: false;"
 
           tangram-map="
           center: 15.8056, 47.7671;
-          zoom: 4;
+          zoom: 3;
           pxToWorldRatio: 100;
+          "
+          >
+        </a-entity>
+
+        <a-entity 
+          position="2 1 -4"
+          geometry="primitive: plane; width: 3; height: 2;"
+          
+          material="color: #ffffff; shader: flat; side: both; transparent: false;"
+
+          tangram-map="
+          style: #yaml-austria;
+          center: 15.8056, 47.7671;
+          zoom: 13;
+          pxToWorldRatio: 100;
+          canvasOffsetPx: 0;
           "
           >
         </a-entity>

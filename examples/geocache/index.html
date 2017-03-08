@@ -27,27 +27,28 @@
  
       <a-entity id="terrain" visible="true"
       
-      geometry="width: 50; height: 50; segmentsWidth: 100; segmentsHeight: 100;"
+      geometry="width: 50; height: 50; segmentsWidth: 64; segmentsHeight: 64;"
 
-      tangram="
-      asHeightMap: true;
-      center: 47.7671, 15.8056;
+      tangram-heightmap="
+      style: #yaml-austria;
+      center: 15.8056, 47.7671;
       zoom: 9;
-      pxToWorldRatio: 1;
-      wireframe: true;
+      wireframe: false;
       " 
 
-      add-markers="geojson: #geo-markers;"
+      
       rotation="-90 0 0"
       >
+      <!--add-markers="geojson: #geo-markers;"-->
 
       </a-entity>
-      <a-entity id="player"  collider-check="heightmap: #terrain;">
+      <a-entity id="player" collider-check="heightmap: #terrain;">
 
 
         <a-camera id="camera" user-height="0.4" wasd-controls-enabled="true" look-controls-enabled="true" 
         >
 
+<!--
         <a-entity position="0 -2 -3" rotation="-90 0 0">
           <a-entity geometry="primitive: box; height: 0.5; width: 0.1; depth: 0.05" material="color: #FCB514" position="0 0 0"></a-entity>
           <a-image map-look-controls="#camera" src="#img-compass-wheel"></a-image>
@@ -62,10 +63,7 @@
 
           set-marker-on-map="heightmap: #terrain; marker: #my-marker;"
 
-          tangram="
-          asHeightMap: false;
-          center: 47.7671, 15.8056;
-          zoom: 13;
+          tangram-map="
           style: #yaml-walkabout-style;
           pxToWorldRatio: 100;
           "
@@ -75,7 +73,7 @@
             </a-image>
           </a-entity>
         </a-entity>
-        
+        -->
 
           <a-cursor></a-cursor>
 

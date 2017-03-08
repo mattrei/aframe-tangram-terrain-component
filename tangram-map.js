@@ -61,6 +61,9 @@ AFRAME.registerComponent('tangram-map', {
         },
         pxToWorldRatio: {
             default: 100
+        },
+        canvasOffsetPx: {
+            default: 9999 // debug
         }
     },
 
@@ -117,10 +120,12 @@ AFRAME.registerComponent('tangram-map', {
 
         var _canvasContainerId = cuid();
         const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId,
-            width, height, LEFT_OFFSET_PX);
+            width, height, data.canvasOffsetPx);
 
 
-        const renderer = L.canvas({padding: 0})
+        const renderer = L.canvas({
+            padding: 0
+        })
 
 
         const options = Object.assign({
@@ -136,33 +141,19 @@ AFRAME.registerComponent('tangram-map', {
         var layer = Tangram.leafletLayer({
             scene: sceneStyle,
             attribution: '',
-            postUpdate: _ => {
+            postUpdate: _ => {}
+        });
+        layer.scene.subscribe({
+            view_complete: () => {
+                processCanvasElement(canvasContainer)
+                const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
+                const canvas = document.querySelector(`#${_canvasContainerId} canvas`)
+                this.el.setAttribute('material', 'src', `#${canvasId}`);
                 this.el.emit(MAP_LOADED_EVENT);
             }
         });
-
-        var scene = layer.scene
-        this._scene = scene
-
-        layer.on('init', _ => {
-            // resetViewComplete();
-            scene.subscribe({
-                // will be triggered when tiles are finished loading
-                // and also manually by the moveend event
-                view_complete: () => {}
-            });
-            this.mapScene_loaded = true;
-
-            processCanvasElement(canvasContainer)
-            const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
-            this.el.setAttribute('material', 'src', `#${canvasId}`);
-            console.log("initiated map " + width + " " + height + " " + _canvasContainerId)
-        });
         layer.addTo(map);
-
-        if (!this.data.asHeightMap) {
-            this._mapInstance = map
-        }
+        this._mapInstance = map
     },
     remove: function() {},
 

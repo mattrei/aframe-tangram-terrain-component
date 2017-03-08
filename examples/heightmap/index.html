@@ -15,17 +15,30 @@
  
       <a-entity id="terrain" visible="true"
       
-      geometry="width: 50; height: 50; segmentsWidth: 100; segmentsHeight: 100;"
-      material="color: #ffffff; shader: flat; side: both; transparent: true;"
+      geometry="width: 50; height: 50; segmentsWidth: 128; segmentsHeight: 128;"
+      material="color: #00ffff; shader: flat; side: both; transparent: true;"
 
       tangram-heightmap="
+      style: #yaml-austria;
       center: 15.8056, 47.7671;
-      zoom: 9;
-      wireframe: true;
+      zoom: 10;
+      wireframe: false;
+      canvasOffsetPx: 9999;
+      pxToWorldRatio: 30;
       " 
 
       rotation="-90 0 0"
       >
+
+      <!--
+            tangram-map="
+          style: #yaml-austria;
+          center: 15.8056, 47.7671;
+          zoom: 13;
+          pxToWorldRatio: 10;
+          canvasOffsetPx: 0;
+          "
+          -->
 
       </a-entity>
 

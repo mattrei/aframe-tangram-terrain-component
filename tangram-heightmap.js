@@ -3,7 +3,8 @@
 const latLonFrom = require('./utils').latLonFrom
 const leafletOptions = require('./utils').leafletOptions
 const getCanvasContainerAssetElement = require('./utils').getCanvasContainerAssetElement
-const LEFT_OFFSET_PX = 0
+const processStyle = require('./utils').processStyle
+const processCanvasElement = require('./utils').processCanvasElement
 
 if (typeof AFRAME === 'undefined') {
     throw new Error('Component attempted to register before AFRAME was available.');
@@ -61,6 +62,12 @@ AFRAME.registerComponent('tangram-heightmap', {
         },
         wireframe: {
             default: false
+        },
+        pxToWorldRatio: {
+            default: 10
+        },
+        canvasOffsetPx: {
+            default: 9999 // debug
         }
     },
 
@@ -87,11 +94,9 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         this._canvasContainerId = cuid();
         const canvasContainer = getCanvasContainerAssetElement(this._canvasContainerId,
-            width, height, LEFT_OFFSET_PX);
+            width, height, data.canvasOffsetPx);
 
         var map = L.map(canvasContainer, leafletOptions);
-
-
 
         var layer = Tangram.leafletLayer({
             scene: heightmapStyle,
@@ -138,11 +143,9 @@ AFRAME.registerComponent('tangram-heightmap', {
         layer.addTo(map);
         this._mapInstance = map
 
-        // TODO?
         if (data.maxBounds) this._mapInstance.setMaxBounds(L.latLngBounds(this.data.maxBounds))
         if (data.fitBounds) this._mapInstance.fitBounds(L.latLngBounds(this.data.fitBounds))
         this._mapInstance.setView(latLonFrom(this.data.center), this.data.zoom)
-
     },
     _expose: function() {
         this.analysing = true;
@@ -176,6 +179,8 @@ AFRAME.registerComponent('tangram-heightmap', {
         var max = 0,
             min = 255;
 
+
+        const geomComponent = this.el.components.geometry;
         // only check every 4th pixel (vary with browser size)
         // var stride = Math.round(img.height * img.width / 1000000);
         // 4 = only sample the red value in [R, G, B, A]
@@ -211,40 +216,72 @@ AFRAME.registerComponent('tangram-heightmap', {
         this.analysed = true
         this._createTerrain()
     },
-    /*
-        _createMap: function() {
+    _initMap: function(geometry) {
 
-            if (this.creatingMap) return
+        var data = this.data
 
+        const geomComponent = this.el.components.geometry;
+        var width = Math.min(4096, THREE.Math.nextPowerOfTwo(geomComponent.data.width * data.pxToWorldRatio))
+        var height = Math.min(4096, THREE.Math.nextPowerOfTwo(geomComponent.data.height * data.pxToWorldRatio))
 
-            console.log("Creating map")
-            this.creatingMap = true
+        console.log(geomComponent.data.width + ' ' + width)
 
-            var scene = this.mapScene
-            var mapCanvas = this.mapCanvas
-            var ctx = mapCanvas.getContext("2d");
-            ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
-
-
-            // redraw canvas smaller in testing canvas, for speed
-            ctx.drawImage(scene.canvas, 0, 0, scene.canvas.width / tempFactor, scene.canvas.height / tempFactor);
+        var _canvasContainerId = cuid();
+        const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId,
+            width, height, data.canvasOffsetPx);
 
 
-            var texture = new THREE.CanvasTexture(mapCanvas);
-            texture.wrapS = THREE.ClampToEdgeWrapping;
-            texture.wrapT = THREE.ClampToEdgeWrapping;
+        const renderer = L.canvas({
+            padding: 0
+        })
+
+        const options = Object.assign({
+                renderer
+            },
+            leafletOptions)
+
+        var map = L.map(canvasContainer, options);
 
 
-            var mesh = this.el.getObject3D('mesh')
-            console.log(mesh)
-            mesh.material.map = texture
-            mesh.material.needsUpdate = true
+        const sceneStyle = processStyle(data.style);
 
-            this.creatingMap = false
-            console.log("Created map")
+        var layer = Tangram.leafletLayer({
+            scene: sceneStyle,
+            attribution: '',
+            postUpdate: _ => {
+                
+                /*
+                processCanvasElement(canvasContainer)
+                const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
+                this.el.setAttribute('material', 'width', `1024`);
+                this.el.setAttribute('material', 'height', `1024`);
+                this.el.setAttribute('material', 'src', `#${canvasId}`);
+                */
 
-        },
-        */
+                var texture = new THREE.CanvasTexture(layer.scene.canvas);
+                texture.wrapS = THREE.ClampToEdgeWrapping;
+                texture.wrapT = THREE.ClampToEdgeWrapping;
+                var mesh = this.el.getObject3D('mesh')
+                mesh.material.map = texture
+                mesh.material.needsUpdate = true
+
+
+                var mesh = new THREE.Mesh(geometry,
+                    new THREE.MeshBasicMaterial({
+                        map: texture,
+                        wireframe: this.data.wireframe,
+                        transparent: false
+                    }));
+                this.el.setObject3D('mesh', mesh)
+
+                this.el.emit(HEIGHTMAP_LOADED_EVENT);
+            }
+        });
+        layer.addTo(map);
+
+        const heightMapBounds = this._mapInstance.getBounds()
+        map.fitBounds(heightMapBounds)
+    },
     _createTerrain: function() {
 
         if (!this.analysed) return
@@ -270,31 +307,8 @@ AFRAME.registerComponent('tangram-heightmap', {
         geometry.computeFaceNormals();
         geometry.computeBoundingBox();
 
-
-        var texture = new THREE.CanvasTexture(this.heightMapCanvas);
-        texture.wrapS = THREE.ClampToEdgeWrapping;
-        texture.wrapT = THREE.ClampToEdgeWrapping;
-
-
-        var mesh = new THREE.Mesh(geometry,
-            new THREE.MeshBasicMaterial({
-                map: texture,
-                wireframe: this.data.wireframe
-            }));
-
-
-/*
-        const canvasId = document.querySelector(`#${this._canvasContainerId} canvas`).id;
-        console.log("Mat : " + canvasId)
-        this.el.setAttribute('material', 'src', `#${canvasId}`);
-        */
-        this.el.setObject3D('mesh', mesh)
-
-        this.el.emit(HEIGHTMAP_LOADED_EVENT);
-
-        console.log("Created heightmap")
-        
-
+        //var texture = new THREE.CanvasTexture(this.heightMapCanvas);
+        this._initMap(geometry)
     },
     _scale: function(value) {
 

@@ -1,5 +1,4 @@
 AFRAME.registerComponent('set-marker-on-map', {
-    dependencies: ['tangram'],
     schema: {
         heightmap: {
             type: "selector",
@@ -19,7 +18,7 @@ AFRAME.registerComponent('set-marker-on-map', {
         this.camera = this.data.camera.object3D
     },
     tick: function(delta, time) {
-        var heightMap = this.data.heightmap.components['tangram']
+        var heightMap = this.data.heightmap.components['tangram-heightmap']
 
         var position = this.camera.position.clone()
         var nextPosition = position.clone().sub(this.getForward())
@@ -37,7 +36,7 @@ AFRAME.registerComponent('set-marker-on-map', {
         })
         //this.data.marker.setAttribute("position", )
 
-        this.el.setAttribute("tangram", "center", `${latLon.lat}, ${latLon.lon}`)
+        this.el.setAttribute("tangram-map", "center", `${latLon.lon}, ${latLon.lat}`)
     },
     getForward: function() {
         var zaxis = new THREE.Vector3()
