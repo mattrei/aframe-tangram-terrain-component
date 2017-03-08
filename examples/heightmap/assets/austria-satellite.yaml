@@ -1,0 +1,12 @@
+sources:
+    austria:
+        type: Raster
+        url: https://maps1.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/{z}/{y}/{x}.jpeg
+        max_zoom: 18
+
+layers:
+    aerial_aust:
+        data: { source: austria }
+        draw:
+            _terainStyle:
+                style: raster

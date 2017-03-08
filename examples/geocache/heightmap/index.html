@@ -1,7 +1,7 @@
 <html>
   <head>
-    <title>A-Frame Tangram Component - Map</title>
-    <meta name="description" content="Basic map example for Tangram component."></meta>
+    <title>A-Frame Tangram Component - Heightmap</title>
+    <meta name="description" content="Heightmap example for Tangram component."></meta>
 
     <script src="../build.js"></script>
     <script src="https://mapzen.com/tangram/0.10/tangram.min.js"></script>
@@ -9,22 +9,30 @@
   <body>
     <a-scene debug>
       <a-assets>
+        <a-asset-item id="geo-markers" src="assets/markers.geojson" />
+        <a-asset-item id="yaml-austria" src="assets/austria-satellite.yaml" />
+        <a-asset-item id="yaml-walkabout-style" src="assets/walkabout-style.yaml" />
+        <img id="img-compass-wheel" src="assets/compass-wheel.png" />
+        <img id="img-arrow" src="assets/mini_arrow.png" />
       </a-assets>
  
  
-        <a-entity 
-          position="0 1 -4"
-          geometry="primitive: plane; width: 3; height: 2;"
-          
-          material="color: #00ffff; shader: flat; side: both; transparent: false;"
+      <a-entity id="terrain" visible="true"
+      
+      geometry="width: 50; height: 50; segmentsWidth: 100; segmentsHeight: 100;"
 
-          tangram-map="
-          center: 15.8056, 47.7671;
-          zoom: 4;
-          pxToWorldRatio: 100;
-          "
-          >
-        </a-entity>
+      tangram="
+      asHeightMap: true;
+      center: 47.7671, 15.8056;
+      zoom: 9;
+      pxToWorldRatio: 1;
+      wireframe: true;
+      " 
+
+      rotation="-90 0 0"
+      >
+
+      </a-entity>
 
     </a-scene>
       
