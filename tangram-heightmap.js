@@ -318,7 +318,7 @@ AFRAME.registerComponent('tangram-heightmap', {
         } = this.el.components.geometry.data;
 
         const densityFactor = elWidth / elSegmentsWidth
-        const zoomScaleFactor = this._mapInstance.getZoom()
+        const zoomScaleFactor = this.data.zoom * 0.5 //this._mapInstance.getZoom()
 
         var height = (value * 0.05) * zoomScaleFactor * densityFactor * this.data.scaleFactor;
         return height ? height - this._minHeight : 0

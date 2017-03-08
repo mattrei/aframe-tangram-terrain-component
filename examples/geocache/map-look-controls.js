@@ -15,14 +15,9 @@ AFRAME.registerComponent('map-look-controls', {
         var mappedRotation = {
             x: 0, // no rotatiton
             y: 0,
-            z: cameraRotation.y
+            z: -cameraRotation.y
         }
 
         this.el.setAttribute("rotation", mappedRotation)
-    },
-    getAzimuth: function() {
-
-        var rotation = this.el.getAttribute('rotation');
-        return this.azimuth
     }
 });
