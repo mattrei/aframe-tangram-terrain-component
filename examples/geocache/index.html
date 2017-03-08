@@ -8,14 +8,16 @@
 
     <script src="../build.js"></script>
     <script src="https://mapzen.com/tangram/0.10/tangram.min.js"></script>
+    <script src="https://unpkg.com/aframe-sun-sky@3.0.3/dist/aframe-sun-sky.min.js"></script>
 
     <script src="./collider-check.js"></script>
     <script src="./add-markers.js"></script>
+    <script src="./distance-meter.js"></script>
     <script src="./map-look-controls.js"></script>
     <script src="./set-marker-on-map.js"></script>
   </head>
   <body>
-    <a-scene debug>
+    <a-scene>
       <a-assets>
         <a-asset-item id="geo-markers" src="assets/markers.geojson" />
         <a-asset-item id="yaml-austria" src="assets/austria-satellite.yaml" />
@@ -24,6 +26,7 @@
         <img id="img-arrow" src="assets/mini_arrow.png" />
       </a-assets>
  
+      <a-sun-sky material="sunPosition: -0.2 1.0 -5"></a-sun-sky>
  
       <a-entity id="terrain" visible="true"
       
@@ -32,7 +35,7 @@
       tangram-heightmap="
       style: #yaml-austria;
       center: 15.8056, 47.7671;
-      zoom: 9;
+      zoom: 8;
       wireframe: false;
       pxToWorldRatio: 30;
       " 
@@ -62,6 +65,8 @@
           material="color: #ffffff; shader: flat; side: front; transparent: false;"
 
           set-marker-on-map="heightmap: #terrain; marker: #my-marker;"
+
+          distance-meter=""
 
           tangram-map="
           style: #yaml-walkabout-style;

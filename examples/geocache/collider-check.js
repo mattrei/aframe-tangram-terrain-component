@@ -33,8 +33,9 @@ AFRAME.registerComponent('collider-check', {
         	//console.log(panel.point.y)
 
              // Get angle between triangle normal and upwards unit vector
-        	var slope_ang = new THREE.Vector3(0, 1, 0).angleTo(panel.face.normal);
-        	//console.log(slope_ang)
+        	//var slopeAngle = new THREE.Vector3(0, 1, 0).angleTo(panel.face.normal);
+        	//console.log(slopeAngle)
+
         	const player = this.el.object3D
         	player.position.y = panel.point.y + 0.5
         	//player.quaternion.setFromAxisAngle()

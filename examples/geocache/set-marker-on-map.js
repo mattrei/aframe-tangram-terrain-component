@@ -34,8 +34,6 @@ AFRAME.registerComponent('set-marker-on-map', {
             y: 0,
             z: (azimuth / (Math.PI * 2)) * 360
         })
-        //this.data.marker.setAttribute("position", )
-
         this.el.setAttribute("tangram-map", "center", `${latLon.lon}, ${latLon.lat}`)
     },
     getForward: function() {
