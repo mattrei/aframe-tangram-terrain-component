@@ -32,6 +32,7 @@ AFRAME.registerComponent('tangram-heightmap', {
             default: ''
         },
         scaleFactor: {
+            type: 'int',
             default: 1
         },
         center: {
@@ -61,13 +62,21 @@ AFRAME.registerComponent('tangram-heightmap', {
             default: 13
         },
         wireframe: {
+            type: 'boolean',
             default: false
         },
         pxToWorldRatio: {
+            type: 'int',
             default: 10
         },
         canvasOffsetPx: {
+            type: 'int',
             default: 9999 // debug
+        },
+        // set the highest altitude
+        highestAltitudeMeter: {
+            type: 'int',
+            default: undefined
         }
     },
 
@@ -80,6 +89,9 @@ AFRAME.registerComponent('tangram-heightmap', {
         this.analysing = false
         this._mapInstance = null
         this._scene = null
+
+        this.altitudeAddition = 0
+
         this.terrainData = []
 
         this._initHeightMap()
@@ -203,8 +215,21 @@ AFRAME.registerComponent('tangram-heightmap', {
             this.terrainData.push(val)
         }
 
+        // range is 0 to 255 which is 8900 meters according to heightmap-style
         this._minHeight = min
         this._maxHeight = max
+
+        var highestMeter = max / 255 * 8900
+
+        if (this.data.highestAltitudeMeter) {
+            this.altitudeAddition = this.data.highestAltitudeMeter - highestMeter
+        }
+
+        // TODO Schneeberg is 2076 m
+        console.log(min + ' max ' + max)
+        console.log(max / 255 * 8900)
+        console.log((max / 255 * 8900) + this.altitudeAddition)
+        console.log(min / 255 * 8900)
 
         if (empty) {
             // no pixels found, skip the analysis
@@ -249,7 +274,7 @@ AFRAME.registerComponent('tangram-heightmap', {
             scene: sceneStyle,
             attribution: '',
             postUpdate: _ => {
-                
+
                 /*
                 processCanvasElement(canvasContainer)
                 const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
@@ -302,7 +327,7 @@ AFRAME.registerComponent('tangram-heightmap', {
         //https://stackoverflow.com/questions/37927031/how-to-update-the-topology-of-a-geometry-efficiently-in-threejs
         for (var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
             // only set z values (note: planes are not standing by default)
-            vertices[j + 2] = this._scale(data[i])
+            vertices[j + 2] = this._scale(data[i] + this.altitudeAddition)
         }
         geometry.computeFaceNormals();
         geometry.computeBoundingBox();
@@ -329,6 +354,11 @@ AFRAME.registerComponent('tangram-heightmap', {
 
     tick: function(delta, time) {},
 
+    _getAltitudeFromXY: function(x, y) {
+        const idx = this._scene.canvas.width * y + x
+        return this.terrainData[idx]/255*8900 + this.altitudeAddition
+    },
+
     project(lon, lat) {
 
         // The position (origin at top-left corner) in pixel space
@@ -343,8 +373,8 @@ AFRAME.registerComponent('tangram-heightmap', {
         } = this.el.components.geometry.data;
 
 
-        const idx = this._scene.canvas.width * pxY + pxX
-        var z = this._scale(this.terrainData[idx])
+        const idx = this._scene.canvas.width * y + x
+        var z = this._scale(this.terrainData[idx] + this.altitudeAddition)
 
         pxX /= this._scene.canvas.width
         pxY /= this._scene.canvas.height
@@ -388,5 +418,30 @@ AFRAME.registerComponent('tangram-heightmap', {
             lat: latLng.lat,
             lon: latLng.lng
         }
+    },
+    distanceTo(lngLat) {
+        // TODO add altitude, has it an effect?
+        return L.latLng(lngLat).distanceTo(this.data.center)
+    },
+    altitudeTo(lngLat) {
+
+        var data = this.data
+
+        const {
+            x: currX,
+            y: currY
+        } = this._mapInstance.latLngToLayerPoint([data.center[1], data.center[0]]);
+
+        var currAltitude = this._getAltitudeFromXY(currX, currY)
+
+        return currAltitude - this.getAltitude(lngLat)
+    },
+    getAltitude(lngLat) {
+        const {
+            x: givenX,
+            y: givenY
+        } = this._mapInstance.latLngToLayerPoint([lngLat[1], lngLat[0]]);
+
+        return this._getAltitudeFromXY(givenX, givenY)
     }
 });

@@ -1,10 +1,7 @@
 <html>
   <head>
-    <title>A-Frame Tangram Component - Basic</title>
-    <meta name="description" content="Basic example for Tangram component."></meta>
-
-
-    <!--<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css" />-->
+    <title>A-Frame Tangram Component - Geocaching</title>
+    <meta name="description" content="Geocaching example for Tangram component."></meta>
 
     <script src="../build.js"></script>
     <script src="https://mapzen.com/tangram/0.10/tangram.min.js"></script>
@@ -13,11 +10,12 @@
     <script src="./collider-check.js"></script>
     <script src="./add-markers.js"></script>
     <script src="./distance-meter.js"></script>
+    <script src="./altitude-meter.js"></script>
     <script src="./map-look-controls.js"></script>
     <script src="./set-marker-on-map.js"></script>
   </head>
   <body>
-    <a-scene>
+    <a-scene fog="type: exponential; color: #fff; far: 20; density: 0.015;">
       <a-assets>
         <a-asset-item id="geo-markers" src="assets/markers.geojson" />
         <a-asset-item id="yaml-austria" src="assets/austria-satellite.yaml" />
@@ -26,7 +24,7 @@
         <img id="img-arrow" src="assets/mini_arrow.png" />
       </a-assets>
  
-      <a-sun-sky material="sunPosition: -0.2 1.0 -5"></a-sun-sky>
+      <!--<a-sun-sky material="sunPosition: -0.2 1.0 -5"></a-sun-sky>-->
  
       <a-entity id="terrain" visible="true"
       
@@ -35,10 +33,12 @@
       tangram-heightmap="
       style: #yaml-austria;
       center: 15.8056, 47.7671;
-      zoom: 8;
+      zoom: 9;
       wireframe: false;
       pxToWorldRatio: 30;
+      highestAltitudeMeter: 2076;
       " 
+
 
       
       rotation="-90 0 0"
@@ -52,31 +52,35 @@
         <a-camera id="camera" user-height="0.4" wasd-controls-enabled="true" look-controls-enabled="true" 
         >
 
-
-        <a-entity position="0 -2 -3" rotation="-90 0 0">
-          <a-entity geometry="primitive: box; height: 0.5; width: 0.1; depth: 0.05" material="color: #FCB514" position="0 0 0"></a-entity>
-          <a-image map-look-controls="#camera" src="#img-compass-wheel"></a-image>
-        </a-entity>
-        <a-entity id="hud-map" position="0 2 -6" rotation="0 0 0">
-          <a-entity 
-
-          geometry="primitive: plane; width: 3; height: 2;"
-          
-          material="color: #ffffff; shader: flat; side: front; transparent: false;"
-
-          set-marker-on-map="heightmap: #terrain; marker: #my-marker;"
-
-          distance-meter=""
-
-          tangram-map="
-          style: #yaml-walkabout-style;
-          pxToWorldRatio: 100;
-          "
-
-          >
-            <a-image id="my-marker" src="#img-arrow" transparent="true" width="0.2" height="0.2" position="0 0 0.01">
-            </a-image>
+        <a-entity>
+          <a-entity position="0 -2 -3" rotation="-90 0 0">
+            <a-entity geometry="primitive: box; height: 0.5; width: 0.1; depth: 0.05" material="color: #FCB514" position="0 0 0"></a-entity>
+            <a-image map-look-controls="#camera" src="#img-compass-wheel"></a-image>
           </a-entity>
+          <a-entity id="hud-map" position="0 2 -6" rotation="0 0 0">
+            <a-entity 
+
+            geometry="primitive: plane; width: 3; height: 2;"
+            
+            material="color: #ffffff; shader: flat; side: front; transparent: false; fog: false;"
+
+            set-marker-on-map="heightmap: #terrain; marker: #my-marker;"
+
+            distance-meter=""
+            altitude-meter="heightmap: #terrain; text: #altitudeText;"
+
+            tangram-map="
+            style: #yaml-walkabout-style;
+            pxToWorldRatio: 100;
+            "
+
+            >
+              <a-image id="my-marker" src="#img-arrow" transparent="true" width="0.2" height="0.2" position="0 0 0.01">
+              </a-image>
+            </a-entity>
+          </a-entity>
+
+          <a-text id="altitudeText" value="Hallo" color="white" position="-5 2 -5"></a-text>
         </a-entity>
         
 
@@ -91,14 +95,5 @@
 
     </a-scene>
       
-
-    <!-- GitHub Corner. -->
-    <a href="https://github.com/mattrei/aframe-tangram-component" class="github-corner">
-      <svg width="80" height="80" viewBox="0 0 250 250" style="fill:#222; color:#fff; position: absolute; top: 0; border: 0; right: 0;">
-        <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path>
-      </svg>
-    </a>
-    <style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}
-    <!-- End GitHub Corner. -->
   </body>
 </html>

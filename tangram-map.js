@@ -204,9 +204,7 @@ AFRAME.registerComponent('tangram-map', {
             lat: latLng.lat
         }
     },
-
     distanceTo(lngLat) {
-
         return L.latLng(lngLat).distanceTo(this.data.center)
     }
 });
