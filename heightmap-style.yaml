@@ -1,7 +1,7 @@
 sources:
     elevation:
         type: Raster
-        url: https://tile.mapzen.com/mapzen/terrain/v1/terrarium/{z}/{x}/{y}.png?api_key=mapzen-sfnfVzq
+        url: https://tile.mapzen.com/mapzen/terrain/v1/terrarium/{z}/{x}/{y}.png
         max_zoom: 15
         
 styles: 
@@ -10,7 +10,7 @@ styles:
         shaders:
             uniforms:
                 # set desired visible elevation range
-                u_max: 8900. # everest = 8848
+                u_max: 8848. # everest = 8848
                 u_min: 0. # sea level
                 # u_min: -11000. # challenger deep = -10916
             blocks:

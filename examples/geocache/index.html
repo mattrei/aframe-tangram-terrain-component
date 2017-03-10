@@ -13,10 +13,13 @@
     <script src="./altitude-meter.js"></script>
     <script src="./map-look-controls.js"></script>
     <script src="./set-marker-on-map.js"></script>
+    <script src="./map-geojson-on-heightmap.js"></script>
   </head>
   <body>
     <a-scene fog="type: exponential; color: #fff; far: 20; density: 0.015;">
       <a-assets>
+        <a-asset-item id="geo-trails" src="assets/trails.geojson" />
+
         <a-asset-item id="geo-markers" src="assets/markers.geojson" />
         <a-asset-item id="yaml-austria" src="assets/austria-satellite.yaml" />
         <a-asset-item id="yaml-walkabout-style" src="assets/walkabout-style.yaml" />
@@ -31,17 +34,21 @@
       geometry="width: 50; height: 50; segmentsWidth: 64; segmentsHeight: 64;"
 
       tangram-heightmap="
+      mapzenAPIKey: mapzen-sfnfVzq;
       style: #yaml-austria;
       center: 15.8056, 47.7671;
       zoom: 9;
-      wireframe: false;
+      wireframe: true;
       pxToWorldRatio: 30;
       highestAltitudeMeter: 2076;
       " 
 
 
-      
+      map-geojson-on-heightmap="geojson: #geo-trails;"
+
       rotation="-90 0 0"
+
+
       >
       <!--add-markers="geojson: #geo-markers;"-->
 

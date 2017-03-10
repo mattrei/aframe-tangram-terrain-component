@@ -27,6 +27,9 @@ AFRAME.registerComponent('tangram-heightmap', {
     ],
 
     schema: {
+        mapzenAPIKey: {
+            default: ''
+        },
         style: {
             type: "asset",
             default: ''
@@ -112,6 +115,9 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         var layer = Tangram.leafletLayer({
             scene: heightmapStyle,
+            global: {
+                sdk_mapzen_api_key: data.mapzenAPIKey
+            },
             attribution: '',
             postUpdate: _ => {
                 // three stages:
@@ -272,6 +278,9 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         var layer = Tangram.leafletLayer({
             scene: sceneStyle,
+            global: {
+                sdk_mapzen_api_key: data.mapzenAPIKey
+            },
             attribution: '',
             postUpdate: _ => {
 
@@ -298,6 +307,9 @@ AFRAME.registerComponent('tangram-heightmap', {
                         transparent: false
                     }));
                 this.el.setObject3D('mesh', mesh)
+
+                var mesh = this.el.getOrCreateObject3D('mesh', THREE.Mesh);
+                mesh.geometry = new THREE.Geometry();
 
                 this.el.emit(HEIGHTMAP_LOADED_EVENT);
             }
@@ -356,7 +368,7 @@ AFRAME.registerComponent('tangram-heightmap', {
 
     _getAltitudeFromXY: function(x, y) {
         const idx = this._scene.canvas.width * y + x
-        return this.terrainData[idx]/255*8900 + this.altitudeAddition
+        return this.terrainData[idx] / 255 * 8900 + this.altitudeAddition
     },
 
     project(lon, lat) {
@@ -373,7 +385,7 @@ AFRAME.registerComponent('tangram-heightmap', {
         } = this.el.components.geometry.data;
 
 
-        const idx = this._scene.canvas.width * y + x
+        const idx = this._scene.canvas.width * pxY + pxX
         var z = this._scale(this.terrainData[idx] + this.altitudeAddition)
 
         pxX /= this._scene.canvas.width

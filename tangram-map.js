@@ -29,6 +29,9 @@ AFRAME.registerComponent('tangram-map', {
     ],
 
     schema: {
+        mapzenAPIKey: {
+            default: ''
+        },
         style: {
             type: "asset",
             default: ''
@@ -140,6 +143,7 @@ AFRAME.registerComponent('tangram-map', {
 
         var layer = Tangram.leafletLayer({
             scene: sceneStyle,
+            global: { sdk_mapzen_api_key: data.mapzenAPIKey },
             attribution: '',
             postUpdate: _ => {}
         });
