@@ -127,7 +127,8 @@ AFRAME.registerComponent('tangram-map', {
 
 
         const renderer = L.canvas({
-            padding: 0
+            padding: 0,
+            preserveDrawingBuffer: true
         })
 
 
@@ -142,18 +143,27 @@ AFRAME.registerComponent('tangram-map', {
         const sceneStyle = processStyle(this.data.style);
 
         var layer = Tangram.leafletLayer({
-            scene: sceneStyle,
-            global: { sdk_mapzen_api_key: data.mapzenAPIKey },
+            scene: {
+                import: sceneStyle,
+                global: {
+                    sdk_mapzen_api_key: data.mapzenAPIKey
+                }
+            },
             attribution: '',
-            postUpdate: _ => {}
         });
+
+        var once = true
         layer.scene.subscribe({
             view_complete: () => {
                 processCanvasElement(canvasContainer)
                 const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
-                const canvas = document.querySelector(`#${_canvasContainerId} canvas`)
                 this.el.setAttribute('material', 'src', `#${canvasId}`);
                 this.el.emit(MAP_LOADED_EVENT);
+                // dirty fix for a bug in leaflet or tangram somewhere
+                if (once) {
+                    once = false
+                    map.fitBounds(map.getBounds())
+                }
             }
         });
         layer.addTo(map);

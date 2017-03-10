@@ -40,7 +40,7 @@ AFRAME.registerComponent('tangram-heightmap', {
         },
         center: {
             // lat lon
-            default: [0, 0], //[47.7671, 15.8056], // Schneeberg
+            default: [0, 0],
             type: 'array',
         },
         /**
@@ -55,7 +55,7 @@ AFRAME.registerComponent('tangram-heightmap', {
             },
         },
         fitBounds: {
-            default: undefined, //GROSSGLOCKNER,
+            default: undefined,
             type: 'array',
             parse: value => {
                 return value
@@ -113,32 +113,15 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         var map = L.map(canvasContainer, leafletOptions);
 
+        console.log(data.mapzenAPIKey)
         var layer = Tangram.leafletLayer({
-            scene: heightmapStyle,
-            global: {
-                sdk_mapzen_api_key: data.mapzenAPIKey
+            scene: {
+                import: heightmapStyle,
+                global: {
+                    sdk_mapzen_api_key: data.mapzenAPIKey
+                }
             },
             attribution: '',
-            postUpdate: _ => {
-                // three stages:
-                // 1) start analysis
-                if (!this.analysing && !this.analysed) {
-                    //console.log("EXPOSING")
-                    this._expose()
-                }
-                // 2) continue analysis
-                else if (this.analysing && !this.analysed) {
-                    //console.log("START")
-                    this._start_analysis();
-                    this.analysed = false
-                }
-                /*else if (this.analysed) {
-                                       // reset after next update (however that might be done)
-                                       //console.log("ANALYSED")
-                                       this._createTerrain()
-                                       this.analysed = false
-                                   }*/
-            }
         });
 
         var scene = this._scene = layer.scene
@@ -148,7 +131,7 @@ AFRAME.registerComponent('tangram-heightmap', {
             scene.subscribe({
                 // will be triggered when tiles are finished loading
                 // and also manually by the moveend event
-                view_complete: function() {}
+                view_complete: this._start_analysis.bind(this)
             });
             this.scene_loaded = true;
 
@@ -164,17 +147,6 @@ AFRAME.registerComponent('tangram-heightmap', {
         if (data.maxBounds) this._mapInstance.setMaxBounds(L.latLngBounds(this.data.maxBounds))
         if (data.fitBounds) this._mapInstance.fitBounds(L.latLngBounds(this.data.fitBounds))
         this._mapInstance.setView(latLonFrom(this.data.center), this.data.zoom)
-    },
-    _expose: function() {
-        this.analysing = true;
-        if (this.scene_loaded) {
-            this._start_analysis();
-        } else {
-            // wait for scene to initialize first
-            this.scene.initializing.then(function() {
-                this._start_analysis();
-            });
-        }
     },
     _start_analysis: function() {
 
@@ -231,13 +203,9 @@ AFRAME.registerComponent('tangram-heightmap', {
             this.altitudeAddition = this.data.highestAltitudeMeter - highestMeter
         }
 
-        // TODO Schneeberg is 2076 m
-        console.log(min + ' max ' + max)
-        console.log(max / 255 * 8900)
-        console.log((max / 255 * 8900) + this.altitudeAddition)
-        console.log(min / 255 * 8900)
-
         if (empty) {
+            console.warn("no pixels found")
+            this.analysing = false;
             // no pixels found, skip the analysis
             return false;
         }
@@ -277,44 +245,36 @@ AFRAME.registerComponent('tangram-heightmap', {
         const sceneStyle = processStyle(data.style);
 
         var layer = Tangram.leafletLayer({
-            scene: sceneStyle,
-            global: {
-                sdk_mapzen_api_key: data.mapzenAPIKey
+            scene: {
+                import: sceneStyle,
+                global: {
+                    sdk_mapzen_api_key: data.mapzenAPIKey
+                }
             },
-            attribution: '',
-            postUpdate: _ => {
-
-                /*
-                processCanvasElement(canvasContainer)
-                const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
-                this.el.setAttribute('material', 'width', `1024`);
-                this.el.setAttribute('material', 'height', `1024`);
-                this.el.setAttribute('material', 'src', `#${canvasId}`);
-                */
-
-                var texture = new THREE.CanvasTexture(layer.scene.canvas);
-                texture.wrapS = THREE.ClampToEdgeWrapping;
-                texture.wrapT = THREE.ClampToEdgeWrapping;
-                var mesh = this.el.getObject3D('mesh')
-                mesh.material.map = texture
-                mesh.material.needsUpdate = true
-
-
-                var mesh = new THREE.Mesh(geometry,
-                    new THREE.MeshBasicMaterial({
-                        map: texture,
-                        wireframe: this.data.wireframe,
-                        transparent: false
-                    }));
-                this.el.setObject3D('mesh', mesh)
-
-                var mesh = this.el.getOrCreateObject3D('mesh', THREE.Mesh);
-                mesh.geometry = new THREE.Geometry();
-
-                this.el.emit(HEIGHTMAP_LOADED_EVENT);
-            }
+            attribution: ''
         });
         layer.addTo(map);
+
+        var once = true
+        layer.scene.subscribe({
+
+            view_complete: _ => {
+                var mesh = this.el.getOrCreateObject3D('mesh', THREE.Mesh);
+                mesh.geometry = geometry
+                
+                processCanvasElement(canvasContainer)
+                const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
+                this.el.setAttribute('material', 'src', `#${canvasId}`);
+
+                // dirty fix: refresh map after initial render
+                if (once) {
+                    once = false
+                    map.fitBounds(map.getBounds())
+                }
+                
+                this.el.emit(HEIGHTMAP_LOADED_EVENT);
+            }
+        })
 
         const heightMapBounds = this._mapInstance.getBounds()
         map.fitBounds(heightMapBounds)
@@ -344,7 +304,8 @@ AFRAME.registerComponent('tangram-heightmap', {
         geometry.computeFaceNormals();
         geometry.computeBoundingBox();
 
-        //var texture = new THREE.CanvasTexture(this.heightMapCanvas);
+        console.log("Terrain finished")
+            //var texture = new THREE.CanvasTexture(this.heightMapCanvas);
         this._initMap(geometry)
     },
     _scale: function(value) {

@@ -2,6 +2,8 @@ sources:
     elevation:
         type: Raster
         url: https://tile.mapzen.com/mapzen/terrain/v1/terrarium/{z}/{x}/{y}.png
+        url_params:
+            api_key: global.sdk_mapzen_api_key
         max_zoom: 15
         
 styles: 
