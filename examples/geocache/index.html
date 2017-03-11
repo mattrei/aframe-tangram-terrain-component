@@ -6,6 +6,7 @@
     <script src="../build.js"></script>
     <script src="https://mapzen.com/tangram/tangram.min.js"></script>
     <script src="https://unpkg.com/aframe-sun-sky@3.0.3/dist/aframe-sun-sky.min.js"></script>
+    <script src="//cdn.rawgit.com/donmccurdy/aframe-extras/v3.3.1/dist/aframe-extras.min.js"></script>
 
     <script src="./collider-check.js"></script>
     <script src="./add-markers.js"></script>
@@ -32,14 +33,14 @@
       <a-entity id="terrain" visible="true"
       
       geometry="width: 50; height: 50; segmentsWidth: 64; segmentsHeight: 64;"
+      material="color: #ffffff; shader: standard; side: both; transparent: false; wireframe: false;"
 
       tangram-heightmap="
       mapzenAPIKey: mapzen-sfnfVzq;
       style: #yaml-austria;
       center: 15.8056, 47.7671;
       zoom: 9;
-      wireframe: true;
-      pxToWorldRatio: 30;
+      pxToWorldRatio: 40;
       highestAltitudeMeter: 2076;
       " 
 
@@ -56,7 +57,7 @@
       <a-entity id="player" collider-check="heightmap: #terrain;">
 
 
-        <a-camera id="camera" user-height="0.4" wasd-controls-enabled="true" look-controls-enabled="true" 
+        <a-camera id="camera" user-height="0.4" universal-controls
         >
 
         <a-entity>
@@ -64,7 +65,8 @@
             <a-entity geometry="primitive: box; height: 0.5; width: 0.1; depth: 0.05" material="color: #FCB514" position="0 0 0"></a-entity>
             <a-image map-look-controls="#camera" src="#img-compass-wheel"></a-image>
           </a-entity>
-          <a-entity id="hud-map" position="0 2 -6" rotation="0 0 0">
+          
+          <a-entity id="hud-map" visible="true" position="0 2 -6" rotation="0 0 0">
             <a-entity 
 
             geometry="primitive: plane; width: 3; height: 2;"
@@ -90,6 +92,7 @@
 
           <a-text id="altitudeText" value="Hallo" color="white" position="-5 2 -5"></a-text>
         </a-entity>
+        
         
 
           <a-cursor></a-cursor>

@@ -155,15 +155,16 @@ AFRAME.registerComponent('tangram-map', {
         var once = true
         layer.scene.subscribe({
             view_complete: () => {
+                if (once) {
+                    once = false
+                    map.fitBounds(map.getBounds())
+                    return
+                }
+
                 processCanvasElement(canvasContainer)
                 const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
                 this.el.setAttribute('material', 'src', `#${canvasId}`);
                 this.el.emit(MAP_LOADED_EVENT);
-                // dirty fix for a bug in leaflet or tangram somewhere
-                if (once) {
-                    once = false
-                    map.fitBounds(map.getBounds())
-                }
             }
         });
         layer.addTo(map);

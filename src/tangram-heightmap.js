@@ -64,10 +64,6 @@ AFRAME.registerComponent('tangram-heightmap', {
         zoom: {
             default: 13
         },
-        wireframe: {
-            type: 'boolean',
-            default: false
-        },
         pxToWorldRatio: {
             type: 'int',
             default: 10
@@ -248,6 +244,9 @@ AFRAME.registerComponent('tangram-heightmap', {
         });
         layer.addTo(map);
 
+
+        this.geojsonLayer = L.geoJson().addTo(map);
+
         var once = true
         layer.scene.subscribe({
 
@@ -255,7 +254,6 @@ AFRAME.registerComponent('tangram-heightmap', {
                 // dirty fix: refresh map after initial render
                 if (once) {
                     once = false
-                    console.log("ONCE")
                     map.fitBounds(map.getBounds())
                     return
                 }
@@ -268,14 +266,14 @@ AFRAME.registerComponent('tangram-heightmap', {
                 const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
                 this.el.setAttribute('material', 'src', `#${canvasId}`);
 
-                console.log("DONE")
-
                 this.el.emit(HEIGHTMAP_LOADED_EVENT);
             }
         })
 
         const heightMapBounds = this._mapInstance.getBounds()
         map.fitBounds(heightMapBounds)
+
+        this._mapOverlay = map
     },
     _createTerrain: function() {
 
@@ -413,5 +411,10 @@ AFRAME.registerComponent('tangram-heightmap', {
         } = this._mapInstance.latLngToLayerPoint([lngLat[1], lngLat[0]]);
 
         return this._getAltitudeFromXY(givenX, givenY)
+    },
+    addGeoJSON(geojson) {
+        
+        this.geojsonLayer.addData(geojson);
+        console.log("added")
     }
 });

@@ -1,3 +1,4 @@
+
 AFRAME.registerComponent('map-geojson-on-heightmap', {
     dependencies: ['tangram-heightmap'],
     schema: {
@@ -25,11 +26,12 @@ AFRAME.registerComponent('map-geojson-on-heightmap', {
 
             geojson.features.forEach(f => {
                 if (f.geometry.type === "LineString") {
-                    this._addLine(f)
+                    //this._addCurve(f)
                 }  
             })
 
 
+            //this.heightmap.addGeoJSON(geojson)
             
         })
 
@@ -40,19 +42,40 @@ AFRAME.registerComponent('map-geojson-on-heightmap', {
             return this.heightmap.project(c[0], c[1])
         })
 
-        var lineGeometry = new THREE.Geometry();
+        var geometry = new THREE.Geometry();
         points.forEach(p => {
-            lineGeometry.vertices.push(new THREE.Vector3(p.x, p.y, p.z))
+            geometry.vertices.push(new THREE.Vector3(p.x, p.y, p.z))
         })
 
         var material = new THREE.LineBasicMaterial({ 
             color: 0x0000ff,
             linewidth: 5, });
 
-        var line = new THREE.Line( lineGeometry, material );
+        var line = new THREE.Line( geometry, material );
         line.name = `line_${feature.properties.name}`
 
-        console.log(lineGeometry.vertices)
+        this.el.setObject3D(line.name, line)
+    },
+
+    _addCurve: function(feature) {
+
+        let points = feature.geometry.coordinates.map(c => {
+            var p = this.heightmap.project(c[0], c[1])
+            return new THREE.Vector3( p.x, p.y, p.z )
+        })
+
+        var curve = new THREE.CatmullRomCurve3( points )
+
+        var geometry = new THREE.Geometry();
+        geometry.vertices = curve.getPoints( 50 );
+
+        var material = new THREE.LineBasicMaterial({ 
+            color: 0x0000ff,
+            linewidth: 5, });
+
+        var line = new THREE.Line( geometry, material );
+        line.name = `line_${feature.properties.name}`
+
         this.el.setObject3D(line.name, line)
     },
 
