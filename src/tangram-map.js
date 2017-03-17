@@ -159,6 +159,7 @@ AFRAME.registerComponent('tangram-map', {
         var once = true
         layer.scene.subscribe({
             view_complete: () => {
+                
                 if (once) {
                     once = false
                     map.fitBounds(map.getBounds())
@@ -166,10 +167,12 @@ AFRAME.registerComponent('tangram-map', {
                     return
                 }
 
+
                 processCanvasElement(canvasContainer)
                 const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
                 this.el.setAttribute('material', 'src', `#${canvasId}`);
                 this.el.emit(MAP_LOADED_EVENT);
+                console.log("LOADED")
             }
         });
         layer.addTo(map);
