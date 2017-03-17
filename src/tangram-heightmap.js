@@ -76,6 +76,9 @@ AFRAME.registerComponent('tangram-heightmap', {
         highestAltitudeMeter: {
             type: 'int',
             default: undefined
+        },
+        subdomains: {
+            default: 'abc'
         }
     },
 
@@ -115,6 +118,7 @@ AFRAME.registerComponent('tangram-heightmap', {
                 }
             },
             attribution: '',
+            subdomains: data.subdomains
         });
 
         var scene = this._scene = layer.scene
@@ -240,7 +244,8 @@ AFRAME.registerComponent('tangram-heightmap', {
                     sdk_mapzen_api_key: data.mapzenAPIKey
                 }
             },
-            attribution: ''
+            attribution: '',
+            subdomains: data.subdomains
         });
         layer.addTo(map);
 

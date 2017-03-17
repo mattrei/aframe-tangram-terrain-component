@@ -1,28 +1,33 @@
 <html>
   <head>
     <title>A-Frame Tangram Component - Map</title>
-    <meta name="description" content="Basic map example for Tangram component."></meta>
+    <meta name="description" content="Custom style example for Tangram component."></meta>
 
     <script src="../build.js"></script>
     <script src="https://mapzen.com/tangram/tangram.min.js"></script>
   </head>
   <body>
     <a-scene>
+      <a-assets>
+        <a-asset-item id="yaml-austria" src="assets/austria-satellite.yaml" />
+      </a-assets>
  
-      <a-entity 
-        position="0 2 -2"
-        geometry="primitive: plane; width: 7; height: 4;"
-        
-        material="color: #ffffff; shader: flat; side: both; transparent: false;"
+        <a-entity 
+          position="0 2 -2"
+          geometry="primitive: plane; width: 7; height: 4;"
+          
+          material="color: #ffffff; shader: flat; side: both; transparent: false;"
 
-        tangram-map="
-        mapzenAPIKey: mapzen-sfnfVzq;
-        center: 15.8056, 47.7671;
-        zoom: 3;
-        pxToWorldRatio: 100;
-        "
-        >
-      </a-entity>
+          tangram-map="
+          mapzenAPIKey: mapzen-sfnfVzq;
+          style: #yaml-austria;
+          center: 15.8056, 47.7671;
+          zoom: 13;
+          pxToWorldRatio: 100;
+          canvasOffsetPx: 0;
+          "
+          >
+        </a-entity>
 
       <a-box position="0 4 -2" width="7.1" height="0.1" depth="0.1" color="#4CC3D9"></a-box>
       <a-box position="0 0 -2" width="7.1" height="0.1" depth="0.1" color="#4CC3D9"></a-box>
@@ -33,6 +38,7 @@
       <a-entity position="0 0 3.8">
         <a-camera></a-camera>
       </a-entity>
+
 
     </a-scene>
   </body>

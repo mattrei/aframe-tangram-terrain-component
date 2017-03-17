@@ -67,6 +67,9 @@ AFRAME.registerComponent('tangram-map', {
         },
         canvasOffsetPx: {
             default: 9999 // debug
+        },
+        subdomains: {
+            default: 'abc'
         }
     },
 
@@ -150,6 +153,7 @@ AFRAME.registerComponent('tangram-map', {
                 }
             },
             attribution: '',
+            subdomains: data.subdomains
         });
 
         var once = true
@@ -158,6 +162,7 @@ AFRAME.registerComponent('tangram-map', {
                 if (once) {
                     once = false
                     map.fitBounds(map.getBounds())
+                    console.log("fixed")
                     return
                 }
 
