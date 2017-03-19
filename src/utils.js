@@ -5,9 +5,9 @@ const defaultMapStyle = require('./simple-style.yaml');
 module.exports.leafletOptions = {
     "preferCanvas": true,
     "keyboard": false,
-    "scrollWheelZoom": false,
+    "scrollWheelZoom": true,
     "tap": false,
-    "touchZoom": false,
+    "touchZoom": true,
     "zoomControl": false,
     "attributionControl": false,
     "doubleClickZoom": false,

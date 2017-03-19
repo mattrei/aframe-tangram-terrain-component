@@ -19,6 +19,10 @@
   <body>
     <a-scene fog="type: exponential; color: #fff; far: 20; density: 0.015;">
       <a-assets>
+        <canvas id="map-canvas" width="2048" height="2048" crossorigin="anonymous" />
+        <canvas id="gps-canvas" crossorigin="anonymous" />
+      </a-assets>
+      <a-assets>
         <a-asset-item id="gltf-phone" src="assets/phone.gltf"></a-asset-item>
 
         <a-asset-item id="geo-trails" src="assets/trails.geojson" />
@@ -35,9 +39,10 @@
       <a-entity id="terrain" visible="true"
       
       geometry="width: 50; height: 50; segmentsWidth: 64; segmentsHeight: 64;"
-      material="color: #ffffff; shader: standard; side: both; transparent: false; wireframe: false;"
+      material="color: #ffffff; shader: standard; side: both; transparent: false; wireframe: false; src: #map-canvas;"
 
       tangram-heightmap="
+      canvas: #map-canvas;
       mapzenAPIKey: mapzen-sfnfVzq;
       style: #yaml-austria;
       center: 15.8056, 47.7671;
@@ -85,6 +90,7 @@
               altitude-meter="heightmap: #terrain; text: #altitudeText;"
 
               tangram-map="
+              canvas: #gps-canvas;
               mapzenAPIKey: mapzen-sfnfVzq;
               style: #yaml-walkabout-style;
               pxToWorldRatio: 100;

@@ -9,6 +9,7 @@
   <body>
     <a-scene>
       <a-assets>
+        <canvas id="map-canvas" crossorigin="anonymous"></canvas>
         <a-asset-item id="yaml-austria" src="assets/austria-satellite.yaml" />
       </a-assets>
  
@@ -16,15 +17,15 @@
           position="0 2 -2"
           geometry="primitive: plane; width: 7; height: 4;"
           
-          material="color: #ffffff; shader: flat; side: both; transparent: false;"
+          material="color: #ffffff; shader: flat; side: both; transparent: false; src: #map-canvas"
 
           tangram-map="
+          canvas: #map-canvas;
           mapzenAPIKey: mapzen-sfnfVzq;
           style: #yaml-austria;
           center: 15.8056, 47.7671;
           zoom: 13;
           pxToWorldRatio: 100;
-          canvasOffsetPx: 500;
           "
           >
         </a-entity>

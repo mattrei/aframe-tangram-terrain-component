@@ -7,15 +7,19 @@
     <script src="https://mapzen.com/tangram/tangram.min.js"></script>
   </head>
   <body>
-    <a-scene>
+    <a-scene debug>
+      <a-assets>
+        <canvas id="map-canvas" crossorigin="anonymous"></canvas>
+      </a-assets>
  
       <a-entity 
         position="0 2 -2"
         geometry="primitive: plane; width: 7; height: 4;"
         
-        material="color: #ff00ff; shader: flat; side: both; transparent: false;"
+        material="shader: flat; src: #map-canvas"
 
         tangram-map="
+        canvas: #map-canvas;
         mapzenAPIKey: mapzen-sfnfVzq;
         center: 15.8056, 47.7671;
         zoom: 3;

@@ -29,6 +29,10 @@ AFRAME.registerComponent('tangram-map', {
     ],
 
     schema: {
+        canvas: {
+            type: "selector",
+            default: undefined
+        },
         mapzenAPIKey: {
             default: ''
         },
@@ -129,6 +133,7 @@ AFRAME.registerComponent('tangram-map', {
             width, height, data.canvasOffsetPx);
 
 
+
         const renderer = L.canvas({
             padding: 0,
             preserveDrawingBuffer: true
@@ -155,27 +160,30 @@ AFRAME.registerComponent('tangram-map', {
             attribution: '',
             subdomains: data.subdomains
         });
-
-        var once = true
         layer.scene.subscribe({
+            load: () => {
+                processCanvasElement(canvasContainer)
+            },
             view_complete: () => {
                 
-                if (once) {
-                    once = false
-                    map.fitBounds(map.getBounds())
-                    console.log("fixed")
-                    return
+                var sourceCanvas = document.querySelector(`#${_canvasContainerId} canvas`)
+                var ctx = data.canvas.getContext('2d');
+                if (ctx) {
+                    data.canvas.setAttribute("width", width)
+                    data.canvas.setAttribute("height", height)
+                    ctx.drawImage(sourceCanvas, 0, 0);
+                    console.log("canvas")
+                } else {
+                    const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
+                    this.el.setAttribute('material', 'src', `#${canvasId}`);
+                    console.log("old canvas")
                 }
-
-
-                processCanvasElement(canvasContainer)
-                const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
-                this.el.setAttribute('material', 'src', `#${canvasId}`);
                 this.el.emit(MAP_LOADED_EVENT);
-                console.log("LOADED")
             }
         });
         layer.addTo(map);
+
+
         this._mapInstance = map
     },
     remove: function() {},
