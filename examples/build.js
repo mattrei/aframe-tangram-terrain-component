@@ -92868,6 +92868,9 @@ AFRAME.registerComponent('tangram-heightmap', {
     ],
 
     schema: {
+        canvas: {
+            type: "selector"
+        },
         mapzenAPIKey: {
             default: ''
         },
@@ -92917,9 +92920,6 @@ AFRAME.registerComponent('tangram-heightmap', {
         highestAltitudeMeter: {
             type: 'int',
             default: undefined
-        },
-        subdomains: {
-            default: 'abc'
         }
     },
 
@@ -92944,6 +92944,7 @@ AFRAME.registerComponent('tangram-heightmap', {
         const geomComponent = this.el.components.geometry;
         var width = geomComponent.data.segmentsWidth
         var height = geomComponent.data.segmentsHeight
+        console.log(width)
 
         this._canvasContainerId = cuid();
         const canvasContainer = getCanvasContainerAssetElement(this._canvasContainerId,
@@ -92958,11 +92959,11 @@ AFRAME.registerComponent('tangram-heightmap', {
                     sdk_mapzen_api_key: data.mapzenAPIKey
                 }
             },
-            attribution: '',
-            subdomains: data.subdomains
+            attribution: ''
         });
 
         var scene = this._scene = layer.scene
+
 
         layer.on('init', _ => {
             // resetViewComplete();
@@ -92972,11 +92973,6 @@ AFRAME.registerComponent('tangram-heightmap', {
                 view_complete: this._start_analysis.bind(this)
             });
 
-            var heightMapCanvas = document.createElement("canvas")
-            heightMapCanvas.width = scene.canvas.width / tempFactor
-            heightMapCanvas.height = scene.canvas.height / tempFactor
-
-            this.heightMapCanvas = heightMapCanvas
         });
         layer.addTo(map);
         this._mapInstance = map
@@ -92987,18 +92983,22 @@ AFRAME.registerComponent('tangram-heightmap', {
     },
     _start_analysis: function() {
 
+        const geomComponent = this.el.components.geometry;
+        var width = geomComponent.data.segmentsWidth
+        var height = geomComponent.data.segmentsHeight
+
         // based on https://github.com/tangrams/heightmapper/blob/gh-pages/main.js
         var scene = this._scene
-        var canvas = this.heightMapCanvas
+        
+        var heightMapCanvas = document.createElement("canvas")
+        heightMapCanvas.width = width
+        heightMapCanvas.height = height
 
-        var ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // redraw canvas smaller in testing canvas, for speed
-        ctx.drawImage(scene.canvas, 0, 0, scene.canvas.width / tempFactor, scene.canvas.height / tempFactor);
+        var ctx = heightMapCanvas.getContext("2d");
+        ctx.drawImage(scene.canvas, 0, 0, width, height);
 
         // get all the pixels
-        var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var pixels = ctx.getImageData(0, 0, width, height);
 
         var val;
         var counts = {};
@@ -93007,11 +93007,11 @@ AFRAME.registerComponent('tangram-heightmap', {
             min = 255;
 
 
-        const geomComponent = this.el.components.geometry;
+        //const geomComponent = this.el.components.geometry;
         // only check every 4th pixel (vary with browser size)
         // var stride = Math.round(img.height * img.width / 1000000);
         // 4 = only sample the red value in [R, G, B, A]
-        for (var i = 0; i < canvas.height * canvas.width * 4; i += 4) {
+        for (var i = 0; i < height * width * 4; i += 4) {
             val = pixels.data[i];
             var alpha = pixels.data[i + 3];
             if (alpha === 0) { // empty pixel, skip to the next one
@@ -93051,17 +93051,24 @@ AFRAME.registerComponent('tangram-heightmap', {
     },
     _initMap: function(geometry) {
 
-        var data = this.data
+        // is probably a good thing to remove element
+        document.getElementById(this._canvasContainerId).remove()
+
+        const data = this.data
 
         const geomComponent = this.el.components.geometry;
+        const matComponent = this.el.components.material;
+        // TODO - correct
         var width = Math.min(4096, THREE.Math.nextPowerOfTwo(geomComponent.data.width * data.pxToWorldRatio))
         var height = Math.min(4096, THREE.Math.nextPowerOfTwo(geomComponent.data.height * data.pxToWorldRatio))
+        width = matComponent.width
+        height = matComponent.height
 
         console.log(geomComponent.data.width + ' ' + width)
 
         var _canvasContainerId = cuid();
         const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId,
-            width, height, data.canvasOffsetPx);
+            width, height, data.canvasOffsetPx + 999);
 
 
         const renderer = L.canvas({
@@ -93085,34 +93092,49 @@ AFRAME.registerComponent('tangram-heightmap', {
                     sdk_mapzen_api_key: data.mapzenAPIKey
                 }
             },
-            attribution: '',
-            subdomains: data.subdomains
+            attribution: ''
         });
         layer.addTo(map);
 
 
         this.geojsonLayer = L.geoJson().addTo(map);
 
-        var once = true
         layer.scene.subscribe({
-
-            view_complete: _ => {
-                // dirty fix: refresh map after initial render
-                if (once) {
-                    once = false
-                    map.fitBounds(map.getBounds())
-                    return
-                }
-
+            load: () => {
+                processCanvasElement(canvasContainer)
+            },
+            view_complete: () => {
 
                 var mesh = this.el.getOrCreateObject3D('mesh', THREE.Mesh);
                 mesh.geometry = geometry
-                
-                processCanvasElement(canvasContainer)
+
+                var ctx = data.canvas.getContext('2d');
+                if (ctx) {
+                    var sourceCanvas = document.querySelector(`#${_canvasContainerId} canvas`)
+                    // TODO sourceCanvas is much too big. 
+                    sourceCanvas.width = width
+                    sourceCanvas.height = height
+                    //?
+
+                    //data.canvas.setAttribute("width", width)
+                    //data.canvas.setAttribute("height", height)
+                    // TODO?
+                    ctx.drawImage(sourceCanvas, 0, 0, width, height);
+                    console.log("drawn")
+                } else {
+                    const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
+                    this.el.setAttribute('material', 'src', `#${canvasId}`);
+                    console.log("not drawn")
+                }
+/*
                 const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
                 this.el.setAttribute('material', 'src', `#${canvasId}`);
-
+*/
                 this.el.emit(HEIGHTMAP_LOADED_EVENT);
+
+
+                //document.getElementById(_canvasContainerId).remove()
+
             }
         })
 
@@ -93296,6 +93318,9 @@ AFRAME.registerComponent('tangram-map', {
     ],
 
     schema: {
+        canvas: {
+            type: "selector"
+        },
         mapzenAPIKey: {
             default: ''
         },
@@ -93334,9 +93359,6 @@ AFRAME.registerComponent('tangram-map', {
         },
         canvasOffsetPx: {
             default: 9999 // debug
-        },
-        subdomains: {
-            default: 'abc'
         }
     },
 
@@ -93396,6 +93418,7 @@ AFRAME.registerComponent('tangram-map', {
             width, height, data.canvasOffsetPx);
 
 
+
         const renderer = L.canvas({
             padding: 0,
             preserveDrawingBuffer: true
@@ -93419,27 +93442,32 @@ AFRAME.registerComponent('tangram-map', {
                     sdk_mapzen_api_key: data.mapzenAPIKey
                 }
             },
-            attribution: '',
-            subdomains: data.subdomains
+            attribution: ''
         });
-
-        var once = true
         layer.scene.subscribe({
-            view_complete: () => {
-                if (once) {
-                    once = false
-                    map.fitBounds(map.getBounds())
-                    console.log("fixed")
-                    return
-                }
-
+            load: () => {
                 processCanvasElement(canvasContainer)
-                const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
-                this.el.setAttribute('material', 'src', `#${canvasId}`);
+            },
+            view_complete: () => {
+                
+                var ctx = data.canvas.getContext('2d');
+                if (ctx) {
+                    var sourceCanvas = document.querySelector(`#${_canvasContainerId} canvas`)
+                    data.canvas.setAttribute("width", width)
+                    data.canvas.setAttribute("height", height)
+                    ctx.drawImage(sourceCanvas, 0, 0);
+                    console.log("canvas")
+                } else {
+                    const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
+                    this.el.setAttribute('material', 'src', `#${canvasId}`);
+                    console.log("old canvas")
+                }
                 this.el.emit(MAP_LOADED_EVENT);
             }
         });
         layer.addTo(map);
+
+
         this._mapInstance = map
     },
     remove: function() {},
@@ -93505,7 +93533,7 @@ module.exports.leafletOptions = {
     "keyboard": false,
     "scrollWheelZoom": true,
     "tap": false,
-    "touchZoom": false,
+    "touchZoom": true,
     "zoomControl": false,
     "attributionControl": false,
     "doubleClickZoom": false,
