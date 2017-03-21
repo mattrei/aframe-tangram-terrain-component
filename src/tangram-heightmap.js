@@ -79,9 +79,6 @@ AFRAME.registerComponent('tangram-heightmap', {
         highestAltitudeMeter: {
             type: 'int',
             default: undefined
-        },
-        subdomains: {
-            default: 'abc'
         }
     },
 
@@ -191,8 +188,6 @@ AFRAME.registerComponent('tangram-heightmap', {
 
             this.terrainData.push(val)
         }
-        console.log(pixels)
-        console.log(this.terrainData)
 
         // range is 0 to 255 which is 8900 meters according to heightmap-style
         this._minHeight = min
@@ -221,11 +216,12 @@ AFRAME.registerComponent('tangram-heightmap', {
         const data = this.data
 
         const geomComponent = this.el.components.geometry;
+        const matComponent = this.el.components.material;
         // TODO - correct
         var width = Math.min(4096, THREE.Math.nextPowerOfTwo(geomComponent.data.width * data.pxToWorldRatio))
         var height = Math.min(4096, THREE.Math.nextPowerOfTwo(geomComponent.data.height * data.pxToWorldRatio))
-        width = data.canvas.width
-        height = data.canvas.height
+        width = matComponent.width
+        height = matComponent.height
 
         console.log(geomComponent.data.width + ' ' + width)
 
@@ -274,9 +270,15 @@ AFRAME.registerComponent('tangram-heightmap', {
                 var ctx = data.canvas.getContext('2d');
                 if (ctx) {
                     var sourceCanvas = document.querySelector(`#${_canvasContainerId} canvas`)
+                    // TODO sourceCanvas is much too big. 
+                    sourceCanvas.width = width
+                    sourceCanvas.height = height
+                    //?
+
                     //data.canvas.setAttribute("width", width)
                     //data.canvas.setAttribute("height", height)
-                    ctx.drawImage(sourceCanvas, 0, 0);
+                    // TODO?
+                    ctx.drawImage(sourceCanvas, 0, 0, width, height);
                     console.log("drawn")
                 } else {
                     const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
@@ -288,6 +290,10 @@ AFRAME.registerComponent('tangram-heightmap', {
                 this.el.setAttribute('material', 'src', `#${canvasId}`);
 */
                 this.el.emit(HEIGHTMAP_LOADED_EVENT);
+
+
+                //document.getElementById(_canvasContainerId).remove()
+
             }
         })
 

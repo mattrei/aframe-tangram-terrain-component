@@ -30,8 +30,7 @@ AFRAME.registerComponent('tangram-map', {
 
     schema: {
         canvas: {
-            type: "selector",
-            default: undefined
+            type: "selector"
         },
         mapzenAPIKey: {
             default: ''
@@ -71,9 +70,6 @@ AFRAME.registerComponent('tangram-map', {
         },
         canvasOffsetPx: {
             default: 9999 // debug
-        },
-        subdomains: {
-            default: 'abc'
         }
     },
 
@@ -157,8 +153,7 @@ AFRAME.registerComponent('tangram-map', {
                     sdk_mapzen_api_key: data.mapzenAPIKey
                 }
             },
-            attribution: '',
-            subdomains: data.subdomains
+            attribution: ''
         });
         layer.scene.subscribe({
             load: () => {
@@ -166,9 +161,9 @@ AFRAME.registerComponent('tangram-map', {
             },
             view_complete: () => {
                 
-                var sourceCanvas = document.querySelector(`#${_canvasContainerId} canvas`)
                 var ctx = data.canvas.getContext('2d');
                 if (ctx) {
+                    var sourceCanvas = document.querySelector(`#${_canvasContainerId} canvas`)
                     data.canvas.setAttribute("width", width)
                     data.canvas.setAttribute("height", height)
                     ctx.drawImage(sourceCanvas, 0, 0);

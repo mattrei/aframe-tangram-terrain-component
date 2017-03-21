@@ -19,7 +19,7 @@
   <body>
     <a-scene fog="type: exponential; color: #fff; far: 20; density: 0.015;">
       <a-assets>
-        <canvas id="map-canvas" width="2048" height="2048" crossorigin="anonymous" />
+        <canvas id="map-canvas" width="1024" height="1024" crossorigin="anonymous" />
         <canvas id="gps-canvas" crossorigin="anonymous" />
       </a-assets>
       <a-assets>
@@ -38,8 +38,8 @@
  
       <a-entity id="terrain" visible="true"
       
-      geometry="width: 50; height: 50; segmentsWidth: 64; segmentsHeight: 64;"
-      material="color: #ffffff; shader: standard; side: both; transparent: false; wireframe: false; src: #map-canvas;"
+      geometry="width: 100; height: 100; segmentsWidth: 64; segmentsHeight: 64;"
+      material="shader: flat; transparent: false; wireframe: false; src: #map-canvas;"
 
       tangram-heightmap="
       canvas: #map-canvas;
@@ -64,7 +64,7 @@
       <a-entity id="player" collider-check="heightmap: #terrain;">
 
 
-        <a-camera id="camera" user-height="0.4">
+        <a-camera id="camera" user-height="0.4" universal-controls>
 
         <a-entity>
 
@@ -77,6 +77,7 @@
             <a-gltf-model src="#gltf-phone" material="color: black; shader: flat;" scale="0.08 0.08 0.08"
             rotation="-90 0 0"></a-obj-model>
 
+<!--
             <a-entity id="hud-map" visible="true" position="0 -0.2 0.4" rotation="90 0 0">
               <a-entity 
 
@@ -103,6 +104,7 @@
               <a-text id="altitudeText" value="" color="black" position="0 -0.2 0.4"></a-text>
             </a-entity>
           </a-entity>
+          -->
           
           
           
