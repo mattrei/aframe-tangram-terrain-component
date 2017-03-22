@@ -32,13 +32,15 @@ module.exports.getCanvasContainerAssetElement = function(id, width, height, left
     element.style.width = `${width}px`;
     element.style.height = `${height}px`;
 
-    // This is necessary because leaflet like mapbox-gl uses the offsetWidth/Height of the
+
+    // This is necessary because mapbox-gl uses the offsetWidth/Height of the
     // container element to calculate the canvas size.  But those values are 0 if
     // the element (or its parent) are hidden. `position: fixed` means it can be
     // calculated correctly.
     element.style.position = 'fixed';
     element.style.left = `${left}px`;
-    element.style.top = '0';
+    element.style.top = '0px';
+    
 
     if (!document.body.contains(element)) {
         document.body.appendChild(element);

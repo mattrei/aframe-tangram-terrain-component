@@ -4,26 +4,23 @@
     <meta name="description" content="Basic map example for Tangram component."></meta>
 
     <script src="../build.js"></script>
-    <script src="https://mapzen.com/tangram/tangram.min.js"></script>
+    <script src="lib/tangram.debug.js"></script>
   </head>
   <body>
     <a-scene debug>
-      <a-assets>
-        <canvas id="map-canvas" crossorigin="anonymous"></canvas>
-      </a-assets>
  
       <a-entity 
         position="0 2.5 -2"
         geometry="primitive: plane; width: 7; height: 5;"
         
-        material="shader: flat; src: #map-canvas"
+        material="shader: flat; color: #fff"
 
         tangram-map="
         canvas: #map-canvas;
         mapzenAPIKey: mapzen-sfnfVzq;
         center: 15.8056, 47.7671;
-        zoom: 3;
-        pxToWorldRatio: 200;
+        zoom: 12;
+        pxToWorldRatio: 100;
         "
         >
       </a-entity>

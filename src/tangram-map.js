@@ -19,6 +19,16 @@ const MAP_LOADED_EVENT = 'map-loaded';
 const MAP_MOVE_END_EVENT = 'map-moveend';
 
 
+function setDimensions(id, el, width, height) {
+
+    const element = document.querySelector(`#${id}`);
+    element.style.width = `${width}px`;
+    element.style.height = `${height}px`;
+
+    el.setAttribute('material', 'width', width);
+    el.setAttribute('material', 'height', height);
+}
+
 /**
  * Tangram component for A-Frame.
  */
@@ -29,9 +39,6 @@ AFRAME.registerComponent('tangram-map', {
     ],
 
     schema: {
-        canvas: {
-            type: "selector"
-        },
         mapzenAPIKey: {
             default: ''
         },
@@ -87,6 +94,14 @@ AFRAME.registerComponent('tangram-map', {
         if (AFRAME.utils.deepEqual(oldData, this.data)) {
             return;
         }
+
+        if (oldData.pxToWorldRatio !== this.data.pxToWorldRatio) {
+            const geomComponent = this.el.components.geometry;
+            const width = geomComponent.data.width * this.data.pxToWorldRatio;
+            const height = geomComponent.data.height * this.data.pxToWorldRatio;
+            setDimensions(this._canvasContainerId, this.el, width, height);
+        }
+
         // Everything after this requires a map instance
         if (!this._mapInstance) {
             return;
@@ -124,24 +139,12 @@ AFRAME.registerComponent('tangram-map', {
         var width = geomComponent.data.width * this.data.pxToWorldRatio
         var height = geomComponent.data.height * this.data.pxToWorldRatio
 
-        var _canvasContainerId = cuid();
+        this._canvasContainerId = _canvasContainerId = cuid();
         const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId,
             width, height, data.canvasOffsetPx);
 
 
-
-        const renderer = L.canvas({
-            padding: 0,
-            preserveDrawingBuffer: true
-        })
-
-
-        const options = Object.assign({
-                renderer
-            },
-            leafletOptions)
-
-        var map = L.map(canvasContainer, options);
+        var map = L.map(canvasContainer, leafletOptions);
 
 
         const sceneStyle = processStyle(this.data.style);
@@ -160,19 +163,9 @@ AFRAME.registerComponent('tangram-map', {
                 processCanvasElement(canvasContainer)
             },
             view_complete: () => {
-                
-                var ctx = data.canvas.getContext('2d');
-                if (ctx) {
-                    var sourceCanvas = document.querySelector(`#${_canvasContainerId} canvas`)
-                    data.canvas.setAttribute("width", width)
-                    data.canvas.setAttribute("height", height)
-                    ctx.drawImage(sourceCanvas, 0, 0);
-                    console.log("canvas")
-                } else {
-                    const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
-                    this.el.setAttribute('material', 'src', `#${canvasId}`);
-                    console.log("old canvas")
-                }
+
+                const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
+                this.el.setAttribute('material', 'src', `#${canvasId}`);
                 this.el.emit(MAP_LOADED_EVENT);
             }
         });
