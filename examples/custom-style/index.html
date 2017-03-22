@@ -4,12 +4,11 @@
     <meta name="description" content="Custom style example for Tangram component."></meta>
 
     <script src="../build.js"></script>
-    <script src="https://mapzen.com/tangram/tangram.min.js"></script>
+    <script src="../mlib/tangram.debug.js"></script>
   </head>
   <body>
     <a-scene>
       <a-assets>
-        <canvas id="map-canvas" crossorigin="anonymous"></canvas>
         <a-asset-item id="yaml-austria" src="assets/austria-satellite.yaml" />
       </a-assets>
  
@@ -17,14 +16,13 @@
           position="0 2 -2"
           geometry="primitive: plane; width: 7; height: 4;"
           
-          material="color: #ffffff; shader: flat; side: both; transparent: false; src: #map-canvas"
+          material="color: #ffffff; shader: flat;"
 
           tangram-map="
-          canvas: #map-canvas;
           mapzenAPIKey: mapzen-sfnfVzq;
           style: #yaml-austria;
           center: 15.8056, 47.7671;
-          zoom: 14;
+          zoom: 13;
           pxToWorldRatio: 100;
           "
           >

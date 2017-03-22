@@ -27,9 +27,6 @@ AFRAME.registerComponent('tangram-heightmap', {
     ],
 
     schema: {
-        canvas: {
-            type: "selector"
-        },
         mapzenAPIKey: {
             default: ''
         },
@@ -67,10 +64,6 @@ AFRAME.registerComponent('tangram-heightmap', {
         zoom: {
             default: 13
         },
-        pxToWorldRatio: {
-            type: 'int',
-            default: 10
-        },
         canvasOffsetPx: {
             type: 'int',
             default: 9999 // debug
@@ -103,7 +96,6 @@ AFRAME.registerComponent('tangram-heightmap', {
         const geomComponent = this.el.components.geometry;
         var width = geomComponent.data.segmentsWidth
         var height = geomComponent.data.segmentsHeight
-        console.log(width)
 
         this._canvasContainerId = cuid();
         const canvasContainer = getCanvasContainerAssetElement(this._canvasContainerId,
@@ -148,7 +140,7 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         // based on https://github.com/tangrams/heightmapper/blob/gh-pages/main.js
         var scene = this._scene
-        
+
         var heightMapCanvas = document.createElement("canvas")
         heightMapCanvas.width = width
         heightMapCanvas.height = height
@@ -201,7 +193,7 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         if (empty) {
             console.warn("no pixels found")
-            // no pixels found, skip the analysis
+                // no pixels found, skip the analysis
             return false;
         }
 
@@ -217,29 +209,15 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         const geomComponent = this.el.components.geometry;
         const matComponent = this.el.components.material;
-        // TODO - correct
-        var width = Math.min(4096, THREE.Math.nextPowerOfTwo(geomComponent.data.width * data.pxToWorldRatio))
-        var height = Math.min(4096, THREE.Math.nextPowerOfTwo(geomComponent.data.height * data.pxToWorldRatio))
-        width = matComponent.width
-        height = matComponent.height
 
-        console.log(geomComponent.data.width + ' ' + width)
+        const width = matComponent.data.width
+        const height = matComponent.data.height
 
         var _canvasContainerId = cuid();
         const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId,
             width, height, data.canvasOffsetPx + 999);
 
-
-        const renderer = L.canvas({
-            padding: 0
-        })
-
-        const options = Object.assign({
-                renderer
-            },
-            leafletOptions)
-
-        var map = L.map(canvasContainer, options);
+        var map = L.map(canvasContainer, leafletOptions);
 
 
         const sceneStyle = processStyle(data.style);
@@ -267,33 +245,11 @@ AFRAME.registerComponent('tangram-heightmap', {
                 var mesh = this.el.getOrCreateObject3D('mesh', THREE.Mesh);
                 mesh.geometry = geometry
 
-                var ctx = data.canvas.getContext('2d');
-                if (ctx) {
-                    var sourceCanvas = document.querySelector(`#${_canvasContainerId} canvas`)
-                    // TODO sourceCanvas is much too big. 
-                    sourceCanvas.width = width
-                    sourceCanvas.height = height
-                    //?
-
-                    //data.canvas.setAttribute("width", width)
-                    //data.canvas.setAttribute("height", height)
-                    // TODO?
-                    ctx.drawImage(sourceCanvas, 0, 0, width, height);
-                    console.log("drawn")
-                } else {
-                    const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
-                    this.el.setAttribute('material', 'src', `#${canvasId}`);
-                    console.log("not drawn")
-                }
-/*
                 const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
                 this.el.setAttribute('material', 'src', `#${canvasId}`);
-*/
+
+
                 this.el.emit(HEIGHTMAP_LOADED_EVENT);
-
-
-                //document.getElementById(_canvasContainerId).remove()
-
             }
         })
 
@@ -324,8 +280,6 @@ AFRAME.registerComponent('tangram-heightmap', {
         geometry.computeFaceNormals();
         geometry.computeBoundingBox();
 
-        console.log("Terrain finished")
-            //var texture = new THREE.CanvasTexture(this.heightMapCanvas);
         this._initMap(geometry)
     },
     _scale: function(value) {
@@ -336,9 +290,9 @@ AFRAME.registerComponent('tangram-heightmap', {
         } = this.el.components.geometry.data;
 
         const densityFactor = elWidth / elSegmentsWidth
-        const zoomScaleFactor = this.data.zoom * 0.5 //this._mapInstance.getZoom()
+        const zoomScaleFactor = this.data.zoom * 0.2 //this._mapInstance.getZoom()
 
-        var height = (value * 0.05) * zoomScaleFactor * densityFactor * this.data.scaleFactor;
+        var height = (value * 0.18) * zoomScaleFactor * densityFactor * this.data.scaleFactor;
         return height ? height - this._minHeight : 0
     },
 
@@ -367,9 +321,9 @@ AFRAME.registerComponent('tangram-heightmap', {
 
 
         const idx = this._scene.canvas.width * pxY + pxX
-        //console.log(idx)
-        var z = this._scale(this.terrainData[idx]  + this.altitudeAddition)
-        //console.log(z)
+            //console.log(idx)
+        var z = this._scale(this.terrainData[idx] + this.altitudeAddition)
+            //console.log(z)
 
         pxX /= this._scene.canvas.width
         pxY /= this._scene.canvas.height
@@ -440,7 +394,7 @@ AFRAME.registerComponent('tangram-heightmap', {
         return this._getAltitudeFromXY(givenX, givenY)
     },
     addGeoJSON(geojson) {
-        
+
         this.geojsonLayer.addData(geojson);
         console.log("added")
     }

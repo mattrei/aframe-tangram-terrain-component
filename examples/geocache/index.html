@@ -4,7 +4,7 @@
     <meta name="description" content="Geocaching example for Tangram component."></meta>
 
     <script src="../build.js"></script>
-    <script src="https://mapzen.com/tangram/tangram.min.js"></script>
+    <script src="../mlib/tangram.debug.js"></script>
     <script src="https://unpkg.com/aframe-sun-sky@3.0.3/dist/aframe-sun-sky.min.js"></script>
     <script src="//cdn.rawgit.com/donmccurdy/aframe-extras/v3.3.1/dist/aframe-extras.min.js"></script>
 
@@ -18,10 +18,6 @@
   </head>
   <body>
     <a-scene fog="type: exponential; color: #fff; far: 20; density: 0.015;">
-      <a-assets>
-        <canvas id="map-canvas" width="1024" height="1024" crossorigin="anonymous" />
-        <canvas id="gps-canvas" crossorigin="anonymous" />
-      </a-assets>
       <a-assets>
         <a-asset-item id="gltf-phone" src="assets/phone.gltf"></a-asset-item>
 
@@ -38,29 +34,25 @@
  
       <a-entity id="terrain" visible="true"
       
-      geometry="width: 100; height: 100; segmentsWidth: 64; segmentsHeight: 64;"
-      material="shader: flat; transparent: false; wireframe: false; src: #map-canvas;"
+      geometry="width: 100; height: 100; segmentsWidth: 100; segmentsHeight: 100;"
+      material="width: 1350; height: 1350;"
 
       tangram-heightmap="
-      canvas: #map-canvas;
       mapzenAPIKey: mapzen-sfnfVzq;
       style: #yaml-austria;
       center: 15.8056, 47.7671;
-      zoom: 9;
-      pxToWorldRatio: 40;
+      zoom: 10;
       highestAltitudeMeter: 2076;
       " 
-
 
       map-geojson-on-heightmap="geojson: #geo-trails;"
 
       rotation="-90 0 0"
-
-
       >
       <!--add-markers="geojson: #geo-markers;"-->
 
       </a-entity>
+
       <a-entity id="player" collider-check="heightmap: #terrain;">
 
 

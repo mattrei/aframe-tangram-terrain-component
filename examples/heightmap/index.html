@@ -4,21 +4,22 @@
     <meta name="description" content="Heightmap example for Tangram component."></meta>
 
     <script src="../build.js"></script>
-    <script src="https://mapzen.com/tangram/tangram.min.js"></script>
+    <script src="../mlib/tangram.debug.js"></script>
   </head>
   <body>
     <a-scene>
       <a-assets>
-        <canvas id="map-canvas" crossorigin="anonymous"></canvas>
         <a-asset-item id="yaml-austria" src="assets/austria-satellite.yaml" />
       </a-assets>
  
       <a-sky color="#6EBAA7"></a-sky>
  
+      <!-- my Nexus5 chrashes with 1400 x 1400 settings -->
       <a-entity id="terrain" visible="true"
       
-      geometry="width: 40; height: 40; segmentsWidth: 64; segmentsHeight: 64;"
-      material="color: #ffffff; shader: flat; src: #map-canvas; width: 2048; height: 2048;"
+      geometry="width: 50; height: 50; segmentsWidth: 80; segmentsHeight: 80;"
+      material="width: 1350; height: 1350;"
+
 
       tangram-heightmap="
       canvas: #map-canvas;
@@ -26,14 +27,14 @@
       style: #yaml-austria;
       center: 15.8056, 47.7671;
       zoom: 10;
-      canvasOffsetPx: 9999;
-      pxToWorldRatio: 20;
       " 
 
       rotation="-90 0 0"
       position="0 0 0"
       >
       </a-entity>
+
+      <a-entity camera look-controls wasd-controls="fly: true;"></a-entity>
 
     </a-scene>
       
