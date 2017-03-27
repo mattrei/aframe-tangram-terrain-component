@@ -17,7 +17,8 @@
     <script src="./map-geojson-on-heightmap.js"></script>
   </head>
   <body>
-    <a-scene fog="type: exponential; color: #fff; far: 20; density: 0.015;">
+    <!--<a-scene fog="type: exponential; color: #fff; far: 20; density: 0.015;">-->
+    <a-scene>
       <a-assets>
         <a-asset-item id="gltf-phone" src="assets/phone.gltf"></a-asset-item>
 
@@ -30,19 +31,18 @@
         <img id="img-arrow" src="assets/mini_arrow.png" />
       </a-assets>
  
-      <!--<a-sun-sky material="sunPosition: -0.2 1.0 -5"></a-sun-sky>-->
+      <a-sun-sky material="sunPosition: -0.2 1.0 -5"></a-sun-sky>
  
       <a-entity id="terrain" visible="true"
       
       geometry="width: 100; height: 100; segmentsWidth: 100; segmentsHeight: 100;"
-      material="width: 1350; height: 1350;"
+      material="width: 1400; height: 1400;"
 
       tangram-heightmap="
       mapzenAPIKey: mapzen-sfnfVzq;
       style: #yaml-austria;
-      center: 15.8056, 47.7671;
+      center: 12.6947, 47.0742;
       zoom: 10;
-      highestAltitudeMeter: 2076;
       " 
 
       map-geojson-on-heightmap="geojson: #geo-trails;"
@@ -50,68 +50,62 @@
       rotation="-90 0 0"
       >
       <!--add-markers="geojson: #geo-markers;"-->
-
       </a-entity>
+
+      <a-entity light="type: ambient; color: #CCC"></a-entity>
 
       <a-entity id="player" collider-check="heightmap: #terrain;">
 
 
-        <a-camera id="camera" user-height="0.4" universal-controls>
+        <a-camera id="camera" user-height="1.0" universal-controls>
 
-        <a-entity>
+          <a-entity>
 
-          <a-entity id="player-compass" class="right-hand" position="1 -0.7 -2" rotation="-20 -20 0" scale="0.5 0.5 0.5">
-            <a-entity geometry="primitive: box; height: 0.5; width: 0.1; depth: 0.05" material="color: #FCB514" position="0 0 0"></a-entity>
-            <a-image map-look-controls="#camera" src="#img-compass-wheel"></a-image>
-          </a-entity>
 
-          <a-entity id="player-gps" class="left-hand" position="-0.5 -0.5 -1" rotation="-30 45 0">
-            <a-gltf-model src="#gltf-phone" material="color: black; shader: flat;" scale="0.08 0.08 0.08"
-            rotation="-90 0 0"></a-obj-model>
-
-<!--
-            <a-entity id="hud-map" visible="true" position="0 -0.2 0.4" rotation="90 0 0">
-              <a-entity 
-
-              geometry="primitive: plane; width: 4; height: 5;"
-              
-              material="color: #ffffff; shader: flat; side: front; transparent: false; fog: false;"
-
-              set-marker-on-map="heightmap: #terrain; marker: #my-marker;"
-
-              distance-meter=""
-              altitude-meter="heightmap: #terrain; text: #altitudeText;"
-
-              tangram-map="
-              canvas: #gps-canvas;
-              mapzenAPIKey: mapzen-sfnfVzq;
-              style: #yaml-walkabout-style;
-              pxToWorldRatio: 100;
-              "
-
-              >
-                <a-image id="my-marker" src="#img-arrow" transparent="true" width="0.2" height="0.2" position="0 0 0.01">
-                </a-image>
-              </a-entity>
-              <a-text id="altitudeText" value="" color="black" position="0 -0.2 0.4"></a-text>
+            <a-entity visible="false" id="player-compass" class="right-hand" position="1 -0.7 -2" rotation="-20 -20 0" scale="0.5 0.5 0.5">
+              <a-entity geometry="primitive: box; height: 0.5; width: 0.1; depth: 0.05" material="color: #FCB514" position="0 0 0"></a-entity>
+              <a-image map-look-controls="#camera" src="#img-compass-wheel"></a-image>
             </a-entity>
+
+            <a-entity id="player-gps" class="left-hand" position="0 0.3 -1" rotation="0 0 0">
+
+              <a-gltf-model visible="false" src="#gltf-phone" material="color: black; shader: flat;" scale="0.08 0.08 0.08"
+              rotation="-90 0 0"></a-gltf-model>
+
+
+              <a-entity id="hud-map" visible="true" position="0 -0.2 0.4" rotation="0 0 0" scale="0.05 0.05 0.05">
+                <a-entity 
+
+                geometry="primitive: plane; width: 4; height: 5;"
+                
+                material="color: #ffffff; shader: flat; side: front; transparent: false; fog: false;"
+
+                set-marker-on-map="heightmap: #terrain; marker: #my-marker;"
+
+                distance-meter=""
+                altitude-meter="heightmap: #terrain; text: #altitudeText;"
+
+                tangram-map="
+                mapzenAPIKey: mapzen-sfnfVzq;
+                style: #yaml-walkabout-style;
+                pxToWorldRatio: 100;
+                zoom: 15;
+                "
+                >
+                  <a-image id="my-marker" src="#img-arrow" transparent="true" width="0.4" height="0.4" position="0 0 0.01">
+                  </a-image>
+                </a-entity>
+                <a-text id="altitudeText" value="" color="black" position="0 -0.2 0.4"></a-text>
+              </a-entity>
+            </a-entity>
+            
+
+            <a-cursor></a-cursor>
+
+
           </a-entity>
-          -->
-          
-          
-          
-
-          
-        </a-entity>
-        
-        
-
-          <a-cursor></a-cursor>
-
-        </a-camera>
-        
-
-        
+        </a-camera>        
+       
       </a-entity>
 
 
