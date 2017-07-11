@@ -5,8 +5,10 @@ sources:
         max_zoom: 18
 
 layers:
-    aerial_aust:
+    aerial_austria:
         data: { source: austria }
         draw:
             _terainStyle:
                 style: raster
+                order: 0
+                

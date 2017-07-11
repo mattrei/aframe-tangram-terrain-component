@@ -48,14 +48,14 @@ AFRAME.registerComponent('tangram-heightmap', {
             [1] northeast
         */
         maxBounds: {
-            default: undefined,
+            default: [],
             type: 'array',
             parse: value => {
                 return value
             },
         },
         fitBounds: {
-            default: undefined,
+            default: [],
             type: 'array',
             parse: value => {
                 return value
@@ -71,7 +71,7 @@ AFRAME.registerComponent('tangram-heightmap', {
         // set the highest altitude
         highestAltitudeMeter: {
             type: 'int',
-            default: undefined
+            default: 0
         }
     },
 
@@ -110,6 +110,9 @@ AFRAME.registerComponent('tangram-heightmap', {
                     sdk_mapzen_api_key: data.mapzenAPIKey
                 }
             },
+            webGLContextOptions: {
+                preserveDrawingBuffer: true
+            },
             attribution: ''
         });
 
@@ -128,8 +131,8 @@ AFRAME.registerComponent('tangram-heightmap', {
         layer.addTo(map);
         this._mapInstance = map
 
-        if (data.maxBounds) this._mapInstance.setMaxBounds(L.latLngBounds(this.data.maxBounds))
-        if (data.fitBounds) this._mapInstance.fitBounds(L.latLngBounds(this.data.fitBounds))
+        if (data.maxBounds.length > 0) this._mapInstance.setMaxBounds(L.latLngBounds(this.data.maxBounds))
+        if (data.fitBounds.length > 0) this._mapInstance.fitBounds(L.latLngBounds(this.data.fitBounds))
         this._mapInstance.setView(latLonFrom(this.data.center), this.data.zoom)
     },
     _start_analysis: function() {
@@ -187,7 +190,7 @@ AFRAME.registerComponent('tangram-heightmap', {
 
         var highestMeter = max / 255 * 8900
 
-        if (this.data.highestAltitudeMeter) {
+        if (this.data.highestAltitudeMeter > 0) {
             this.altitudeAddition = this.data.highestAltitudeMeter - highestMeter
         }
 
@@ -228,6 +231,9 @@ AFRAME.registerComponent('tangram-heightmap', {
                 global: {
                     sdk_mapzen_api_key: data.mapzenAPIKey
                 }
+            },
+            webGLContextOptions: {
+                preserveDrawingBuffer: true
             },
             attribution: ''
         });

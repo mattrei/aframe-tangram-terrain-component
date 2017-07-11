@@ -56,14 +56,14 @@ AFRAME.registerComponent('tangram-map', {
             [1] northeast
         */
         maxBounds: {
-            default: undefined,
+            default: [],
             type: 'array',
             parse: value => {
                 return value
             },
         },
         fitBounds: {
-            default: undefined,
+            default: [],
             type: 'array',
             parse: value => {
                 return value
@@ -107,18 +107,21 @@ AFRAME.registerComponent('tangram-map', {
             return;
         }
 
-        if (!AFRAME.utils.deepEqual(oldData.maxBounds, this.data.maxBounds)) {
+        //if (!AFRAME.utils.deepEqual(oldData.maxBounds, this.data.maxBounds)) {
+        if (oldData.maxBounds !== this.data.maxBounds) {
             var bounds = L.latLngBounds(this.data.maxBounds);
             this._mapInstance.setMaxBounds(bounds)
         }
 
         var moved = false;
-        if (!AFRAME.utils.deepEqual(oldData.center, this.data.center)) {
+        //if (!AFRAME.utils.deepEqual(oldData.center, this.data.center)) {
+        if (oldData.center !== this.data.center) {
             moved = true
             this._mapInstance.setView(latLonFrom(this.data.center), this.data.zoom)
         }
 
-        if (!AFRAME.utils.deepEqual(oldData.fitBounds, this.data.fitBounds)) {
+        //if (!AFRAME.utils.deepEqual(oldData.fitBounds, this.data.fitBounds)) {
+        if (this.data.fitBounds.length > 0 && oldData.fitBounds !== this.data.fitBounds) {
             moved = true
             var bounds = L.latLngBounds(this.data.fitBounds);
             this._mapInstance.fitBounds(bounds)
@@ -155,6 +158,9 @@ AFRAME.registerComponent('tangram-map', {
                 global: {
                     sdk_mapzen_api_key: data.mapzenAPIKey
                 }
+            },
+            webGLContextOptions: {
+                preserveDrawingBuffer: true
             },
             attribution: ''
         });

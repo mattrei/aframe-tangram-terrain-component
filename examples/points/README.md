@@ -1,1 +1,0 @@
-https://github.com/tangrams/cinnabar-style-no-labels
