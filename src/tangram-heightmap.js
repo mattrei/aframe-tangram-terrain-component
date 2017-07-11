@@ -15,7 +15,7 @@ const cuid = require('cuid')
 const heightmapStyle = require('./heightmap-style.yaml');
 require('leaflet')
 
-const HEIGHTMAP_LOADED_EVENT = 'tangram-heightmap-loaded';
+const HEIGHTMAP_LOADED_EVENT = 'heightmap-loaded';
 
 // TODO make configurable?
 var tempFactor = 1; // size of heightMapCanvas relative to main canvas: 1/n
@@ -307,10 +307,6 @@ AFRAME.registerComponent('tangram-heightmap', {
 
     tick: function(delta, time) {},
 
-    _getAltitudeFromXY: function(x, y) {
-        const idx = this._scene.canvas.width * y + x
-        return this.terrainData[idx] / 255 * 8900 + this.altitudeAddition
-    },
 
     project(lon, lat) {
 
@@ -374,6 +370,8 @@ AFRAME.registerComponent('tangram-heightmap', {
             lon: latLng.lng
         }
     },
+    // TODO - refactor out
+    /*
     distanceTo(lngLat) {
         // TODO add altitude, has it an effect?
         return L.latLng(lngLat).distanceTo(this.data.center)
@@ -387,17 +385,22 @@ AFRAME.registerComponent('tangram-heightmap', {
             y: currY
         } = this._mapInstance.latLngToLayerPoint([data.center[1], data.center[0]]);
 
-        var currAltitude = this._getAltitudeFromXY(currX, currY)
+        var currAltitude = this.unprojectAlitude(currX, currY)
 
         return currAltitude - this.getAltitude(lngLat)
     },
-    getAltitude(lngLat) {
+    */
+    unprojectAlitude: function(x, y) {
+        const idx = this._scene.canvas.width * y + x
+        return this.terrainData[idx] / 255 * 8900 + this.altitudeAddition
+    },
+    projectAltitude(lng, lat) {
         const {
             x: givenX,
             y: givenY
-        } = this._mapInstance.latLngToLayerPoint([lngLat[1], lngLat[0]]);
+        } = this._mapInstance.latLngToLayerPoint([lat, lng]);
 
-        return this._getAltitudeFromXY(givenX, givenY)
+        return this.unprojectAlitude(givenX, givenY)
     },
     addGeoJSON(geojson) {
 
