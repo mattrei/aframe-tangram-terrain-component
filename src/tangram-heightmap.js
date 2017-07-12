@@ -13,7 +13,6 @@ if (typeof AFRAME === 'undefined') {
 const cuid = require('cuid')
 
 const heightmapStyle = require('./heightmap-style.yaml');
-require('leaflet')
 
 const HEIGHTMAP_LOADED_EVENT = 'heightmap-loaded';
 

@@ -13,8 +13,6 @@ if (typeof AFRAME === 'undefined') {
 
 const cuid = require('cuid')
 
-require('leaflet')
-
 const MAP_LOADED_EVENT = 'map-loaded';
 const MAP_MOVE_END_EVENT = 'map-moveend';
 
