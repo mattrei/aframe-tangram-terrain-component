@@ -307,7 +307,7 @@ AFRAME.registerComponent('tangram-heightmap', {
     project(lon, lat) {
 
         // The position (origin at top-left corner) in pixel space
-        let {
+        const {
             x: pxX,
             y: pxY
         } = this._mapInstance.latLngToLayerPoint([lat, lon]);
