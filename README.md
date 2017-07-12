@@ -139,5 +139,5 @@ require('aframe-tangram-component');
 
 
 ### Known issues
-* The maximum texture size of the overlay map is restricted on mobile devies. 
-* Further versions may include the support of map tiling to overcome this issue.
+* The maximum texture size of the overlay map is restricted on mobile devies.  
+* Future versions may include the support of map tiling to overcome this issue.

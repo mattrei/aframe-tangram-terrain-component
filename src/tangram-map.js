@@ -57,17 +57,11 @@ AFRAME.registerComponent('tangram-map', {
         */
         maxBounds: {
             default: [],
-            type: 'array',
-            parse: value => {
-                return value
-            },
+            type: 'array'
         },
         fitBounds: {
             default: [],
-            type: 'array',
-            parse: value => {
-                return value
-            },
+            type: 'array'
         },
         zoom: {
             default: 13
@@ -90,6 +84,8 @@ AFRAME.registerComponent('tangram-map', {
         this._initMap()
     },
     update: function(oldData) {
+        var self = this;
+
         // Nothing changed
         if (AFRAME.utils.deepEqual(oldData, this.data)) {
             return;
@@ -129,14 +125,15 @@ AFRAME.registerComponent('tangram-map', {
 
         if (moved) {
             // A way to signal when these async actions have completed
-            this._mapInstance.once('moveend', e => {
-                this.el.emit(MAP_MOVE_END_EVENT);
+            this._mapInstance.once('moveend', function(evt) {
+                self.el.emit(MAP_MOVE_END_EVENT);
             });
         }
     },
     _initMap: function() {
 
         var data = this.data
+        var self = this
 
         const geomComponent = this.el.components.geometry;
         var width = geomComponent.data.width * this.data.pxToWorldRatio
@@ -165,14 +162,14 @@ AFRAME.registerComponent('tangram-map', {
             attribution: ''
         });
         layer.scene.subscribe({
-            load: () => {
+            load: function() {
                 processCanvasElement(canvasContainer)
             },
-            view_complete: () => {
+            view_complete: function() {
 
                 const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
-                this.el.setAttribute('material', 'src', `#${canvasId}`);
-                this.el.emit(MAP_LOADED_EVENT);
+                self.el.setAttribute('material', 'src', `#${canvasId}`);
+                self.el.emit(MAP_LOADED_EVENT);
             }
         });
         layer.addTo(map);
@@ -229,10 +226,4 @@ AFRAME.registerComponent('tangram-map', {
             lat: latLng.lat
         }
     }
-    /*,
-    distanceTo(lon, lat) {
-
-        const latLon = [lat, lon]
-        return L.latLng(latLon).distanceTo(this.data.center)
-    }*/
 });

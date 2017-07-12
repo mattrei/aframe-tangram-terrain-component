@@ -49,17 +49,11 @@ AFRAME.registerComponent('tangram-heightmap', {
         */
         maxBounds: {
             default: [],
-            type: 'array',
-            parse: value => {
-                return value
-            },
+            type: 'array'
         },
         fitBounds: {
             default: [],
-            type: 'array',
-            parse: value => {
-                return value
-            },
+            type: 'array'
         },
         zoom: {
             default: 13
@@ -119,7 +113,7 @@ AFRAME.registerComponent('tangram-heightmap', {
         var scene = this._scene = layer.scene
 
 
-        layer.on('init', _ => {
+        layer.on('init', function() {
             // resetViewComplete();
             scene.subscribe({
                 // will be triggered when tiles are finished loading
@@ -205,6 +199,8 @@ AFRAME.registerComponent('tangram-heightmap', {
     },
     _initMap: function(geometry) {
 
+        var self = this
+
         // is probably a good thing to remove element
         document.getElementById(this._canvasContainerId).remove()
 
@@ -243,19 +239,19 @@ AFRAME.registerComponent('tangram-heightmap', {
         this.geojsonLayer = L.geoJson().addTo(map);
 
         layer.scene.subscribe({
-            load: () => {
+            load: function() {
                 processCanvasElement(canvasContainer)
             },
-            view_complete: () => {
+            view_complete: function() {
 
-                var mesh = this.el.getOrCreateObject3D('mesh', THREE.Mesh);
+                var mesh = self.el.getOrCreateObject3D('mesh', THREE.Mesh);
                 mesh.geometry = geometry
 
                 const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
-                this.el.setAttribute('material', 'src', `#${canvasId}`);
+                self.el.setAttribute('material', 'src', `#${canvasId}`);
 
 
-                this.el.emit(HEIGHTMAP_LOADED_EVENT);
+                self.el.emit(HEIGHTMAP_LOADED_EVENT);
             }
         })
 
@@ -370,26 +366,6 @@ AFRAME.registerComponent('tangram-heightmap', {
             lon: latLng.lng
         }
     },
-    // TODO - refactor out
-    /*
-    distanceTo(lngLat) {
-        // TODO add altitude, has it an effect?
-        return L.latLng(lngLat).distanceTo(this.data.center)
-    },
-    altitudeTo(lngLat) {
-
-        var data = this.data
-
-        const {
-            x: currX,
-            y: currY
-        } = this._mapInstance.latLngToLayerPoint([data.center[1], data.center[0]]);
-
-        var currAltitude = this.unprojectAlitude(currX, currY)
-
-        return currAltitude - this.getAltitude(lngLat)
-    },
-    */
     unprojectAlitude: function(x, y) {
         const idx = this._scene.canvas.width * y + x
         return this.terrainData[idx] / 255 * 8900 + this.altitudeAddition
