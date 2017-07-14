@@ -1,5 +1,5 @@
-require('leaflet')
+require('leaflet');
 
-require('./src/tangram-map')
-require('./src/tangram-heightmap')
+require('./src/tangram-map');
+require('./src/tangram-heightmap');
 

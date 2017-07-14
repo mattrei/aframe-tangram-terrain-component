@@ -73,6 +73,16 @@ This component so far can be just used as a texture for a geometry object (plane
 ### Styling
 The Mapzen Tangram styling:
 
+### Dependencies
+The Mapzen styling documents are in the YAML format, so you need a possiblity to require those files.
+If you are using _Webpack_ install
+`npm install yml-loader --save-dev` 
+and configure the webpack configuration file
+
+If you are using browserify install the
+`nmp install yamlify --save-dev` 
+and give pass the transform (-t) parameter to browserify.
+
 ### Installation
 
 #### Browser
