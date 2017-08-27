@@ -9,7 +9,7 @@
   <body>
     <a-scene>
       <a-assets>
-        <a-asset-item id="yaml-austria" src="assets/austria-satellite.yaml" />
+        <a-asset-item id="yaml-hyposometric" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/hypsometric.yaml" />
       </a-assets>
  
       <a-sky color="#6EBAA7"></a-sky>
@@ -17,16 +17,15 @@
       <!-- my Nexus5 chrashes with 1400 x 1400 settings -->
       <a-entity id="terrain" visible="true"
       
-      geometry="width: 50; height: 50; segmentsWidth: 80; segmentsHeight: 80;"
-      material="width: 1350; height: 1350; wireframe: true;"
+      geometry="width: 20; height: 20; segmentsWidth: 40; segmentsHeight: 40;"
+      material="width: 1350; height: 1350;"
 
 
       tangram-heightmap="
       mapzenAPIKey: mapzen-sfnfVzq;
-      style: #yaml-austria;
+      style: #yaml-hyposometric;
       center: 15.8056, 47.7671;
-      zoom: 10;
-      scaleFactor: 1;
+      zoom: 8;
       " 
 
       rotation="-90 0 0"

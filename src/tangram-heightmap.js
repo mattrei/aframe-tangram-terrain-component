@@ -83,6 +83,7 @@ AFRAME.registerComponent('tangram-heightmap', {
     this._initHeightMap();
   },
   _initHeightMap: function () {
+    const self = this;
     var data = this.data;
 
     const geomComponent = this.el.components.geometry;
@@ -115,7 +116,9 @@ AFRAME.registerComponent('tangram-heightmap', {
       scene.subscribe({
                 // will be triggered when tiles are finished loading
                 // and also manually by the moveend event
-        view_complete: this._start_analysis.bind(this)
+        view_complete: function() {
+          self._start_analysis()
+        }
       });
     });
     layer.addTo(map);

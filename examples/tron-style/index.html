@@ -1,0 +1,39 @@
+<html>
+  <head>
+    <title>A-Frame Tangram Component - Map</title>
+    <meta name="description" content="Custom style example for Tangram component."></meta>
+
+    <script src="../build.js"></script>
+    <script src="https://mapzen.com/tangram/tangram.min.js"></script>
+  </head>
+  <body>
+    <a-scene>
+      <a-assets>
+        <a-asset-item id="zip-tron" src="assets/tron-style.zip" />
+      </a-assets>
+ 
+        <a-entity 
+          position="0 2 -2"
+          geometry="primitive: plane; width: 8; height: 8;"
+          
+          material="color: #fff; shader: flat;"
+
+          tangram-map="
+          mapzenAPIKey: mapzen-sfnfVzq;
+          style: #zip-tron;
+          center: 16.3738, 48.2082;
+          zoom: 12;
+          pxToWorldRatio: 100;
+          "
+          >
+        </a-entity>
+
+
+      <a-entity position="0 0 3.8">
+        <a-camera></a-camera>
+      </a-entity>
+
+
+    </a-scene>
+  </body>
+</html>
