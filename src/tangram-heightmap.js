@@ -116,8 +116,8 @@ AFRAME.registerComponent('tangram-heightmap', {
       scene.subscribe({
                 // will be triggered when tiles are finished loading
                 // and also manually by the moveend event
-        view_complete: function() {
-          self._start_analysis()
+        view_complete: function () {
+          self._start_analysis();
         }
       });
     });
