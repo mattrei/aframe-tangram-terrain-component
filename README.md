@@ -1,4 +1,4 @@
-## aframe-tangram-component
+## aframe-tangram-terrain-component
 
 A Mapzen Tangram component for [A-Frame](https://aframe.io).
 
@@ -9,36 +9,7 @@ A Mapzen Tangram component for [A-Frame](https://aframe.io).
 
 ### API
 
-This library provides two components for visualizing a map and a heightmap using the Mapzen Tangram. 
-
-#### `tangram-map` component
-
-The geojson component has the `material` and `geometry` components as a dependency from the entity. It implements a raycaster logic that fires an event if a GeoJSON feature gets selected.
-
-##### Schema
-| Property | Description | Default Value |
-| -------- | ----------- | ------------- |
-| mapzenAPIKey | Your API key to make use of the Tangram API. | "" |
-| style | The style definition document for the ovleray style. Defaults to the standard Tangam style. | "" |
-| center | Center of the map, in the form of [longitude, latitude] | [0, 0] |
-| maxBounds | The maximum bounds of the map. Given as [[southwest], [northeast]] | [] |
-| fitBounds | Uses the optimal zoom level for the given map boundaries. Given as [[southwest], [northeast]] | [] |
-| zoom | The zoom level of the map. Is ignored when _fitBounds_ is given. | 13 |
-| pxToWorldRatio | The zoom level of the map. Is ignored when _fitBounds_ is given. | 13 |
-
-##### Events
-| Name | Data | Description |
-| -------- | ----------- | ------------- |
-| map-loaded | None| Fired when the map has finished loading. |
-| map-moveend | None | Fired when the map parameters have been changed and the map has reloaded. |
-
-##### API
-| Name | Data | Description |
-| -------- | ----------- | ------------- |
-| project | _lon_, _lat_| Returns the pixel x and y coordinates of the given longitude and latitude. |
-| unproject | _x_, _y_| Gives the longitude and latitude of the pixel coordinates. |
-
-#### `tangram-heightmap` component
+#### `tangram-terrain` component
 
 This component so far can be just used as a texture for a geometry object (plane, sphere, etc). No feature selection events are fired. A strategy may be implemented in future releases. 
 
@@ -94,14 +65,11 @@ Install and use by directly including the [browser files](dist):
   <title>My A-Frame Scene</title>
   <script src="https://aframe.io/releases/0.6.0/aframe.min.js"></script>
   <script src="https://mapzen.com/tangram/tangram.min.js"></script>
-  <script src="https://unpkg.com/aframe-tangram-component/dist/aframe-tangram-component.min.js"></script>
+  <script src="https://unpkg.com/aframe-tangram-terrain-component/dist/aframe-tangram-terrain-component.min.js"></script>
 </head>
 
 <body>
   <a-scene>
-    <a-assets>
-    <a-asset-item id="world-geojson" src="assets/world-50m.v1.json" />
-    </a-assets>        
 
       <a-entity 
         position="0 2.5 -2"
@@ -128,7 +96,7 @@ version of the component straight into your HTML file, respective to your
 version of A-Frame:
 
 ```sh
-angle install aframe-geojson-component
+angle install aframe-tangram-terrain-component
 ```
 -->
 
@@ -137,14 +105,14 @@ angle install aframe-geojson-component
 Install via npm:
 
 ```bash
-npm install aframe-tangram-component
+npm install aframe-tangram-terrain-component
 ```
 
 Then require and use.
 
 ```js
 require('aframe');
-require('aframe-tangram-component');
+require('aframe-tangram-terrain-component');
 ```
 
 
