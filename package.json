@@ -1,13 +1,13 @@
 {
-    "name": "aframe-tangram-component",
+    "name": "aframe-tangram-terrain-component",
     "version": "1.0.0",
-    "description": "A Tangram component for A-Frame.",
+    "description": "A Tangram terrain component for A-Frame.",
     "main": "index.js",
-    "cdn": "dist/aframe-tangram-component.min.js",
+    "cdn": "dist/aframe-tangram-terrain-component.min.js",
     "scripts": {
         "build": "browserify examples/main.js -t yamlify -o examples/build.js",
         "dev": "budo examples/main.js:build.js --dir examples --port 8000 --live -- -t yamlify",
-        "dist": "webpack index.js dist/aframe-tangram-component.js && webpack -p index.js dist/aframe-tangram-component.min.js",
+        "dist": "webpack index.js dist/aframe-tangram-terrain-component.js && webpack -p index.js dist/aframe-tangram-terrain-component.min.js",
         "lint": "semistandard -v --fix | snazzy",
         "prepublish": "npm run dist",
         "preghpages": "npm run build && shx rm -rf gh-pages && shx mkdir gh-pages && shx cp -r examples/* gh-pages",
@@ -19,7 +19,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/mattrei/aframe-tangram-component"
+        "url": "https://github.com/mattrei/aframe-tangram-terrain-component"
     },
     "keywords": [
         "aframe",
@@ -28,14 +28,15 @@
         "vr",
         "mozvr",
         "webvr",
-        "tangram"
+        "tangram",
+        "terrain"
     ],
     "author": "Matthias Treitler <matthias.treitler@gmail.com>",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/mattrei/aframe-tangram-component/issues"
+        "url": "https://github.com/mattrei/aframe-tangram-terrain-component/issues"
     },
-    "homepage": "https://github.com/mattrei/aframe-tangram-component#readme",
+    "homepage": "https://github.com/mattrei/aframe-tangram-terrain-component#readme",
     "devDependencies": {
         "aframe": "^0.6.0",
         "browserify": "^13.0.0",
@@ -60,7 +61,8 @@
         "sinon-chai": "^2.13.0",
         "snazzy": "^4.0.0",
         "webpack": "^1.13.0",
-        "yamlify": "^0.1.3"
+        "yamlify": "^0.1.3",
+        "yml-loader": "^2.1.0"
     },
     "dependencies": {
         "cuid": "^1.3.8",
