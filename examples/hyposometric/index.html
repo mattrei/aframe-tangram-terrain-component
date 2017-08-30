@@ -9,10 +9,12 @@
   <body>
     <a-scene>
       <a-assets>
-        <a-asset-item id="yaml-hyposometric" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/terrarium-elevation.yaml" />
+        <a-asset-item id="yamlElevation" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/terrarium-elevation.yaml" />
+        <a-asset-item id="yamlHypsometric" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/hypsometric-adjusted.yaml" />
+        <a-asset-item id="yamlGrayscale" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/grayscale.yaml" />
       </a-assets>
  
-      <a-sky color="#6EBAA7"></a-sky>
+      <a-sky color="#aaa"></a-sky>
  
       <!-- my Nexus5 chrashes with 1400 x 1400 settings -->
   <a-entity id="terrain" visible="true"
@@ -21,9 +23,9 @@
       material="width: 1350; height: 1350; wireframe: false;"
 
 
-      tangram-heightmap="
+      tangram-terrain="
       mapzenAPIKey: mapzen-sfnfVzq;
-      style: #yaml-hyposometric;
+      style: #yamlHypsometric;
       center: 15.8056, 47.7671;
       zoom: 9;
       scaleFactor: 1;

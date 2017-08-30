@@ -39,6 +39,10 @@ AFRAME.registerComponent('tangram-terrain', {
       type: 'asset',
       default: ''
     },
+    preset: {
+      oneOf: ['elevation', 'grayscale', 'hypsometric-adjusted' ]
+    },
+
     scaleFactor: {
       type: 'int',
       default: 1
@@ -214,10 +218,10 @@ AFRAME.registerComponent('tangram-terrain', {
     const height = matComponent.data.height;
 
     var _canvasContainerId = cuid();
-    const canvasContainer = getCanvasContainerAssetElement(_canvasContainerId,
+    const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
             width, height, data.canvasOffsetPx + 999);
 
-    var map = L.map(canvasContainer, leafletOptions);
+    var map = L.map(canvasContainer, Utils.leafletOptions);
 
     const sceneStyle = Utils.processStyle(data.style);
 
