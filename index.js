@@ -1,6 +1,7 @@
 /* global AFRAME THREE Tangram L */
 
-require('leaflet');
+const L = require('leaflet');
+const Tangram = require('tangram');
 
 const Utils = require('./src/utils')
 
@@ -20,7 +21,7 @@ const cuid = require('cuid');
 
 const heightmapStyle = require('./src/heightmap-style.yaml');
 
-const HEIGHTMAP_LOADED_EVENT = 'heightmap-loaded';
+const HEIGHTMAP_LOADED_EVENT = 'model-loaded';
 
 // TODO make configurable?
 var tempFactor = 1; // size of heightMapCanvas relative to main canvas: 1/n
@@ -48,7 +49,7 @@ AFRAME.registerComponent('tangram-terrain', {
       default: 1
     },
     center: {
-            // lat lon
+      // lat lon
       default: [0, 0],
       type: 'array'
     },
@@ -86,6 +87,9 @@ AFRAME.registerComponent('tangram-terrain', {
     this._mapInstance = null;
     this._scene = null;
 
+    this.canvasWidth = 0
+    this.canvasHeigth = 0
+
     this.altitudeAddition = 0;
 
     this.terrainData = [];
@@ -119,15 +123,19 @@ AFRAME.registerComponent('tangram-terrain', {
       attribution: ''
     });
 
-    var scene = this._scene = layer.scene;
+    //this._scene = layer.scene;
+    
 
     layer.on('init', function () {
             // resetViewComplete();
-      scene.subscribe({
+      layer.scene.subscribe({
                 // will be triggered when tiles are finished loading
                 // and also manually by the moveend event
         view_complete: function () {
-          self._start_analysis();
+
+          self.canvasWidth = layer.scene.canvas.width
+          self.canvasHeight = layer.scene.canvas.height
+          self._start_analysis(layer.scene);
         }
       });
     });
@@ -138,13 +146,12 @@ AFRAME.registerComponent('tangram-terrain', {
     if (data.fitBounds.length > 0) this._mapInstance.fitBounds(L.latLngBounds(this.data.fitBounds));
     this._mapInstance.setView(Utils.latLonFrom(this.data.center), this.data.zoom);
   },
-  _start_analysis: function () {
+  _start_analysis: function (scene) {
     const geomComponent = this.el.components.geometry;
     var width = geomComponent.data.segmentsWidth;
     var height = geomComponent.data.segmentsHeight;
 
-        // based on https://github.com/tangrams/heightmapper/blob/gh-pages/main.js
-    var scene = this._scene;
+      // based on https://github.com/tangrams/heightmapper/blob/gh-pages/main.js
 
     var heightMapCanvas = document.createElement('canvas');
     heightMapCanvas.width = width;
@@ -185,7 +192,7 @@ AFRAME.registerComponent('tangram-terrain', {
       this.terrainData.push(val);
     }
 
-        // range is 0 to 255 which is 8900 meters according to heightmap-style
+    // range is 0 to 255 which is 8900 meters according to heightmap-style
     this._minHeight = min;
     this._maxHeight = max;
 
@@ -200,6 +207,10 @@ AFRAME.registerComponent('tangram-terrain', {
                 // no pixels found, skip the analysis
       return false;
     }
+
+    // remove canvas and destroy scene
+    heightMapCanvas = null;
+    scene.destroy()
 
     this._createTerrain();
   },
@@ -239,7 +250,7 @@ AFRAME.registerComponent('tangram-terrain', {
     });
     layer.addTo(map);
 
-    this.geojsonLayer = L.geoJson().addTo(map);
+    //this.geojsonLayer = L.geoJson().addTo(map);
 
     layer.scene.subscribe({
       load: function () {
@@ -253,6 +264,8 @@ AFRAME.registerComponent('tangram-terrain', {
         self.el.setAttribute('material', 'src', `#${canvasId}`);
 
         self.el.emit(HEIGHTMAP_LOADED_EVENT);
+
+        //layer.scene.destroy()
       }
     });
 
@@ -260,6 +273,9 @@ AFRAME.registerComponent('tangram-terrain', {
     map.fitBounds(heightMapBounds);
 
     this._mapOverlay = map;
+
+    // TODO?
+    this._mapInstance = map;
   },
   _createTerrain: function () {
     const {
@@ -273,11 +289,29 @@ AFRAME.registerComponent('tangram-terrain', {
             elWidth, elHeight,
             elSegmentsWidth - 1, elSegmentsHeight - 1);
     var vertices = geometry.attributes.position.array;
-        // https://stackoverflow.com/questions/37927031/how-to-update-the-topology-of-a-geometry-efficiently-in-threejs
+    // https://stackoverflow.com/questions/37927031/how-to-update-the-topology-of-a-geometry-efficiently-in-threejs
+
+    var max = 0;
+    
     for (var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
             // only set z values (note: planes are not standing by default)
-      vertices[j + 2] = this._scale(this.terrainData[i] + this.altitudeAddition);
+      if (this.terrainData[i]) {
+        var val = this._scale(this.terrainData[i] + this.altitudeAddition);
+        vertices[j + 2] = val;
+
+        max = Math.max(max, val);
+      }
     }
+
+    console.log(this.terrainData)
+
+    console.log(max)
+    // place to the ground
+    for (var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
+      //vertices[j + 2] -= max;
+      //vertices[j + 2] -= max;
+    }
+
     geometry.computeFaceNormals();
     geometry.computeBoundingBox();
 
@@ -293,7 +327,8 @@ AFRAME.registerComponent('tangram-terrain', {
     const zoomScaleFactor = this.data.zoom * 0.2; // this._mapInstance.getZoom()
 
     var height = (value * 0.18) * zoomScaleFactor * densityFactor * this.data.scaleFactor;
-    return height ? height - this._minHeight : 0;
+    return height;
+    //return height ? height - this._minHeight : 0;
   },
 
   remove: function () {},
@@ -312,13 +347,13 @@ AFRAME.registerComponent('tangram-terrain', {
             height: elHeight
         } = this.el.components.geometry.data;
 
-    const idx = this._scene.canvas.width * pxY + pxX;
+    const idx = this.canvasWidth * pxY + pxX;
             // console.log(idx)
     var z = this._scale(this.terrainData[idx] + this.altitudeAddition);
             // console.log(z)
 
-    pxX /= this._scene.canvas.width;
-    pxY /= this._scene.canvas.height;
+    pxX /= this.canvasWidth;
+    pxY /= this.canvasHeight;
 
     pxX *= elWidth;
     pxY *= elHeight;
@@ -347,9 +382,12 @@ AFRAME.registerComponent('tangram-terrain', {
     var nx = pxX / elWidth;
     var ny = pxY / elHeight;
 
-    nx *= this._scene.canvas.width;
-    ny *= this._scene.canvas.height;
+    nx *= this.canvasWidth;
+    ny *= this.canvasHeight;
 
+
+    console.log("Points")
+    console.log(x + ' ' + y + ' --> ' + nx + ' ' + ny + '  ' + this.canvasWidth)
         // Return the lat / long of that pixel on the map
     var latLng = this._mapInstance.layerPointToLatLng([nx, ny]);
     return {
@@ -358,7 +396,7 @@ AFRAME.registerComponent('tangram-terrain', {
     };
   },
   unprojectAlitude: function (x, y) {
-    const idx = this._scene.canvas.width * y + x;
+    const idx = this.canvasWidth * y + x;
     return this.terrainData[idx] / 255 * 8900 + this.altitudeAddition;
   },
   projectAltitude (lng, lat) {
@@ -369,8 +407,13 @@ AFRAME.registerComponent('tangram-terrain', {
 
     return this.unprojectAlitude(givenX, givenY);
   },
+  getLeafletInstance: function() {
+    return this._mapInstance;
+  }
+  /*
   addGeoJSON (geojson) {
     this.geojsonLayer.addData(geojson);
     console.log('added');
   }
+  */
 });
