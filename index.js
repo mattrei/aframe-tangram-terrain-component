@@ -5,14 +5,6 @@ const Tangram = require('tangram');
 
 const Utils = require('./src/utils')
 
-/*
-const latLonFrom = require('./src/utils').latLonFrom;
-const leafletOptions = require('./src/utils').leafletOptions;
-const getCanvasContainerAssetElement = require('./src/utils').getCanvasContainerAssetElement;
-const processStyle = require('./src/utils').processStyle;
-const processCanvasElement = require('./src/utils').processCanvasElement;
-*/
-
 if (typeof AFRAME === 'undefined') {
   throw new Error('Component attempted to register before AFRAME was available.');
 }
@@ -67,6 +59,9 @@ AFRAME.registerComponent('tangram-terrain', {
     },
     zoom: {
       default: 13
+    },
+    pxToWorldRatio: {
+      default: 10
     },
     canvasOffsetPx: {
       type: 'int',
@@ -223,10 +218,9 @@ AFRAME.registerComponent('tangram-terrain', {
     const data = this.data;
 
     const geomComponent = this.el.components.geometry;
-    const matComponent = this.el.components.material;
 
-    const width = matComponent.data.width;
-    const height = matComponent.data.height;
+    const width = geomComponent.data.width * this.data.pxToWorldRatio;
+    const height = geomComponent.data.height * this.data.pxToWorldRatio;
 
     var _canvasContainerId = cuid();
     const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
@@ -331,7 +325,9 @@ AFRAME.registerComponent('tangram-terrain', {
     //return height ? height - this._minHeight : 0;
   },
 
-  remove: function () {},
+  remove: function () {
+    this._scene.destroy();
+  },
 
   tick: function (delta, time) {},
 

@@ -4,7 +4,6 @@
     <meta name="description" content="Heightmap example for Tangram component."></meta>
 
     <script src="../build.js"></script>
-    <script src="https://mapzen.com/tangram/tangram.min.js"></script>
   </head>
   <body>
     <a-scene>
@@ -19,20 +18,21 @@
       <!-- my Nexus5 chrashes with 1400 x 1400 settings -->
   <a-entity id="terrain" visible="true"
       
-      geometry="width: 50; height: 50; segmentsWidth: 80; segmentsHeight: 80;"
-      material="width: 800; height: 800; wireframe: false;"
+      geometry="width: 25; height: 25; segmentsWidth: 40; segmentsHeight: 40;"
+      material="wireframe: false;"
 
 
       tangram-terrain="
       mapzenAPIKey: mapzen-sfnfVzq;
-      style: #yamlHypsometric;
+      style: #yamlElevation;
       center: 15.8056, 47.7671;
       zoom: 9;
       scaleFactor: 1;
+      pxToWorldRatio: 10;
       " 
 
       rotation="-90 0 0"
-      position="0 0 0"
+      position="0 -10 -20"
       >
       </a-entity>
 
