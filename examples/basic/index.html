@@ -15,18 +15,17 @@
  
       <a-sky color="#aaa"></a-sky>
  
-      <!-- my Nexus5 chrashes with 1400 x 1400 settings -->
   <a-entity id="terrain" visible="true"
       
-      geometry="width: 25; height: 25; segmentsWidth: 40; segmentsHeight: 40;"
-      material="wireframe: false;"
+      geometry="width: 25; height: 25; segmentsWidth: 50; segmentsHeight: 50;"
+      material="wireframe: false; displacementScale: 30;"
 
 
       tangram-terrain="
       mapzenAPIKey: mapzen-sfnfVzq;
       style: #yamlElevation;
       center: 15.8056, 47.7671;
-      zoom: 9;
+      zoom: 12;
       scaleFactor: 1;
       pxToWorldRatio: 10;
       " 
