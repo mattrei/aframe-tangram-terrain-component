@@ -30,7 +30,7 @@ This component so far can be just used as a texture for a geometry object (plane
 ##### Events
 | Name | Data | Description |
 | -------- | ----------- | ------------- |
-| heightmap-loaded | None| Fired when the heightmap and its overlaymap has finished loading. |
+| model-loaded | None| Fired when the heightmap and its overlaymap has finished loading. |
 
 
 ##### API
@@ -43,6 +43,12 @@ This component so far can be just used as a texture for a geometry object (plane
 
 ### Styling
 The Mapzen Tangram styling:
+
+### Parameters
+* On lower zoom levels set the displacement scale not too high otherwise the terrain becomes clunky.
+* Mobile devices have texture size limits so set the `pixelWorldRatio` and or the geometry size not too high.
+* If you set the `segmentsWidth` and `segmentsHeigth` high on a high `zoom` level you may get a "stairs" effect.
+
 
 ### Dependencies
 The Mapzen styling documents are in the YAML format, so you need a possiblity to require those files.
@@ -64,7 +70,6 @@ Install and use by directly including the [browser files](dist):
 <head>
   <title>My A-Frame Scene</title>
   <script src="https://aframe.io/releases/0.6.0/aframe.min.js"></script>
-  <script src="https://mapzen.com/tangram/tangram.min.js"></script>
   <script src="https://unpkg.com/aframe-tangram-terrain-component/dist/aframe-tangram-terrain-component.min.js"></script>
 </head>
 
@@ -77,7 +82,7 @@ Install and use by directly including the [browser files](dist):
         
         material="shader: flat;"
 
-        tangram-map="
+        tangram-terrain="
         mapzenAPIKey: mapzen-sfnfVzq;
         center: 15.8056, 47.7671;
         zoom: 12;

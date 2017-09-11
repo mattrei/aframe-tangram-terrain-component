@@ -1,10 +1,9 @@
 <html>
   <head>
-    <title>A-Frame Tangram Component - Heightmap</title>
-    <meta name="description" content="Heightmap example for Tangram component."></meta>
+    <title>A-Frame Tangram Terrain Component - Airborne</title>
+    <meta name="description" content="Airborne example for Tangram component."></meta>
 
     <script src="../build.js"></script>
-    <script src="https://mapzen.com/tangram/tangram.min.js"></script>
   </head>
   <body>
     <a-scene>
@@ -14,23 +13,22 @@
  
       <a-sky color="#6EBAA7"></a-sky>
  
-      <!-- my Nexus5 chrashes with 1400 x 1400 settings -->
       <a-entity id="terrain" visible="true"
       
-      geometry="width: 50; height: 50; segmentsWidth: 80; segmentsHeight: 80;"
-      material="width: 1350; height: 1350; wireframe: false;"
+      geometry="width: 50; height: 50; segmentsWidth: 50; segmentsHeight: 50;"
+      material="wireframe: false; displacementScale: 100;"
 
 
-      tangram-heightmap="
+      tangram-terrain="
       mapzenAPIKey: mapzen-sfnfVzq;
       style: #yaml-austria;
       center: 15.8056, 47.7671;
-      zoom: 10;
-      scaleFactor: 1;
+      zoom: 15;
+      pxToWorldRatio: 30;
       " 
 
       rotation="-90 0 0"
-      position="0 0 0"
+      position="0 -30 0"
       >
       </a-entity>
 

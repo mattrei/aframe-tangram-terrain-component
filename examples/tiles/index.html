@@ -1,11 +1,10 @@
 <html>
   <head>
-    <title>A-Frame Tangram Component - Heightmap</title>
-    <meta name="description" content="Heightmap example for Tangram component."></meta>
+    <title>A-Frame Tangram Terrain Component - Tiles</title>
+    <meta name="description" content="Tiles example for Tangram component."></meta>
 
     <script src="../build.js"></script>
     <script src="./tiles.js"></script>
-    <!--<script src="https://mapzen.com/tangram/tangram.min.js"></script>-->
   </head>
   <body>
     <a-scene>
@@ -18,32 +17,13 @@
   <a-entity tiles="
       mapzenAPIKey: mapzen-sfnfVzq;
       center: 15.347900390625002, 48.379634;
-      zoom: 9;
-      tileSegments: 5;
-      wireframe: false;" 
+      zoom: 12;
+      tileSize: 1;
+      tileSegments: 10;
+      pxToWorldRatio: 50;
+      wireframe: true;" 
       rotation="-90 0 0"
       position="0 -2 -1">
-
-  <!--
-    <a-entity id="terrain" visible="true"
-      
-      geometry="width: 2; height: 2; segmentsWidth: 5; segmentsHeight: 5;"
-      material="width: 2; height: 2; wireframe: true;"
-
-
-      tangram-terrain="
-      mapzenAPIKey: mapzen-sfnfVzq;
-      center: 15.8056, 47.7671;
-      zoom: 9;
-      scaleFactor: 1;
-      canvasOffsetPx: 9999;
-      " 
-
-      rotation="-90 0 0"
-      position="0 0 0"
-      >
-      </a-entity>
-      -->
     </a-entity>
 
       <a-entity camera look-controls wasd-controls="fly: true;"></a-entity>

@@ -17,6 +17,9 @@ AFRAME.registerComponent('tiles', {
     tileSegments: {
       default: 5
     },
+    pxToWorldRatio: {
+      default: 10
+    },
     wireframe: {
       default: true
     }
@@ -48,9 +51,11 @@ AFRAME.registerComponent('tiles', {
 
     var terrain = document.createElement('a-entity')  // TODO
 
-    terrain.setAttribute('tangram-terrain', {'mapzenAPIKey': data.mapzenAPIKey,
+    terrain.setAttribute('tangram-terrain', 
+      {'mapzenAPIKey': data.mapzenAPIKey,
     'center': center,
     'zoom': data.zoom,
+    'pxToWorldRatio': data.pxToWorldRatio,
     'canvasOffsetPx': 0})
 /*
     terrain.setAttribute('mapzenAPIKey', data.mapzenAPIKey);
@@ -64,12 +69,12 @@ AFRAME.registerComponent('tiles', {
       segmentsWidth: data.tileSegments,
       segmentsHeight: data.tileSegments
     }
+    console.log(geometry)
     terrain.setAttribute('geometry', geometry);
 
     var material = {
-      width: data.tileSize * 20,
-      height: data.tileSize * 20,
-      wireframe: data.wireframe
+      wireframe: data.wireframe,
+      displacementScale: 10
     }
     terrain.setAttribute('material', material);
 

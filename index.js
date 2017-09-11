@@ -13,7 +13,7 @@ const cuid = require('cuid');
 
 const heightmapStyle = require('./src/heightmap-style.yaml');
 
-const HEIGHTMAP_LOADED_EVENT = 'model-loaded';
+const MODEL_LOADED_EVENT = 'model-loaded';
 
 // TODO make configurable?
 var tempFactor = 1; // size of heightMapCanvas relative to main canvas: 1/n
@@ -34,11 +34,6 @@ AFRAME.registerComponent('tangram-terrain', {
     },
     preset: {
       oneOf: ['elevation', 'grayscale', 'hypsometric-adjusted' ]
-    },
-
-    scaleFactor: {
-      type: 'int',
-      default: 1
     },
     center: {
       // lat lon
@@ -98,15 +93,12 @@ AFRAME.registerComponent('tangram-terrain', {
 
     const geomComponent = this.el.components.geometry;
     
-    //var width = geomComponent.data.segmentsWidth;
-    //var height = geomComponent.data.segmentsHeight;
-
     const width = geomComponent.data.width * this.data.pxToWorldRatio;
     const height = geomComponent.data.height * this.data.pxToWorldRatio;
 
     const _canvasContainerId = cuid();
     const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
-            width, height, 0);//data.canvasOffsetPx);
+            width, height, data.canvasOffsetPx);
 
     var map = L.map(canvasContainer, Utils.leafletOptions);
 
@@ -139,12 +131,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
           var mesh = self.el.getObject3D('mesh');
 
-          self.el.setAttribute('material', 'displacementMap', layer.scene.canvas);
-
-
-          material = self.el.getObject3D('mesh').material;
-          console.log(material)
-          
+          self.el.setAttribute('material', 'displacementMap', layer.scene.canvas);      
 
           const {
             width: elWidth,
@@ -277,13 +264,6 @@ AFRAME.registerComponent('tangram-terrain', {
       attribution: ''
     });
     
-
-    /*
-    const heightMapBounds = this._mapInstance.getBounds();
-    console.log(heightMapBounds)
-    map.fitBounds(heightMapBounds);
-    */
-
     //this.geojsonLayer = L.geoJson().addTo(map);
 
     layer.scene.subscribe({
@@ -291,23 +271,9 @@ AFRAME.registerComponent('tangram-terrain', {
         Utils.processCanvasElement(canvasContainer);
       },
       view_complete: function () {
-        console.log("COMO")
-        /*
-        var mesh = self.el.getOrCreateObject3D('mesh', THREE.Mesh);
-        mesh.geometry = geometry;
-
-        const canvasId = document.querySelector(`#${_canvasContainerId} canvas`).id;
-        self.el.setAttribute('material', 'src', `#${canvasId}`);
-
-        self.el.emit(HEIGHTMAP_LOADED_EVENT);
-        */
-        //this._initHeightMap();
-        //layer.scene.destroy()
         const canvasId = document.querySelector('#' + _canvasContainerId + ' canvas').id;
         self.el.setAttribute('material', 'src', '#' + canvasId);
-        console.log("FINISH")
-
-        //self._initHeightMap()
+        self.el.emit(MODEL_LOADED_EVENT);
       }
     });
     layer.addTo(map);
