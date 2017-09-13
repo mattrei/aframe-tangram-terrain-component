@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>A-Frame Tangram Component - Heightmap</title>
+    <title>A-Frame Tangram Terrain Component - Heightmap</title>
     <meta name="description" content="Heightmap example for Tangram component."></meta>
 
     <script src="../build.js"></script>
@@ -25,12 +25,15 @@
       style: #yamlElevation;
       center: 15.8056, 47.7671;
       zoom: 10;
-      pxToWorldRatio: 10;
+      pxToWorldRatio: 12;
       " 
 
       rotation="-90 0 0"
       position="0 -10 -20"
       >
+
+        <a-sphere id="marker" color="#EF2D5E" position="0 0 0" visible="true" radius="0.1"></a-sphere>
+        <a-sphere id="marker2" color="#AF2D5E" position="0 0 0" visible="true" radius="0.1"></a-sphere>
       </a-entity>
 
       <a-entity camera look-controls wasd-controls="fly: true;"></a-entity>
@@ -38,4 +41,16 @@
     </a-scene>
       
   </body>
+
+
+    <script>
+      var mapEl = document.querySelector('[tangram-terrain]');
+      var markerEl = document.querySelector('#marker');
+      var marker2El = document.querySelector('#marker2');
+      var setProperty = window.AFRAME.utils.entity.setComponentProperty;
+      mapEl.addEventListener('model-loaded', function() {
+          setProperty(markerEl, 'position', mapEl.components["tangram-terrain"].project(15.9, 47.8));
+          setProperty(marker2El, 'position', mapEl.components["tangram-terrain"].project(15.69, 47.69));
+      });
+    </script>
 </html>

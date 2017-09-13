@@ -98,8 +98,9 @@ AFRAME.registerComponent('tiles', {
 
       this.tiles.x.push(x)
       var pX = x * (this.data.tileSize)
-      var pY = y * (this.data.tileSize*0.5)
+      var pY = y * (this.data.tileSize)
       var latLng = this.mainTile.components['tangram-terrain'].unproject(pX, pY)
+      console.log(pX)
       console.log(latLng)
 
       //latLng.lat = 48.379634
