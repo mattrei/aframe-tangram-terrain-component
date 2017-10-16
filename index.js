@@ -86,6 +86,10 @@ AFRAME.registerComponent('tangram-terrain', {
 
         this._initHeightMap();
         //this._initMap();
+        console.log("INIT CALLED")
+        console.log(this.data.center)
+    },
+    update: function(data, oldData) {
     },
     _initHeightMap: function() {
         const self = this;
@@ -99,6 +103,8 @@ AFRAME.registerComponent('tangram-terrain', {
         const _canvasContainerId = cuid();
         const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
             width, height, data.canvasOffsetPx);
+
+            
 
         var map = L.map(canvasContainer, Utils.leafletOptions);
 
@@ -117,39 +123,57 @@ AFRAME.registerComponent('tangram-terrain', {
 
         //this._scene = layer.scene;
 
+        layer.scene.subscribe({
+            load: function() {
+                Utils.processCanvasElement(canvasContainer);
+            },
+            view_complete: function() {
+                self.canvasWidth = layer.scene.canvas.width
+                self.canvasHeight = layer.scene.canvas.height
+                self._start_analysis(layer.scene);
 
-        layer.on('init', function() {
-            // resetViewComplete();
-            layer.scene.subscribe({
-                // will be triggered when tiles are finished loading
-                // and also manually by the moveend event
-                view_complete: function() {
+                var mesh = self.el.getObject3D('mesh');
 
-                    self.canvasWidth = layer.scene.canvas.width
-                    self.canvasHeight = layer.scene.canvas.height
-                    self._start_analysis(layer.scene);
+                //TEST
 
-                    var mesh = self.el.getObject3D('mesh');
+                const copyId = cuid()
+                console.log("Copy " + copyId)
+                const copyCanvas = document.createElement('canvas')
+                copyCanvas.setAttribute('id', copyId)
+                copyCanvas.setAttribute('width', layer.scene.canvas.width)
+                copyCanvas.setAttribute('height', layer.scene.canvas.height)
+                const copyCtx = copyCanvas.getContext('2d');
+                copyCtx.drawImage(layer.scene.canvas, 0, 0);
+                //document.body.appendChild(copyCanvas)
+                    //END TEST
+                
 
-                    self.el.setAttribute('material', 'displacementMap', layer.scene.canvas);
+                self.el.setAttribute('material', 'displacementMap', copyCanvas);
+                //const canvasId = document.querySelector('#' + _canvasContainerId + ' canvas').id;
+                //self.el.setAttribute('material', 'src', '#' + copyId);
+                //self.el.setAttribute('material', 'displacementMap', '#' + copyId);
 
-                    const {
-                        width: elWidth,
-                        height: elHeight,
-                        segmentsWidth: elSegmentsWidth,
-                        segmentsHeight: elSegmentsHeight
-                    } = self.el.components.geometry.data;
+                const {
+                    width: elWidth,
+                    height: elHeight,
+                    segmentsWidth: elSegmentsWidth,
+                    segmentsHeight: elSegmentsHeight
+                } = self.el.components.geometry.data;
 
-                    var geometry = new THREE.PlaneBufferGeometry(
-                        elWidth, elHeight,
-                        elSegmentsWidth - 1, elSegmentsHeight - 1);
+                var geometry = new THREE.PlaneBufferGeometry(
+                    elWidth, elHeight,
+                    elSegmentsWidth - 1, elSegmentsHeight - 1);
 
-                    mesh.geometry = geometry;
+                mesh.geometry = geometry;
+                
 
-                    self._initMap();
-                }
-            });
+                self._initMap();
+                // removing all ressources layer
+                layer.remove()
+                
+            }
         });
+
         layer.addTo(map);
 
         /*
@@ -159,6 +183,7 @@ AFRAME.registerComponent('tangram-terrain', {
         if (data.fitBounds.length > 0) this._mapInstance.fitBounds(L.latLngBounds(this.data.fitBounds));
         */
         map.setView(Utils.latLonFrom(this.data.center), this.data.zoom);
+        this._mapInstance = map;
 
     },
     _start_analysis: function(scene) {
@@ -209,12 +234,15 @@ AFRAME.registerComponent('tangram-terrain', {
         }
 
 
-//        console.log(this.terrainData.length)
-//        console.log('MIN/MAX: ' + min + '  ' + max)
+        console.log(this.terrainData.length)
+        console.log(empty)
+        console.log('MIN/MAX: ' + min + '  ' + max)
 
         // range is 0 to 255 which is 8900 meters according to heightmap-style
         this._minHeight = min;
         this._maxHeight = max;
+
+        console.log('Min / Max ' + this._minHeight + ' ' + this._maxHeight)
 
         var highestMeter = max / 255 * 8900;
 
@@ -223,10 +251,8 @@ AFRAME.registerComponent('tangram-terrain', {
         }
 
         // remove canvas and destroy scene
-        //heightMapCanvas.remove();
+        heightMapCanvas.remove();
         //scene.destroy()
-
-        //this._createTerrain();
     },
     _initMap: function() {
         var self = this;
@@ -270,6 +296,8 @@ AFRAME.registerComponent('tangram-terrain', {
                 const canvasId = document.querySelector('#' + _canvasContainerId + ' canvas').id;
                 self.el.setAttribute('material', 'src', '#' + canvasId);
                 self.el.emit(MODEL_LOADED_EVENT);
+
+                //layer.remove();
             }
         });
         layer.addTo(map);
@@ -298,6 +326,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
     remove: function() {
         this._scene.destroy();
+        //layer.remove();
     },
 
     tick: function(delta, time) {},
@@ -357,10 +386,4 @@ AFRAME.registerComponent('tangram-terrain', {
     getLeafletInstance: function() {
             return this._mapInstance;
         }
-        /*
-        addGeoJSON (geojson) {
-          this.geojsonLayer.addData(geojson);
-          console.log('added');
-        }
-        */
 });

@@ -12,7 +12,7 @@ module.exports.leafletOptions = {
   'doubleClickZoom': false,
   'trackResize': false,
   'boxZoom': false,
-  'dragging': false,
+  'dragging': true,
   'zoomAnimation': false,
   'fadeAnimation': false,
   'markerZoomAnimation': false

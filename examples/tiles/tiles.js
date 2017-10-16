@@ -49,20 +49,16 @@ AFRAME.registerComponent('tiles', {
 
     const data = this.data;
 
-    var terrain = document.createElement('a-entity')  // TODO
+    const terrain = document.createElement('a-entity')  // TODO
 
-    terrain.setAttribute('tangram-terrain', 
-      {'mapzenAPIKey': data.mapzenAPIKey,
-    'center': center,
-    'zoom': data.zoom,
-    'pxToWorldRatio': data.pxToWorldRatio,
-    'canvasOffsetPx': 0})
+
 /*
     terrain.setAttribute('mapzenAPIKey', data.mapzenAPIKey);
     terrain.setAttribute('center', center);
     terrain.setAttribute('zoom', data.zoom);
     */
 
+    console.log(center)
     var geometry = {
       width: data.tileSize,
       height: data.tileSize,
@@ -74,9 +70,16 @@ AFRAME.registerComponent('tiles', {
 
     var material = {
       wireframe: data.wireframe,
-      displacementScale: 10
+      displacementScale: 25 // TODO
     }
     terrain.setAttribute('material', material);
+
+    terrain.setAttribute('tangram-terrain', 
+    {'mapzenAPIKey': data.mapzenAPIKey,
+  'center': center,
+  'zoom': data.zoom,
+  'pxToWorldRatio': data.pxToWorldRatio,
+  'canvasOffsetPx': 0})
 
     terrain.setAttribute('position', position)
 
