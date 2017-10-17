@@ -71,7 +71,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
     multiple: false,
 
-    init: function() {
+    init: function () {
         this._minHeight = 0;
         this._maxHeight = 0;
         this._mapInstance = null;
@@ -85,13 +85,12 @@ AFRAME.registerComponent('tangram-terrain', {
         this.terrainData = [];
 
         this._initHeightMap();
-        //this._initMap();
-        console.log("INIT CALLED")
-        console.log(this.data.center)
+        //console.log(this.data)
+        //console.log(this.el.components['material'].data)
     },
-    update: function(data, oldData) {
+    update: function (data, oldData) {
     },
-    _initHeightMap: function() {
+    _initHeightMap: function () {
         const self = this;
         var data = this.data;
 
@@ -104,7 +103,7 @@ AFRAME.registerComponent('tangram-terrain', {
         const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
             width, height, data.canvasOffsetPx);
 
-            
+
 
         var map = L.map(canvasContainer, Utils.leafletOptions);
 
@@ -124,10 +123,10 @@ AFRAME.registerComponent('tangram-terrain', {
         //this._scene = layer.scene;
 
         layer.scene.subscribe({
-            load: function() {
+            load: function () {
                 Utils.processCanvasElement(canvasContainer);
             },
-            view_complete: function() {
+            view_complete: function () {
                 self.canvasWidth = layer.scene.canvas.width
                 self.canvasHeight = layer.scene.canvas.height
                 self._start_analysis(layer.scene);
@@ -137,7 +136,7 @@ AFRAME.registerComponent('tangram-terrain', {
                 //TEST
 
                 const copyId = cuid()
-                console.log("Copy " + copyId)
+                //console.log("Copy " + copyId)
                 const copyCanvas = document.createElement('canvas')
                 copyCanvas.setAttribute('id', copyId)
                 copyCanvas.setAttribute('width', layer.scene.canvas.width)
@@ -145,8 +144,8 @@ AFRAME.registerComponent('tangram-terrain', {
                 const copyCtx = copyCanvas.getContext('2d');
                 copyCtx.drawImage(layer.scene.canvas, 0, 0);
                 //document.body.appendChild(copyCanvas)
-                    //END TEST
-                
+                //END TEST
+
 
                 self.el.setAttribute('material', 'displacementMap', copyCanvas);
                 //const canvasId = document.querySelector('#' + _canvasContainerId + ' canvas').id;
@@ -165,12 +164,19 @@ AFRAME.registerComponent('tangram-terrain', {
                     elSegmentsWidth - 1, elSegmentsHeight - 1);
 
                 mesh.geometry = geometry;
-                
+
 
                 self._initMap();
-                // removing all ressources layer
-                layer.remove()
-                
+
+                // removing all ressources layer after a timeout
+                Utils.delay(500, _ => layer.remove())
+
+            },
+            error: function (e) {
+                console.log('scene error:', e);
+            },
+            warning: function (e) {
+                console.log('scene warning:', e);
             }
         });
 
@@ -186,7 +192,7 @@ AFRAME.registerComponent('tangram-terrain', {
         this._mapInstance = map;
 
     },
-    _start_analysis: function(scene) {
+    _start_analysis: function (scene) {
 
         var width = scene.canvas.width
         var height = scene.canvas.height
@@ -233,11 +239,6 @@ AFRAME.registerComponent('tangram-terrain', {
             this.terrainData.push(val);
         }
 
-
-        console.log(this.terrainData.length)
-        console.log(empty)
-        console.log('MIN/MAX: ' + min + '  ' + max)
-
         // range is 0 to 255 which is 8900 meters according to heightmap-style
         this._minHeight = min;
         this._maxHeight = max;
@@ -254,7 +255,7 @@ AFRAME.registerComponent('tangram-terrain', {
         heightMapCanvas.remove();
         //scene.destroy()
     },
-    _initMap: function() {
+    _initMap: function () {
         var self = this;
 
         // is probably a good thing to remove element
@@ -289,10 +290,10 @@ AFRAME.registerComponent('tangram-terrain', {
         });
 
         layer.scene.subscribe({
-            load: function() {
+            load: function () {
                 Utils.processCanvasElement(canvasContainer);
             },
-            view_complete: function() {
+            view_complete: function () {
                 const canvasId = document.querySelector('#' + _canvasContainerId + ' canvas').id;
                 self.el.setAttribute('material', 'src', '#' + canvasId);
                 self.el.emit(MODEL_LOADED_EVENT);
@@ -310,7 +311,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
         this._mapInstance.setView(Utils.latLonFrom(this.data.center), this.data.zoom);
     },
-    _scale: function(value) {
+    _scale: function (value) {
         const {
             width: elWidth,
             segmentsWidth: elSegmentsWidth
@@ -324,14 +325,14 @@ AFRAME.registerComponent('tangram-terrain', {
         //return height ? height - this._minHeight : 0;
     },
 
-    remove: function() {
+    remove: function () {
         this._scene.destroy();
         //layer.remove();
     },
 
-    tick: function(delta, time) {},
+    tick: function (delta, time) { },
 
-    project: function(lon, lat) {
+    project: function (lon, lat) {
 
         var px = this._mapInstance.latLngToLayerPoint([lat, lon]);
 
@@ -341,7 +342,7 @@ AFRAME.registerComponent('tangram-terrain', {
         const idx = this.canvasWidth * px.y + px.x;
         //var z = this._scale(this.terrainData[idx] + this.altitudeAddition);
         var z = this.terrainData[idx] / 254 * scale
-        console.log(z)
+        //console.log(z)
 
         return {
             x: (px.x / this.data.pxToWorldRatio) - (el.width / 2),
@@ -352,7 +353,7 @@ AFRAME.registerComponent('tangram-terrain', {
         };
 
     },
-    unproject: function(x, y) {
+    unproject: function (x, y) {
 
         const el = this.el.components.geometry.data;
 
@@ -364,18 +365,17 @@ AFRAME.registerComponent('tangram-terrain', {
 
         // Return the lat / long of that pixel on the map
         var latLng = this._mapInstance.layerPointToLatLng([pxX, pxY]);
-        console.log("Real " + pxX)
         return {
             lon: latLng.lng,
             lat: latLng.lat
         };
 
     },
-    unprojectAlitude: function(x, y) {
+    unprojectAlitude: function (x, y) {
         const idx = this.canvasWidth * y + x;
         return this.terrainData[idx] / 255 * 8900 + this.altitudeAddition;
     },
-    projectAltitude: function(lng, lat) {
+    projectAltitude: function (lng, lat) {
         const {
             x: givenX,
             y: givenY
@@ -383,7 +383,42 @@ AFRAME.registerComponent('tangram-terrain', {
 
         return this.unprojectAlitude(givenX, givenY);
     },
-    getLeafletInstance: function() {
-            return this._mapInstance;
-        }
+    getLeafletInstance: function () {
+        return this._mapInstance;
+    }
+});
+
+
+AFRAME.registerPrimitive('a-tangram-terrain', {
+    // Attaches the `ocean` component by default.
+    // Defaults the ocean to be parallel to the ground.
+    defaultComponents: {
+        'tangram-terrain': {},
+        rotation: { x: -90, y: 0, z: 0 },
+        material: {
+            side: 'both',
+            transparent: true,
+            shader: 'standard',
+            displacementScale: 100
+        },
+        geometry: {
+            primitive: 'plane',
+            segmentsWidth: 50,
+            segmentsHeight: 50
+        },
+        
+    },
+    mappings: {
+        key: 'tangram-terrain.mapzenAPIKey',
+        width: 'geometry.width',
+        depth: 'geometry.height',
+        segmentsWidth: 'geometry.segmentsWidth',
+        segmentsHeight: 'geometry.segmentsHeight',
+        center: 'tangram-terrain.center',
+        style: 'tangram-terrain.style',
+        zoom: 'tangram-terrain.zoom',
+        ratio: 'tangram-terrain.pxToWorldRatio',
+        
+        wireframe: 'material.wireframe'
+    }
 });

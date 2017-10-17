@@ -1,56 +1,73 @@
 <html>
-  <head>
-    <title>A-Frame Tangram Terrain Component - Heightmap</title>
-    <meta name="description" content="Heightmap example for Tangram component."></meta>
 
-    <script src="../build.js"></script>
-  </head>
-  <body>
-    <a-scene>
-      <a-assets>
-        <a-asset-item id="yamlElevation" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/terrarium-elevation.yaml" />
-        <a-asset-item id="yamlHypsometric" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/hypsometric-adjusted.yaml" />
-        <a-asset-item id="yamlGrayscale" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/grayscale.yaml" />
-      </a-assets>
- 
-      <a-sky color="#aaa"></a-sky>
- 
+<head>
+  <title>A-Frame Tangram Terrain Component - Heightmap</title>
+  <meta name="description" content="Heightmap example for Tangram component."></meta>
+
+  <script src="../build.js"></script>
+</head>
+
+<body>
+  <a-scene>
+    <a-assets>
+      <a-asset-item id="yamlElevation" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/terrarium-elevation.yaml"
+      />
+      <a-asset-item id="yamlHypsometric" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/hypsometric-adjusted.yaml"
+      />
+      <a-asset-item id="yamlGrayscale" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/grayscale.yaml"
+      />
+    </a-assets>
+
+    <a-sky color="#aaa"></a-sky>
+
+    
+    <a-tangram-terrain id="terrain" 
+    key="mapzen-sfnfVzq" zoom="10" center="15.8056, 7.7671" style="#yamlElevation" ratio="12"
+    visible="true" wireframe="false"
+    width="25" depth="25"
+   position="0 -10 -20">
+
+      <a-sphere id="marker" color="#EF2D5E" position="0 0 0" visible="true" radius="0.1"></a-sphere>
+      <a-sphere id="marker2" color="#AF2D5E" position="0 0 0" visible="true" radius="0.1"></a-sphere>
+    </a-tangram-terrain>
+  
+   
+  <!--
   <a-entity id="terrain" visible="true"
-      
-      geometry="width: 25; height: 25; segmentsWidth: 50; segmentsHeight: 50;"
-      material="wireframe: false; displacementScale: 30;"
+  
+  geometry="width: 25; height: 25; segmentsWidth: 50; segmentsHeight: 50;"
+  material="wireframe: false; displacementScale: 30;"
 
-      tangram-terrain="
-      mapzenAPIKey: mapzen-sfnfVzq;
-      style: #yamlElevation;
-      center: 15.8056, 47.7671;
-      zoom: 10;
-      pxToWorldRatio: 12;
-      " 
+  tangram-terrain="
+  mapzenAPIKey: mapzen-sfnfVzq;
+  style: #yamlElevation;
+  center: 15.8056, 47.7671;
+  zoom: 10;
+  pxToWorldRatio: 12;
+  " 
 
-      rotation="-90 0 0"
-      position="0 -10 -20"
-      >
+  rotation="-90 0 0"
+  position="0 -10 -20"
+  >
 
-        <a-sphere id="marker" color="#EF2D5E" position="0 0 0" visible="true" radius="0.1"></a-sphere>
-        <a-sphere id="marker2" color="#AF2D5E" position="0 0 0" visible="true" radius="0.1"></a-sphere>
-      </a-entity>
-
+</a-entity>
+-->
       <a-entity camera look-controls wasd-controls="fly: true;"></a-entity>
 
-    </a-scene>
-      
-  </body>
+  </a-scene>
+
+</body>
 
 
-    <script>
-      var mapEl = document.querySelector('[tangram-terrain]');
-      var markerEl = document.querySelector('#marker');
-      var marker2El = document.querySelector('#marker2');
-      var setProperty = window.AFRAME.utils.entity.setComponentProperty;
-      mapEl.addEventListener('model-loaded', function() {
-          setProperty(markerEl, 'position', mapEl.components["tangram-terrain"].project(15.9, 47.8));
-          setProperty(marker2El, 'position', mapEl.components["tangram-terrain"].project(15.69, 47.69));
-      });
-    </script>
+<script>
+  var mapEl = document.querySelector('#terrain');
+  var markerEl = document.querySelector('#marker');
+  var marker2El = document.querySelector('#marker2');
+  var setProperty = window.AFRAME.utils.entity.setComponentProperty;
+  mapEl.addEventListener('model-loaded', function () {
+    setProperty(markerEl, 'position', mapEl.components["tangram-terrain"].project(15.9, 47.8));
+    setProperty(marker2El, 'position', mapEl.components["tangram-terrain"].project(15.69, 47.69));
+  });
+</script>
+
 </html>
