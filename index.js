@@ -124,6 +124,7 @@ AFRAME.registerComponent('tangram-terrain', {
                 ctx.drawImage(layer.scene.canvas, 0, 0);
 
                 self.el.setAttribute('material', 'displacementMap', canvas);
+                //self.el.setAttribute('material', 'displacementScale', data.heightScale);
 
                 const {
                     width: elWidth,
@@ -334,7 +335,7 @@ AFRAME.registerComponent('tangram-terrain', {
         var px = this._mapInstance.latLngToLayerPoint([lat, lon]);
 
         const el = this.el.components.geometry.data;
-        const scale = this.el.components.material.data.displacementScale;;
+        const scale = this.el.components.material.data.displacementScale;
 
         const idx = this.canvasWidth * px.y + px.x;
         //var z = this._scale(this.terrainData[idx] + this.altitudeAddition);

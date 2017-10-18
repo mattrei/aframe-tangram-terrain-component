@@ -14,6 +14,10 @@ AFRAME.registerComponent('tiles', {
     zoom: {
       default: 13
     },
+    style: {
+      type: 'asset',
+      default: ''
+    },
     tileSize: {
       default: 1
     },
@@ -26,8 +30,8 @@ AFRAME.registerComponent('tiles', {
     wireframe: {
       default: true
     },
-    height: {
-      default: 25
+    displacementScale: {
+      default: 1
     },
     radius: {
       default: 0
@@ -94,7 +98,7 @@ AFRAME.registerComponent('tiles', {
 
     var material = {
       wireframe: data.wireframe,
-      displacementScale: data.height
+      displacementScale: data.displacementScale
     }
     terrain.setAttribute('material', material);
 
@@ -102,6 +106,7 @@ AFRAME.registerComponent('tiles', {
       {
         'mapzenAPIKey': data.mapzenAPIKey,
         'center': center,
+        'style': data.style,
         'zoom': data.zoom,
         'pxToWorldRatio': data.pxToWorldRatio,
         'canvasOffsetPx': 9999
