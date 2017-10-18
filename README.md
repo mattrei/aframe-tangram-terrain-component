@@ -60,6 +60,7 @@ and configure the webpack configuration file
 If you are using browserify install the
 `nmp install yamlify --save-dev` 
 and give pass the transform (-t) parameter to browserify.
+
 ### Installation
 
 #### Browser

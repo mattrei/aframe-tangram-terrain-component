@@ -166,14 +166,13 @@ AFRAME.registerComponent('tangram-terrain', {
         // based on https://github.com/tangrams/heightmapper/blob/gh-pages/main.js
 
     var ctx = scene.canvas.getContext('2d');
-    //ctx.drawImage(scene.canvas, 0, 0, width, height);
+    // ctx.drawImage(scene.canvas, 0, 0, width, height);
 
         // get all the pixels
     var pixels = ctx.getImageData(0, 0, width, height);
 
     var val;
     var counts = {};
-    var empty = true;
     var max = 0;
     var min = 255;
 
@@ -186,8 +185,6 @@ AFRAME.registerComponent('tangram-terrain', {
       if (alpha === 0) { // empty pixel, skip to the next one
         continue;
       }
-            // if we got this far, we found at least one non-empty pixel!
-      empty = false;
 
             // update counts, to get a histogram
       counts[val] = counts[val] ? counts[val] + 1 : 1;
@@ -219,9 +216,6 @@ AFRAME.registerComponent('tangram-terrain', {
     if (this.data.highestAltitudeMeter > 0) {
       this.altitudeAddition = this.data.highestAltitudeMeter - highestMeter;
     }
-
-    // remove canvas and destroy scene
-    heightMapCanvas.remove();    
   },
   _initMap: function () {
     var self = this;
@@ -262,7 +256,6 @@ AFRAME.registerComponent('tangram-terrain', {
         Utils.processCanvasElement(canvasContainer);
       },
       view_complete: function () {
-
         // copy canvas contents to new canvas so that we can remove Tangram instance later
         const canvas = document.createElement('canvas');
         canvas.setAttribute('id', cuid());
