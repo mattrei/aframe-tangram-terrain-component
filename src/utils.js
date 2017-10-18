@@ -70,4 +70,4 @@ module.exports.delay = function (duration, func) {
       resolve(func.apply(null, args));
     }, duration);
   });
-}
+};
