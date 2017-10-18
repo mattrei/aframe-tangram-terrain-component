@@ -1,7 +1,7 @@
 AFRAME.registerComponent('tiles', {
   dependencies: [
     'position'
-],
+  ],
   schema: {
     mapzenAPIKey: {
       default: ''
@@ -26,8 +26,11 @@ AFRAME.registerComponent('tiles', {
     wireframe: {
       default: true
     },
+    height: {
+      default: 25
+    },
     radius: {
-      default: 2
+      default: 0
     }
   },
 
@@ -43,9 +46,7 @@ AFRAME.registerComponent('tiles', {
     });
     this.camera = sceneEl.camera;
 
-
-    console.log(this.el.components.position)
-    this.mainTile = this._addTile(this.data.center, this.el.components.position);//new THREE.Vector3())
+    this.mainTile = this._addTile('0,0', this.data.center, this.el.components.position);//new THREE.Vector3())
 
     var self = this;
 
@@ -54,34 +55,35 @@ AFRAME.registerComponent('tiles', {
       self.leaflet = e.target.components['tangram-terrain'].getLeafletInstance()
     })
 
-    this.tick = AFRAME.utils.throttleTick(this.tick, 1000, this);
+    this.tick = AFRAME.utils.throttleTick(this.tick, 1500, this);
 
   },
-  _addToQueue: function (center, position) {
+  _addToQueue: function (tile, center, position) {
 
-    this.queue.push({ center, position })
+    this.queue.push({ tile, center, position })
   },
   _processQueue: function () {
     var self = this;
 
     if (!this._isBusy && this.queue.length > 0) {
-      console.log(this.queue)
       const first = this.queue[0];
       this._isBusy = true;
-      const tile = this._addTile(first.center, first.position)
+      const tile = this._addTile(first.tile, first.center, first.position)
       tile.addEventListener('model-loaded', (e) => {
         self._isBusy = false;
         self.queue.shift();
       })
     }
   },
-  _addTile: function (center, position) {
+  _addTile: function (tile, center, position) {
 
     this._isBusy = true
     const data = this.data;
 
     const terrain = document.createElement('a-entity')
 
+
+    terrain.setAttribute('id', 'terrainTile_' + tile);
     var geometry = {
       width: data.tileSize,
       height: data.tileSize,
@@ -92,7 +94,7 @@ AFRAME.registerComponent('tiles', {
 
     var material = {
       wireframe: data.wireframe,
-      displacementScale: 25 // TODO
+      displacementScale: data.height
     }
     terrain.setAttribute('material', material);
 
@@ -102,7 +104,7 @@ AFRAME.registerComponent('tiles', {
         'center': center,
         'zoom': data.zoom,
         'pxToWorldRatio': data.pxToWorldRatio,
-        'canvasOffsetPx': 0
+        'canvasOffsetPx': 9999
       })
 
     terrain.setAttribute('position', position)
@@ -111,31 +113,54 @@ AFRAME.registerComponent('tiles', {
 
     return terrain
   },
+  _checkPosition: function () {
+
+    const data = this.data
+    var pos = this.getCameraPosition()
+
+    const x = Math.floor((pos.x + data.tileSize * 0.5) / data.tileSize)
+    const y = Math.floor((-pos.z + data.tileSize * 0.5) / data.tileSize)
+
+
+    this._addTileFor(x, y)
+    if (data.radius > 0) {
+      this._addTileFor(x + 1, y + 1)
+      this._addTileFor(x + 1, y)
+      this._addTileFor(x + 1, y - 1)
+      this._addTileFor(x - 1, y - 1)
+      this._addTileFor(x - 1, y)
+      this._addTileFor(x - 1, y + 1)
+      this._addTileFor(x, y - 1)
+      this._addTileFor(x, y + 1)
+    }
+    
+  },
+  _addTileFor: function (x, y) {
+    const data = this.data
+
+    const tile = `${x},${y}`;
+    if (!this.tiles.includes(tile)) {
+      this.tiles.push(tile)
+
+      console.log(x + ' ' + y)
+
+      var pX = x * (this.data.tileSize) 
+      var pY = y * (this.data.tileSize) 
+      var latLng = this.mainTile.components['tangram-terrain'].unproject(pX, pY)
+
+      console.log(latLng)
+      this._addToQueue(tile, [latLng.lon, latLng.lat], new THREE.Vector3(x * this.data.tileSize, y * this.data.tileSize, 0))
+    }
+  },
   tick: function (time, delta) {
 
     if (!this.leaflet) return;
 
-    const data = this.data
-    var pos = this.getPosition()
 
-    var x = Math.floor((pos.x + data.tileSize * 0.5) / data.tileSize)
-    var y = Math.floor((-pos.z + data.tileSize * 0.5) / data.tileSize)
-
-
-    if (!this.tiles.includes(`${x},${y}`)) {
-      this.tiles.push(`${x},${y}`)
-      
-      console.log(x + ' ' + y)
-      var pX = x * (this.data.tileSize)
-      var pY = y * (this.data.tileSize)
-      var latLng = this.mainTile.components['tangram-terrain'].unproject(pX, pY)
-
-      this._addToQueue([latLng.lon, latLng.lat], new THREE.Vector3(x * this.data.tileSize, y * this.data.tileSize, 0))
-    } else {
-      this._processQueue()
-    }
+    this._checkPosition();
+    this._processQueue()
   },
-  getPosition: function () {
+  getCameraPosition: function () {
     var worldPos = new THREE.Vector3();
     return function () {
       worldPos.setFromMatrixPosition(this.camera.matrixWorld);

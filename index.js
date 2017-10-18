@@ -96,12 +96,12 @@ AFRAME.registerComponent('tangram-terrain', {
 
         const geomComponent = this.el.components.geometry;
 
-        const width = geomComponent.data.width * this.data.pxToWorldRatio;
-        const height = geomComponent.data.height * this.data.pxToWorldRatio;
+        const width = geomComponent.data.width * data.pxToWorldRatio;
+        const height = geomComponent.data.height * data.pxToWorldRatio;
 
         const _canvasContainerId = cuid();
         const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
-            width, height, data.canvasOffsetPx);
+            width+1, height+1, data.canvasOffsetPx);
 
 
 
@@ -130,27 +130,18 @@ AFRAME.registerComponent('tangram-terrain', {
                 self.canvasWidth = layer.scene.canvas.width
                 self.canvasHeight = layer.scene.canvas.height
                 self._start_analysis(layer.scene);
+                console.log(layer.scene.canvas.width)
 
                 var mesh = self.el.getObject3D('mesh');
 
-                //TEST
+                const canvas = document.createElement('canvas')
+                canvas.setAttribute('id', cuid())
+                canvas.setAttribute('width', layer.scene.canvas.width)
+                canvas.setAttribute('height', layer.scene.canvas.height)
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(layer.scene.canvas, 0, 0);
 
-                const copyId = cuid()
-                //console.log("Copy " + copyId)
-                const copyCanvas = document.createElement('canvas')
-                copyCanvas.setAttribute('id', copyId)
-                copyCanvas.setAttribute('width', layer.scene.canvas.width)
-                copyCanvas.setAttribute('height', layer.scene.canvas.height)
-                const copyCtx = copyCanvas.getContext('2d');
-                copyCtx.drawImage(layer.scene.canvas, 0, 0);
-                //document.body.appendChild(copyCanvas)
-                //END TEST
-
-
-                self.el.setAttribute('material', 'displacementMap', copyCanvas);
-                //const canvasId = document.querySelector('#' + _canvasContainerId + ' canvas').id;
-                //self.el.setAttribute('material', 'src', '#' + copyId);
-                //self.el.setAttribute('material', 'displacementMap', '#' + copyId);
+                self.el.setAttribute('material', 'displacementMap', canvas);
 
                 const {
                     width: elWidth,
@@ -161,7 +152,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
                 var geometry = new THREE.PlaneBufferGeometry(
                     elWidth, elHeight,
-                    elSegmentsWidth - 1, elSegmentsHeight - 1);
+                    elSegmentsWidth-1, elSegmentsHeight-1);
 
                 mesh.geometry = geometry;
 
@@ -215,6 +206,9 @@ AFRAME.registerComponent('tangram-terrain', {
         var max = 0;
         var min = 255;
 
+        var left = []
+        var right = []
+
         // const geomComponent = this.el.components.geometry;
         // only check every 4th pixel (vary with browser size)
         // var stride = Math.round(img.height * img.width / 1000000);
@@ -237,7 +231,16 @@ AFRAME.registerComponent('tangram-terrain', {
 
 
             this.terrainData.push(val);
+
+            if (i % (width*4) === 0) {
+                left.push(val)
+            }
+            if (i % (width*4) === ((width-1)*4)) {
+                right.push(val)
+            }
         }
+        console.log(left)
+        console.log(right)
 
         // range is 0 to 255 which is 8900 meters according to heightmap-style
         this._minHeight = min;
@@ -294,11 +297,23 @@ AFRAME.registerComponent('tangram-terrain', {
                 Utils.processCanvasElement(canvasContainer);
             },
             view_complete: function () {
-                const canvasId = document.querySelector('#' + _canvasContainerId + ' canvas').id;
-                self.el.setAttribute('material', 'src', '#' + canvasId);
+                //const canvasId = document.querySelector('#' + _canvasContainerId + ' canvas').id;
+                //self.el.setAttribute('material', 'src', '#' + canvasId);
+
+                const canvas = document.createElement('canvas')
+                canvas.setAttribute('id', cuid())
+                canvas.setAttribute('width', layer.scene.canvas.width)
+                canvas.setAttribute('height', layer.scene.canvas.height)
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(layer.scene.canvas, 0, 0);
+
+                self.el.setAttribute('material', 'src', canvas);
+
                 self.el.emit(MODEL_LOADED_EVENT);
 
                 //layer.remove();
+                // removing all ressources layer after a timeout
+                Utils.delay(500, _ => layer.remove())
             }
         });
         layer.addTo(map);

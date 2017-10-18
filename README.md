@@ -1,9 +1,8 @@
 ## aframe-tangram-terrain-component
 
-A Mapzen Tangram component for [A-Frame](https://aframe.io).
+A [Mapzen Tangram](https://mapzen.com/products/tangram/) terrain component for [A-Frame](https://aframe.io).
 
-> Supports A-Frame 0.6.0.
-> Works with Tangram 0.13.0.
+> Supports A-Frame 0.7.0.
 
 ![Example](doc/example.jpg)
 
