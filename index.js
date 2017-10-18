@@ -32,24 +32,9 @@ AFRAME.registerComponent('tangram-terrain', {
             type: 'asset',
             default: ''
         },
-        preset: {
-            oneOf: ['elevation', 'grayscale', 'hypsometric-adjusted']
-        },
         center: {
             // lat lon
             default: [0, 0],
-            type: 'array'
-        },
-        /**
-            [0] southwest
-            [1] northeast
-        */
-        maxBounds: {
-            default: [],
-            type: 'array'
-        },
-        fitBounds: {
-            default: [],
             type: 'array'
         },
         zoom: {
@@ -60,7 +45,7 @@ AFRAME.registerComponent('tangram-terrain', {
         },
         canvasOffsetPx: {
             type: 'int',
-            default: 9999 // debug
+            default: 99999 // debug
         },
         // set the highest altitude
         highestAltitudeMeter: {
@@ -96,12 +81,12 @@ AFRAME.registerComponent('tangram-terrain', {
 
         const geomComponent = this.el.components.geometry;
 
-        const width = geomComponent.data.width * data.pxToWorldRatio;
-        const height = geomComponent.data.height * data.pxToWorldRatio;
+        const width = geomComponent.data.width * data.pxToWorldRatio + 1;
+        const height = geomComponent.data.height * data.pxToWorldRatio + 1;
 
         const _canvasContainerId = cuid();
         const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
-            width+1, height+1, data.canvasOffsetPx);
+            width, height, data.canvasOffsetPx);
 
 
 
@@ -120,8 +105,6 @@ AFRAME.registerComponent('tangram-terrain', {
             attribution: ''
         });
 
-        //this._scene = layer.scene;
-
         layer.scene.subscribe({
             load: function () {
                 Utils.processCanvasElement(canvasContainer);
@@ -129,8 +112,7 @@ AFRAME.registerComponent('tangram-terrain', {
             view_complete: function () {
                 self.canvasWidth = layer.scene.canvas.width
                 self.canvasHeight = layer.scene.canvas.height
-                self._start_analysis(layer.scene);
-                console.log(layer.scene.canvas.width)
+                //self._start_analysis(layer.scene);
 
                 var mesh = self.el.getObject3D('mesh');
 
@@ -160,7 +142,7 @@ AFRAME.registerComponent('tangram-terrain', {
                 self._initMap();
 
                 // removing all ressources layer after a timeout
-                Utils.delay(500, _ => layer.remove())
+                Utils.delay(300, _ => layer.remove())
 
             },
             error: function (e) {

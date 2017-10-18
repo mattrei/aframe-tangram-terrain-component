@@ -142,13 +142,14 @@ AFRAME.registerComponent('tiles', {
     if (!this.tiles.includes(tile)) {
       this.tiles.push(tile)
 
-      console.log(x + ' ' + y)
+    
 
       var pX = x * (this.data.tileSize) 
       var pY = y * (this.data.tileSize) 
       var latLng = this.mainTile.components['tangram-terrain'].unproject(pX, pY)
 
-      console.log(latLng)
+      //console.log(x + ' ' + y)
+      //console.log(latLng)
       this._addToQueue(tile, [latLng.lon, latLng.lat], new THREE.Vector3(x * this.data.tileSize, y * this.data.tileSize, 0))
     }
   },
