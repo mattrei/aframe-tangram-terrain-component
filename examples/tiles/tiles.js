@@ -1,3 +1,5 @@
+/* global AFRAME THREE */
+
 AFRAME.registerComponent('tiles', {
   dependencies: [
     'position'
@@ -50,7 +52,7 @@ AFRAME.registerComponent('tiles', {
     });
     this.camera = sceneEl.camera;
 
-    this.mainTile = this._addTile('0,0', this.data.center, this.el.components.position);// new THREE.Vector3())
+    this.mainTile = this._addTile('0,0', this.data.center, this.el.components.position);
 
     var self = this;
 
@@ -123,14 +125,15 @@ AFRAME.registerComponent('tiles', {
 
     this._addTileFor(x, y);
     if (data.radius > 0) {
+      // clockwise
+      this._addTileFor(x, y + 1);
       this._addTileFor(x + 1, y + 1);
       this._addTileFor(x + 1, y);
       this._addTileFor(x + 1, y - 1);
+      this._addTileFor(x, y - 1);
       this._addTileFor(x - 1, y - 1);
       this._addTileFor(x - 1, y);
       this._addTileFor(x - 1, y + 1);
-      this._addTileFor(x, y - 1);
-      this._addTileFor(x, y + 1);
     }
   },
   _addTileFor: function (x, y) {

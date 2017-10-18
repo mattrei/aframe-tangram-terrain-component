@@ -13,6 +13,7 @@ const cuid = require('cuid');
 
 const heightmapStyle = require('./src/heightmap-style.yaml');
 
+const HEIGHTMAP_LOADED_EVENT = 'heightmap-loaded';
 const MODEL_LOADED_EVENT = 'model-loaded';
 const REMOVETANGRAM_TIMEOUT = 300;
 
@@ -31,7 +32,7 @@ AFRAME.registerComponent('tangram-terrain', {
       default: ''
     },
     center: {
-            // lat lon
+      // lat lon
       default: [0, 0],
       type: 'array'
     },
@@ -44,32 +45,21 @@ AFRAME.registerComponent('tangram-terrain', {
     canvasOffsetPx: {
       type: 'int',
       default: 99999 // debug
-    },
-        // set the highest altitude
-    highestAltitudeMeter: {
-      type: 'int',
-      default: 0
     }
   },
 
   multiple: false,
 
   init: function () {
-    this._minHeight = 0;
-    this._maxHeight = 0;
     this._mapInstance = null;
-    this._scene = null;
-
-    this.canvasWidth = 0;
-    this.canvasHeigth = 0;
-
-    this.altitudeAddition = 0;
-
-    this.terrainData = [];
+    this._heightmapCanvas = null;
+    this._overlayCanvas = null;
 
     this._initHeightMap();
-        // console.log(this.data)
-        // console.log(this.el.components['material'].data)
+    var self = this;
+    this.el.addEventListener(HEIGHTMAP_LOADED_EVENT, function (e) {
+      self._initMap();
+    });
   },
   update: function (data, oldData) {
   },
@@ -84,7 +74,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
     const _canvasContainerId = cuid();
     const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
-            width, height, data.canvasOffsetPx);
+      width, height, data.canvasOffsetPx);
 
     var map = L.map(canvasContainer, Utils.leafletOptions);
 
@@ -106,10 +96,6 @@ AFRAME.registerComponent('tangram-terrain', {
         Utils.processCanvasElement(canvasContainer);
       },
       view_complete: function () {
-        self.canvasWidth = layer.scene.canvas.width;
-        self.canvasHeight = layer.scene.canvas.height;
-                // self._start_analysis(layer.scene);
-
         var mesh = self.el.getObject3D('mesh');
 
         const canvas = document.createElement('canvas');
@@ -119,24 +105,23 @@ AFRAME.registerComponent('tangram-terrain', {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(layer.scene.canvas, 0, 0);
 
+        self._heightmapCanvas = canvas;
+
         self.el.setAttribute('material', 'displacementMap', canvas);
-        // self.el.setAttribute('material', 'displacementScale', data.heightScale);
 
         const {
                     width: elWidth,
-                    height: elHeight,
-                    segmentsWidth: elSegmentsWidth,
-                    segmentsHeight: elSegmentsHeight
+          height: elHeight,
+          segmentsWidth: elSegmentsWidth,
+          segmentsHeight: elSegmentsHeight
                 } = self.el.components.geometry.data;
 
         var geometry = new THREE.PlaneBufferGeometry(
-                    elWidth, elHeight,
-                    elSegmentsWidth - 1, elSegmentsHeight - 1);
-
+          elWidth, elHeight,
+          elSegmentsWidth - 1, elSegmentsHeight - 1);
         mesh.geometry = geometry;
 
-        self._initMap();
-
+        self.el.emit(HEIGHTMAP_LOADED_EVENT);
         // removing all ressources layer after a safe timeout
         Utils.delay(REMOVETANGRAM_TIMEOUT, _ => layer.remove());
       },
@@ -150,25 +135,20 @@ AFRAME.registerComponent('tangram-terrain', {
 
     layer.addTo(map);
 
-        /*
-        this._mapInstance = map;
-
-        if (data.maxBounds.length > 0) this._mapInstance.setMaxBounds(L.latLngBounds(this.data.maxBounds));
-        if (data.fitBounds.length > 0) this._mapInstance.fitBounds(L.latLngBounds(this.data.fitBounds));
-        */
     map.setView(Utils.latLonFrom(this.data.center), this.data.zoom);
     this._mapInstance = map;
   },
-  _start_analysis: function (scene) {
-    var width = scene.canvas.width;
-    var height = scene.canvas.height;
+  /*
+  _start_analysis: function (canvas) {
+    var width = canvas.width;
+    var height = canvas.height;
 
-        // based on https://github.com/tangrams/heightmapper/blob/gh-pages/main.js
+    // based on https://github.com/tangrams/heightmapper/blob/gh-pages/main.js
 
-    var ctx = scene.canvas.getContext('2d');
+    var ctx = canvas.getContext('2d');
     // ctx.drawImage(scene.canvas, 0, 0, width, height);
 
-        // get all the pixels
+    // get all the pixels
     var pixels = ctx.getImageData(0, 0, width, height);
 
     var val;
@@ -186,10 +166,10 @@ AFRAME.registerComponent('tangram-terrain', {
         continue;
       }
 
-            // update counts, to get a histogram
+      // update counts, to get a histogram
       counts[val] = counts[val] ? counts[val] + 1 : 1;
 
-            // update min and max so far
+      // update min and max so far
       min = Math.min(min, val);
       max = Math.max(max, val);
 
@@ -205,7 +185,7 @@ AFRAME.registerComponent('tangram-terrain', {
     console.log(left);
     console.log(right);
 
-        // range is 0 to 255 which is 8900 meters according to heightmap-style
+    // range is 0 to 255 which is 8900 meters according to heightmap-style
     this._minHeight = min;
     this._maxHeight = max;
 
@@ -217,11 +197,9 @@ AFRAME.registerComponent('tangram-terrain', {
       this.altitudeAddition = this.data.highestAltitudeMeter - highestMeter;
     }
   },
+  */
   _initMap: function () {
     var self = this;
-
-        // is probably a good thing to remove element
-        // document.getElementById(this._canvasContainerId).remove();
 
     const data = this.data;
 
@@ -232,7 +210,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
     var _canvasContainerId = cuid();
     const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
-            width, height, data.canvasOffsetPx + 999);
+      width, height, data.canvasOffsetPx + 999);
 
     var map = L.map(canvasContainer, Utils.leafletOptions);
 
@@ -264,18 +242,25 @@ AFRAME.registerComponent('tangram-terrain', {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(layer.scene.canvas, 0, 0);
 
+        self._overlayCanvas = canvas;
+
         self.el.setAttribute('material', 'src', canvas);
 
+        // finally everything is finished
         self.el.emit(MODEL_LOADED_EVENT);
 
         // removing all ressources layer after a safe timeout
         Utils.delay(REMOVETANGRAM_TIMEOUT, _ => layer.remove());
+      },
+      error: function (e) {
+        console.log('scene error:', e);
+      },
+      warning: function (e) {
+        console.log('scene warning:', e);
       }
     });
     layer.addTo(map);
 
-        // TODO?
-    this._scene = layer.scene;
     this._mapInstance = map;
 
     this._mapInstance.setView(Utils.latLonFrom(this.data.center), this.data.zoom);
@@ -283,7 +268,7 @@ AFRAME.registerComponent('tangram-terrain', {
   _scale: function (value) {
     const {
             width: elWidth,
-            segmentsWidth: elSegmentsWidth
+      segmentsWidth: elSegmentsWidth
         } = this.el.components.geometry.data;
 
     const densityFactor = elWidth / elSegmentsWidth;
@@ -291,51 +276,67 @@ AFRAME.registerComponent('tangram-terrain', {
 
     var height = (value * 0.18) * zoomScaleFactor * densityFactor * this.data.scaleFactor;
     return height;
-        // return height ? height - this._minHeight : 0;
+    // return height ? height - this._minHeight : 0;
   },
 
   remove: function () {
-    this._scene.destroy();
-        // layer.remove();
+    var ctx = this._heigthmapCanvas.getContext('2d');
+    ctx.clearRect(0, 0, this._heigthmapCanvas.width, this._heigthmapCanvas.height);
+
+    ctx = this._overlayCanvas.getContext('2d');
+    ctx.clearRect(0, 0, this._overlayCanvas.width, this._overlayCanvas.height);
   },
 
   tick: function (delta, time) { },
 
   project: function (lon, lat) {
+    const data = this.data;
+    const el = this.el;
+
     var px = this._mapInstance.latLngToLayerPoint([lat, lon]);
 
-    const el = this.el.components.geometry.data;
-    const scale = this.el.components.material.data.displacementScale;
+    const geometry = el.components.geometry.data;
 
-    const idx = this.canvasWidth * px.y + px.x;
-        // var z = this._scale(this.terrainData[idx] + this.altitudeAddition);
-    var z = this.terrainData[idx] / 254 * scale;
-        // console.log(z)
+    var width = this._heightmapCanvas.width;
+    var height = this._heightmapCanvas.height;
+    var ctx = this._heightmapCanvas.getContext('2d');
+    var pixels = ctx.getImageData(0, 0, width, height);
+
+    const _x = (width - 1) / (geometry.width * data.pxToWorldRatio) * px.x;
+    const _y = (height - 1) / (geometry.height * data.pxToWorldRatio) * px.y;
+
+    const idx = Math.round(width * _y + _x);
+    var z = pixels.data[idx * 4] / 254;
+
+    z *= el.components.material.data.displacementScale;
+    // add the bias
+    z += el.components.material.data.displacementBias;
 
     return {
-      x: (px.x / this.data.pxToWorldRatio) - (el.width / 2),
-            // y-coord is inverted (positive up in world space, positive down in
-            // pixel space)
-      y: -(px.y / this.data.pxToWorldRatio) + (el.height / 2),
+      x: (px.x / data.pxToWorldRatio) - (geometry.width / 2),
+      // y-coord is inverted (positive up in world space, positive down in
+      // pixel space)
+      y: -(px.y / data.pxToWorldRatio) + (geometry.height / 2),
       z: z
     };
   },
   unproject: function (x, y) {
     const el = this.el.components.geometry.data;
 
-        // Converting back to pixel space
+    // Converting back to pixel space
     const pxX = (x + (el.width / 2)) * this.data.pxToWorldRatio;
-        // y-coord is inverted (positive up in world space, positive down in
-        // pixel space)
+    // y-coord is inverted (positive up in world space, positive down in
+    // pixel space)
     const pxY = ((el.height / 2) - y) * this.data.pxToWorldRatio;
 
-        // Return the lat / long of that pixel on the map
+    // Return the lat / long of that pixel on the map
     var latLng = this._mapInstance.layerPointToLatLng([pxX, pxY]);
     return {
       lon: latLng.lng,
       lat: latLng.lat
     };
   },
+  /*
   unprojectAlitude: function (x, y) {
     const idx = this.canvasWidth * y + x;
     return this.terrainData[idx] / 255 * 8900 + this.altitudeAddition;
@@ -348,27 +349,25 @@ AFRAME.registerComponent('tangram-terrain', {
 
     return this.unprojectAlitude(givenX, givenY);
   },
+  */
   getLeafletInstance: function () {
     return this._mapInstance;
   }
 });
 
 AFRAME.registerPrimitive('a-tangram-terrain', {
-    // Attaches the `ocean` component by default.
-    // Defaults the ocean to be parallel to the ground.
+  // Defaults the terrain to be parallel to the ground.
   defaultComponents: {
     'tangram-terrain': {},
     rotation: { x: -90, y: 0, z: 0 },
-    material: {
-      side: 'both',
-      transparent: true,
-      shader: 'standard',
-      displacementScale: 100
-    },
     geometry: {
       primitive: 'plane',
       segmentsWidth: 50,
       segmentsHeight: 50
+    },
+    material: {
+      wireframe: false,
+      displacementScale: 30
     }
 
   },
@@ -376,13 +375,15 @@ AFRAME.registerPrimitive('a-tangram-terrain', {
     key: 'tangram-terrain.mapzenAPIKey',
     width: 'geometry.width',
     depth: 'geometry.height',
-    segmentsWidth: 'geometry.segmentsWidth',
-    segmentsHeight: 'geometry.segmentsHeight',
+    gridwidth: 'geometry.segmentsWidth',
+    griddepth: 'geometry.segmentsHeight',
     center: 'tangram-terrain.center',
     style: 'tangram-terrain.style',
     zoom: 'tangram-terrain.zoom',
     ratio: 'tangram-terrain.pxToWorldRatio',
-
+    height: 'material.displacementScale',
     wireframe: 'material.wireframe'
   }
 });
+
+// the displacement map scaling does not work. Why I do not know...
