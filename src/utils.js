@@ -19,22 +19,22 @@ module.exports.leafletOptions = {
 };
 
 module.exports.getCanvasContainerAssetElement = function (id, width, height, left) {
-  let element = document.querySelector(`#${id}`);
+  var element = document.querySelector('#' + id);
 
   if (!element) {
     element = document.createElement('div');
   }
 
   element.setAttribute('id', id);
-  element.style.width = `${width}px`;
-  element.style.height = `${height}px`;
+  element.style.width = width + 'px';
+  element.style.height = height + 'px';
 
     // This is necessary because mapbox-gl uses the offsetWidth/Height of the
     // container element to calculate the canvas size.  But those values are 0 if
     // the element (or its parent) are hidden. `position: fixed` means it can be
     // calculated correctly.
   element.style.position = 'fixed';
-  element.style.left = `${left}px`;
+  element.style.left = left + 'px';
   element.style.top = '0px';
 
   if (!document.body.contains(element)) {

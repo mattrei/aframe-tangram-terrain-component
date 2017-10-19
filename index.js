@@ -109,21 +109,18 @@ AFRAME.registerComponent('tangram-terrain', {
 
         self.el.setAttribute('material', 'displacementMap', canvas);
 
-        const {
-                    width: elWidth,
-          height: elHeight,
-          segmentsWidth: elSegmentsWidth,
-          segmentsHeight: elSegmentsHeight
-                } = self.el.components.geometry.data;
+        const geometry = self.el.components.geometry.data;
 
-        var geometry = new THREE.PlaneBufferGeometry(
-          elWidth, elHeight,
-          elSegmentsWidth - 1, elSegmentsHeight - 1);
-        mesh.geometry = geometry;
+        const plane = new THREE.PlaneBufferGeometry(
+          geometry.width, geometry.height,
+          geometry.segmentsWidth - 1, geometry.segmentsHeight - 1);
+        mesh.geometry = plane;
 
         self.el.emit(HEIGHTMAP_LOADED_EVENT);
         // removing all ressources layer after a safe timeout
-        Utils.delay(REMOVETANGRAM_TIMEOUT, _ => layer.remove());
+        Utils.delay(REMOVETANGRAM_TIMEOUT, function() {
+          layer.remove()
+        });
       },
       error: function (e) {
         console.log('scene error:', e);
@@ -250,7 +247,9 @@ AFRAME.registerComponent('tangram-terrain', {
         self.el.emit(MODEL_LOADED_EVENT);
 
         // removing all ressources layer after a safe timeout
-        Utils.delay(REMOVETANGRAM_TIMEOUT, _ => layer.remove());
+        Utils.delay(REMOVETANGRAM_TIMEOUT, function() {
+          layer.remove()
+        });
       },
       error: function (e) {
         console.log('scene error:', e);
@@ -265,20 +264,6 @@ AFRAME.registerComponent('tangram-terrain', {
 
     this._mapInstance.setView(Utils.latLonFrom(this.data.center), this.data.zoom);
   },
-  _scale: function (value) {
-    const {
-            width: elWidth,
-      segmentsWidth: elSegmentsWidth
-        } = this.el.components.geometry.data;
-
-    const densityFactor = elWidth / elSegmentsWidth;
-    const zoomScaleFactor = this.data.zoom * 0.2; // this._mapInstance.getZoom()
-
-    var height = (value * 0.18) * zoomScaleFactor * densityFactor * this.data.scaleFactor;
-    return height;
-    // return height ? height - this._minHeight : 0;
-  },
-
   remove: function () {
     var ctx = this._heigthmapCanvas.getContext('2d');
     ctx.clearRect(0, 0, this._heigthmapCanvas.width, this._heigthmapCanvas.height);
@@ -306,7 +291,7 @@ AFRAME.registerComponent('tangram-terrain', {
     const _y = (height - 1) / (geometry.height * data.pxToWorldRatio) * px.y;
 
     const idx = Math.round(width * _y + _x);
-    var z = pixels.data[idx * 4] / 254;
+    var z = pixels.data[idx * 4] / 255;
 
     z *= el.components.material.data.displacementScale;
     // add the bias
@@ -336,20 +321,15 @@ AFRAME.registerComponent('tangram-terrain', {
       lat: latLng.lat
     };
   },
-  /*
   unprojectAlitude: function (x, y) {
     const idx = this.canvasWidth * y + x;
     return this.terrainData[idx] / 255 * 8900 + this.altitudeAddition;
   },
   projectAltitude: function (lng, lat) {
-    const {
-            x: givenX,
-            y: givenY
-        } = this._mapInstance.latLngToLayerPoint([lat, lng]);
-
-    return this.unprojectAlitude(givenX, givenY);
+    const px = this._mapInstance.latLngToLayerPoint([lat, lng]);
+    return this.unprojectAlitude(px.x, px.y);
   },
-  */
+
   getLeafletInstance: function () {
     return this._mapInstance;
   }
