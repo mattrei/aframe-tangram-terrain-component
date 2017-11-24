@@ -121,6 +121,17 @@ require('aframe');
 require('aframe-tangram-terrain-component');
 ```
 
+#### Required step for Webpack
+To get the import working you need to tell _Webpack_ not to parse the _Tangram_ library otherwise you will run into [this error](https://github.com/tangrams/tangram/issues/559). So you need to add this in your _webpack.config.js_.
+
+```js
+module: {
+    noParse: [/tangram\/dist\/tangram/],
+}
+```
+
+See also [here](https://github.com/tangrams/tangram-play/wiki/Advanced-Tangram-for-front-end-engineers:-bundlers,-frameworks,-etc) for more information.
+
 
 ### Known issues
 * The maximum texture size (configured by the _pxToWorldRatio_ and _size_ parameters of the overlay map is restricted on mobile devies.  
