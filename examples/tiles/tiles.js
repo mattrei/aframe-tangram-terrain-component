@@ -95,7 +95,7 @@ AFRAME.registerComponent('tiles', {
     terrain.setAttribute('geometry', geometry);
 
     var material = {
-      //color: "#aaa",//data.wireframe,
+      // color: "#aaa",//data.wireframe,
       wireframe: data.wireframe,
       displacementScale: data.displacementScale
     };

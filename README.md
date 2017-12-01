@@ -1,6 +1,6 @@
 ## aframe-tangram-terrain-component
 
-A [Mapzen Tangram](https://mapzen.com/products/tangram/) terrain component for [A-Frame](https://aframe.io).
+A [Mapzen Tangram](https://mapzen.com/products/tangram/) terrain component for [A-Frame](https://aframe.io). 
 
 > Supports A-Frame 0.7.0.
 
@@ -10,7 +10,10 @@ A [Mapzen Tangram](https://mapzen.com/products/tangram/) terrain component for [
 
 #### `tangram-terrain` component
 
-This component so far can be just used as a texture for a geometry object (plane, sphere, etc). No feature selection events are fired. A strategy may be implemented in future releases. 
+This component obtains a heightmap from the Mapzen servers and applies a overlay texture according the 
+_style_ specification. The heightmap is used as a _displacement_ map and so is used in conjunction with 
+GPU picking technique to obtain fast results.
+No bathymetry data is included!
 
 ##### Schema
 | Property | Description | Default Value |
@@ -20,7 +23,6 @@ This component so far can be just used as a texture for a geometry object (plane
 | center | Center of the map, in the form of [longitude, latitude] | [0, 0] |
 | zoom | The zoom level of the map. | 13 |
 | pxToWorldRatio | The multiplication factor between meters in A-Frame and the pixels of the map. ie; when set to 100, will display 100 pixels per 1 meter in world space. (see [a note on fidelity](#a-note-on-fidelity)) | 100 |
-| highestAltitudeMeter | The heightmap does not contain exact absolute height values. If you know the highest point of the map area than you can give it here to give exact height measuring results. _0_ ignores it | 0 |
 
 
 ##### Events
@@ -32,10 +34,10 @@ This component so far can be just used as a texture for a geometry object (plane
 ##### API
 | Name | Data | Description |
 | -------- | ----------- | ------------- |
-| project | _lon_, _lat_| Returns the pixel x and y and z coordinates of the given longitude and latitude. |
-| unproject | _x_, _y_| Gives the longitude and latitude of the pixel coordinates. |
-| projectAltitude | _lon_, _lat_| Returns the altitude in meters from the the longitude and latitude. |
-| unprojectAltitude | _x_, _y_| Gives the altitude in meters from the pixel coordinates. |
+| project | _lon_, _lat_| Returns the pixel x and y and z (depth) coordinates of the given longitude and latitude. |
+| unproject | _x_, _y_| Gives the longitude and latitude of the world coordinates. |
+| unprojectHeight | _x_, _y_| Gives the depth value (GPU picked from the heightmap) from the pixel coordinates. Value is scaled according to the _displacementScale_ scale and added the _displacementBias_ value. To obtain real height values |
+| unprojectHeightInMeters | _x_, _y_| Gives the height value in meters. No exact values are possible though. Range between 0 and 8900 (Mount Everest) |
 
 ### Styling
 The Mapzen Tangram are styled within a (set) of YAML files. See the [Tangram documentation](https://mapzen.com/documentation/tangram/) for details. 

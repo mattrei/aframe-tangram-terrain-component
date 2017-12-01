@@ -62,6 +62,7 @@ AFRAME.registerComponent('tangram-terrain', {
     });
   },
   update: function (data, oldData) {
+    // TODO?
   },
   _initHeightMap: function () {
     const self = this;
@@ -109,17 +110,21 @@ AFRAME.registerComponent('tangram-terrain', {
 
         self.el.setAttribute('material', 'displacementMap', canvas);
 
-        const geometry = self.el.components.geometry.data;
+        const geomComponent = self.el.components.geometry;
+        const width = geomComponent.data.width;
+        const height = geomComponent.data.height;
 
         const plane = new THREE.PlaneBufferGeometry(
-          geometry.width, geometry.height,
-          geometry.segmentsWidth - 1, geometry.segmentsHeight - 1);
+          width, height,
+          geomComponent.data.segmentsWidth, geomComponent.data.segmentsHeight);
         mesh.geometry = plane;
+
+        self._createHitMesh(canvas);
 
         self.el.emit(HEIGHTMAP_LOADED_EVENT);
         // removing all ressources layer after a safe timeout
-        Utils.delay(REMOVETANGRAM_TIMEOUT, function() {
-          layer.remove()
+        Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
+          layer.remove();
         });
       },
       error: function (e) {
@@ -135,66 +140,36 @@ AFRAME.registerComponent('tangram-terrain', {
     map.setView(Utils.latLonFrom(this.data.center), this.data.zoom);
     this._mapInstance = map;
   },
-  /*
-  _start_analysis: function (canvas) {
-    var width = canvas.width;
-    var height = canvas.height;
+  _createHitMesh: function (canvas) {
+        // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
+    const imageWidth = canvas.width;
+    const imageHeight = canvas.height;
 
-    // based on https://github.com/tangrams/heightmapper/blob/gh-pages/main.js
+    this.hitScene = new THREE.Scene();
+    this.hitCamera = new THREE.OrthographicCamera(imageWidth / -2,
+              imageWidth / 2,
+              imageHeight / 2,
+              imageHeight / -2, -1, 1);
+    this.hitTexture = new THREE.WebGLRenderTarget(imageWidth, imageHeight, {
+      minFilter: THREE.NearestFilter,
+      magFilter: THREE.NearestFilter
+              // type: isMobile.any ? THREE.HalfFloatType : THREE.FloatType,
+    });
+    this.hitTexture.texture.generateMipMaps = false;
 
-    var ctx = canvas.getContext('2d');
-    // ctx.drawImage(scene.canvas, 0, 0, width, height);
+    const hitMesh = new THREE.Mesh(
+              new THREE.PlaneBufferGeometry(imageWidth, imageHeight),
+              new THREE.MeshBasicMaterial({
+                map: new THREE.CanvasTexture(canvas),
+                side: THREE.DoubleSide
+              })
+          );
+    this.hitScene.add(hitMesh);
 
-    // get all the pixels
-    var pixels = ctx.getImageData(0, 0, width, height);
-
-    var val;
-    var counts = {};
-    var max = 0;
-    var min = 255;
-
-    var left = [];
-    var right = [];
-
-    for (var i = 0; i < height * width * 4; i += 4) {
-      val = pixels.data[i];
-      var alpha = pixels.data[i + 3];
-      if (alpha === 0) { // empty pixel, skip to the next one
-        continue;
-      }
-
-      // update counts, to get a histogram
-      counts[val] = counts[val] ? counts[val] + 1 : 1;
-
-      // update min and max so far
-      min = Math.min(min, val);
-      max = Math.max(max, val);
-
-      this.terrainData.push(val);
-
-      if (i % (width * 4) === 0) {
-        left.push(val);
-      }
-      if (i % (width * 4) === ((width - 1) * 4)) {
-        right.push(val);
-      }
-    }
-    console.log(left);
-    console.log(right);
-
-    // range is 0 to 255 which is 8900 meters according to heightmap-style
-    this._minHeight = min;
-    this._maxHeight = max;
-
-    console.log('Min / Max ' + this._minHeight + ' ' + this._maxHeight);
-
-    var highestMeter = max / 255 * 8900;
-
-    if (this.data.highestAltitudeMeter > 0) {
-      this.altitudeAddition = this.data.highestAltitudeMeter - highestMeter;
-    }
+    this.el.sceneEl.renderer.render(this.hitScene,
+            this.hitCamera,
+            this.hitTexture);
   },
-  */
   _initMap: function () {
     var self = this;
 
@@ -247,8 +222,8 @@ AFRAME.registerComponent('tangram-terrain', {
         self.el.emit(MODEL_LOADED_EVENT);
 
         // removing all ressources layer after a safe timeout
-        Utils.delay(REMOVETANGRAM_TIMEOUT, function() {
-          layer.remove()
+        Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
+          layer.remove();
         });
       },
       error: function (e) {
@@ -278,41 +253,35 @@ AFRAME.registerComponent('tangram-terrain', {
     const data = this.data;
     const el = this.el;
 
+    // pixel space from leaflet
     var px = this._mapInstance.latLngToLayerPoint([lat, lon]);
 
     const geometry = el.components.geometry.data;
 
-    var width = this._heightmapCanvas.width;
-    var height = this._heightmapCanvas.height;
-    var ctx = this._heightmapCanvas.getContext('2d');
-    var pixels = ctx.getImageData(0, 0, width, height);
+    // convert to world space
+    const worldX = (px.x / data.pxToWorldRatio) - (geometry.width / 2);
+    // y-coord is inverted (positive up in world space, positive down in pixel space)
+    const worldY = -(px.y / data.pxToWorldRatio) + (geometry.height / 2);
 
-    const _x = (width - 1) / (geometry.width * data.pxToWorldRatio) * px.x;
-    const _y = (height - 1) / (geometry.height * data.pxToWorldRatio) * px.y;
-
-    const idx = Math.round(width * _y + _x);
-    var z = pixels.data[idx * 4] / 255;
+    // console.log('LEAFLET: ' + px.x + ' ' + px.y);
+    // console.log('WORLD: ' + worldX + ' ' + worldY);
+    var z = this._hitTest(px.x, px.y);
 
     z *= el.components.material.data.displacementScale;
-    // add the bias
     z += el.components.material.data.displacementBias;
 
     return {
-      x: (px.x / data.pxToWorldRatio) - (geometry.width / 2),
-      // y-coord is inverted (positive up in world space, positive down in
-      // pixel space)
-      y: -(px.y / data.pxToWorldRatio) + (geometry.height / 2),
+      x: worldX,
+      y: worldY,
       z: z
     };
   },
   unproject: function (x, y) {
-    const el = this.el.components.geometry.data;
+    const geomData = this.el.components.geometry.data;
 
-    // Converting back to pixel space
-    const pxX = (x + (el.width / 2)) * this.data.pxToWorldRatio;
-    // y-coord is inverted (positive up in world space, positive down in
-    // pixel space)
-    const pxY = ((el.height / 2) - y) * this.data.pxToWorldRatio;
+    // Converting world space to pixel space
+    const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
+    const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
 
     // Return the lat / long of that pixel on the map
     var latLng = this._mapInstance.layerPointToLatLng([pxX, pxY]);
@@ -321,13 +290,41 @@ AFRAME.registerComponent('tangram-terrain', {
       lat: latLng.lat
     };
   },
-  unprojectAlitude: function (x, y) {
-    const idx = this.canvasWidth * y + x;
-    return this.terrainData[idx] / 255 * 8900 + this.altitudeAddition;
+  // needs pixel space
+  _hitTest: function (x, y) {
+    if (!this.hitTexture) return;
+    const pixelBuffer = new Uint8Array(4);
+
+    const renderer = this.el.sceneEl.renderer;
+
+    const geomData = this.el.components.geometry.data;
+    const width = geomData.width * this.data.pxToWorldRatio;
+    const height = geomData.height * this.data.pxToWorldRatio;
+
+    // converting pixel space to texture space
+    const hitX = Math.round(x / width * this.hitTexture.width);
+    const hitY = this.hitTexture.height - Math.round(y / height * this.hitTexture.height);
+
+    renderer.readRenderTargetPixels(this.hitTexture, hitX, hitY, 1, 1, pixelBuffer);
+    // console.log('HIT ' + hitX + ' / ' + hitY + ' : ' + pixelBuffer[0] / 255);
+
+    return pixelBuffer[0] / 255;
   },
-  projectAltitude: function (lng, lat) {
-    const px = this._mapInstance.latLngToLayerPoint([lat, lng]);
-    return this.unprojectAlitude(px.x, px.y);
+  _getHeight: function (x, y) {
+    const geomData = this.el.components.geometry.data;
+
+        // Converting world space to pixel space
+    const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
+    const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
+
+    return this._hitTest(pxX, pxY);
+  },
+  unprojectHeight: function (x, y) {
+    const matData = this.el.components.material.data;
+    return this._getHeight(x, y) * matData.displacementScale + matData.displacementBias;
+  },
+  unprojectHeightInMeters: function (x, y) {
+    return this._getHeight(x, y) * 8900;
   },
 
   getLeafletInstance: function () {

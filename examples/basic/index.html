@@ -5,6 +5,7 @@
   <meta name="description" content="Heightmap example for Tangram component."></meta>
 
   <script src="../build.js"></script>
+  <script src="./collider-check.js"></script>
 </head>
 
 <body>
@@ -34,7 +35,7 @@
     </a-tangram-terrain>
   -->
 
-    <a-entity id="terrain" visible="true" geometry="width: 20; height: 20; segmentsWidth: 50; segmentsHeight: 50;" material="wireframe: false; displacementScale: 20; displacementBias: 0;"
+    <a-entity id="terrain" visible="true" geometry="width: 40; height: 40; segmentsWidth: 50; segmentsHeight: 50;" material="wireframe: false; displacementScale: 20; displacementBias: 0;"
       tangram-terrain="
   mapzenAPIKey: mapzen-sfnfVzq;
   style: #yamlElevation;
@@ -43,12 +44,14 @@
   pxToWorldRatio: 12;
   " rotation="-90 0 0" position="0 -5 -10">
 
-  <a-sphere id="marker" color="#EF2D5E" position="0 0 0" visible="true" radius="0.1"></a-sphere>
-  <a-sphere id="marker2" color="#AF2D5E" position="0 0 0" visible="true" radius="0.1"></a-sphere>
+      <a-sphere id="marker" color="#EF2D5E" position="0 0 0" visible="true" radius="0.1"></a-sphere>
+      <a-sphere id="marker2" color="#AF2D5E" position="0 0 0" visible="true" radius="0.1"></a-sphere>
     </a-entity>
 
 
-    <a-entity camera look-controls wasd-controls="fly: true;"></a-entity>
+    <a-entity id="player" collider-check>
+      <a-entity camera="userHeight: 0" look-controls wasd-controls="fly: false;"></a-entity>
+    </a-entity>
 
   </a-scene>
 
@@ -62,7 +65,7 @@
   var setProperty = window.AFRAME.utils.entity.setComponentProperty;
   mapEl.addEventListener('model-loaded', function () {
     setProperty(markerEl, 'position', mapEl.components["tangram-terrain"].project(15.9, 47.8));
-    setProperty(marker2El, 'position', mapEl.components["tangram-terrain"].project(15.8056, 47.7671));
+    //setProperty(marker2El, 'position', mapEl.components["tangram-terrain"].project(15.8056, 47.7671));
   });
 </script>
 
