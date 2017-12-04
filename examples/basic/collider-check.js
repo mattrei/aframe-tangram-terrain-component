@@ -7,7 +7,7 @@ AFRAME.registerComponent('collider-check', {
   },
   init: function () {
     this.enabled = false;
-    // this.tick = AFRAME.utils.throttleTick(this.tick, 100, this);
+    //this.tick = AFRAME.utils.throttleTick(this.tick, 1000, this);
     this.el.addEventListener('model-loaded', evt => {
       this.enabled = true;
       console.log('LOADED');
@@ -24,9 +24,14 @@ AFRAME.registerComponent('collider-check', {
 
     const dPos = pos.sub(terrainPos);
     const tangramTerrain = data.terrain.components['tangram-terrain'];
-    const height = tangramTerrain.unprojectHeight(dPos.x, dPos.z);
-    // console.log(height)
-    this.el.object3D.position.y = height - 3.5;
+    var height = tangramTerrain.unprojectHeight(dPos.x, -dPos.z);
+    
+
+    height = (Math.round(height * 10)/10)
+    //console.log(height)
+    this.el.object3D.position.y = height - 4;
+
+    //this.el.setAttribute('position', newLerpPos)
     // console.log(tangramTerrain.unprojectHeightInMeters(dPos.x, dPos.z));
   }
 });
