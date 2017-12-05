@@ -18,8 +18,8 @@ No bathymetry data is included!
 ##### Schema
 | Property | Description | Default Value |
 | -------- | ----------- | ------------- |
-| mapzenAPIKey | Your API key to make use of the Tangram API. | "" |
-| style | The style definition document for the ovleray style. Defaults to the standard Tangam style. | "" |
+| mapzenAPIKey | Your Mapzen API key to make use of the Tangram API. May be empty depending if your style defines it. See [here](https://mapzen.com/documentation/overview/api-keys) for more details. | "" |
+| style | The style definition document for the ovleray style. Must point to a custom style or to a [basemap style](https://mapzen.com/documentation/cartography/styles/). | "" |
 | center | Center of the map, in the form of [longitude, latitude] | [0, 0] |
 | zoom | The zoom level of the map. | 13 |
 | pxToWorldRatio | The multiplication factor between meters in A-Frame and the pixels of the map. ie; when set to 100, will display 100 pixels per 1 meter in world space. (see [a note on fidelity](#a-note-on-fidelity)) | 100 |
