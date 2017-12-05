@@ -14,7 +14,7 @@ const cuid = require('cuid');
 const heightmapStyle = require('./src/heightmap-style.yaml');
 
 const HEIGHTMAP_LOADED_EVENT = 'heightmap-loaded';
-const TERRAIN_LOADED_EVENT = 'terrain-loaded';
+const TERRAIN_LOADED_EVENT = 'tangram-terrain-loaded';
 const REMOVETANGRAM_TIMEOUT = 300;
 
 AFRAME.registerComponent('tangram-terrain', {
@@ -51,7 +51,6 @@ AFRAME.registerComponent('tangram-terrain', {
   multiple: false,
 
   init: function () {
-
     const data = this.data;
 
     this._heightmapInstance = null;
@@ -59,7 +58,7 @@ AFRAME.registerComponent('tangram-terrain', {
     this._heightmapCanvas = null;
     this._mapCanvas = null;
 
-    this._hitCanvasTexture = null
+    this._hitCanvasTexture = null;
 
     this._initHeightMap();
     this._initMap();
@@ -134,7 +133,6 @@ AFRAME.registerComponent('tangram-terrain', {
 
         self._heightmapCanvas = canvas;
 
-
         const geomComponent = self.el.components.geometry;
         const width = geomComponent.data.width;
         const height = geomComponent.data.height;
@@ -144,7 +142,7 @@ AFRAME.registerComponent('tangram-terrain', {
           geomComponent.data.segmentsWidth, geomComponent.data.segmentsHeight);
         mesh.geometry = plane;
 
-        //self.el.setAttribute('material', 'displacementMap', canvas);
+        // self.el.setAttribute('material', 'displacementMap', canvas);
         self._createHitMesh(canvas);
 
         self.el.emit(HEIGHTMAP_LOADED_EVENT);
@@ -173,14 +171,15 @@ AFRAME.registerComponent('tangram-terrain', {
               imageWidth / 2,
               imageHeight / 2,
               imageHeight / -2, -1, 1);
+
     this.hitTexture = new THREE.WebGLRenderTarget(imageWidth, imageHeight, {
       minFilter: THREE.NearestFilter,
-      magFilter: THREE.NearestFilter
-              // type: isMobile.any ? THREE.HalfFloatType : THREE.FloatType,
+      magFilter: THREE.NearestFilter,
+      type: THREE.UnsignedByteType
     });
     this.hitTexture.texture.generateMipMaps = false;
 
-    this._hitCanvasTexture = new THREE.CanvasTexture(canvas)
+    this._hitCanvasTexture = new THREE.CanvasTexture(canvas);
 
     const hitMesh = new THREE.Mesh(
               new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
@@ -189,7 +188,6 @@ AFRAME.registerComponent('tangram-terrain', {
               })
           );
     this.hitScene.add(hitMesh);
-
   },
   _initMap: function () {
     var self = this;
@@ -227,7 +225,6 @@ AFRAME.registerComponent('tangram-terrain', {
         Utils.processCanvasElement(canvasContainer);
       },
       view_complete: function () {
-
          // copy canvas contents to new canvas so that we can remove Tangram instance later
         const canvas = document.createElement('canvas');
         canvas.setAttribute('id', cuid());
@@ -325,14 +322,14 @@ AFRAME.registerComponent('tangram-terrain', {
     const hitY = Math.round((height - y) / height * this.hitTexture.height);
 
     renderer.readRenderTargetPixels(this.hitTexture, hitX, hitY, 1, 1, pixelBuffer);
-    //console.log('HIT ' + hitX + ' / ' + hitY + ' : ' + pixelBuffer[0] / 255);
+    // console.log('HIT ' + hitX + ' / ' + hitY + ' : ' + pixelBuffer[0] / 255);
 
     return pixelBuffer[0] / 255;
   },
   _getHeight: function (x, y) {
     const geomData = this.el.components.geometry.data;
 
-    //console.log(x + ' ' +y)
+    // console.log(x + ' ' +y)
         // Converting world space to pixel space
     const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
     const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;

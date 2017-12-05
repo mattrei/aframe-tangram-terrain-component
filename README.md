@@ -28,7 +28,7 @@ No bathymetry data is included!
 ##### Events
 | Name | Data | Description |
 | -------- | ----------- | ------------- |
-| model-loaded | None| Fired when the terrain that means the elevation data and the overlay map has finished loading. |
+| tangram-terrain-loaded | None| Fired when the terrain that means the elevation data and the overlay map has finished loading. Only by then the public API will be usable. |
 
 
 ##### API

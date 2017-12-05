@@ -56,7 +56,7 @@ AFRAME.registerComponent('tiles', {
 
     var self = this;
 
-    this.mainTile.addEventListener('model-loaded', function (e) {
+    this.mainTile.addEventListener('tangram-terrain-loaded', function (e) {
       self._isBusy = false;
       self.leaflet = e.target.components['tangram-terrain'].getLeafletInstance();
     });
@@ -73,7 +73,7 @@ AFRAME.registerComponent('tiles', {
       const first = this.queue[0];
       this._isBusy = true;
       const tile = this._addTile(first.tile, first.center, first.position);
-      tile.addEventListener('model-loaded', (e) => {
+      tile.addEventListener('tangram-terrain-loaded', (e) => {
         self._isBusy = false;
         self.queue.shift();
       });

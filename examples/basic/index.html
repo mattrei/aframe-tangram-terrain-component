@@ -5,8 +5,7 @@
   <meta name="description" content="Heightmap example for Tangram component."></meta>
 
   <script src="../build.js"></script>
-  <script src="./collider-check.js"></script>
-  <script src="./height-matrix.js"></script>
+  <script src="./sphere-matrix.js"></script>
 </head>
 
 <body>
@@ -46,7 +45,7 @@
   zoom: 10;
   pxToWorldRatio: 12;
   " rotation="-90 0 0" position="0 -5 0"
-  height-matrix>
+  sphere-matrix>
 
       <a-sphere id="marker" color="red" position="0 0 0" visible="true" radius="0.1"></a-sphere>
       <a-sphere id="marker2" color="red" position="0 0 0" visible="true" radius="0.1"></a-sphere>
@@ -54,9 +53,7 @@
     </a-entity>
 
 
-    <a-entity id="player" collider-check>
-      <a-entity camera="userHeight: 0" look-controls wasd-controls="fly: false;"></a-entity>
-    </a-entity>
+      <a-entity camera="userHeight: 0" look-controls wasd-controls="fly: true;"></a-entity>
 
   </a-scene>
 
@@ -69,7 +66,7 @@
   var marker2El = document.querySelector('#marker2');
   var marker3El = document.querySelector('#marker3');
   var setProperty = window.AFRAME.utils.entity.setComponentProperty;
-  mapEl.addEventListener('terrain-loaded', function () {
+  mapEl.addEventListener('tangram-terrain-loaded', function () {
     setProperty(markerEl, 'position', mapEl.components["tangram-terrain"].project(15.9, 47.8));
     setProperty(marker2El, 'position', mapEl.components["tangram-terrain"].project(15.8056, 47.7671));
     setProperty(marker3El, 'position', mapEl.components["tangram-terrain"].project(15.6, 47.6));
