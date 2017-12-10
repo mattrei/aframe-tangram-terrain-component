@@ -1,18 +1,17 @@
 const cuid = require('cuid');
-const defaultMapStyle = require('./simple-style.yaml');
 
 module.exports.leafletOptions = {
   'preferCanvas': true,
   'keyboard': false,
-  'scrollWheelZoom': true,
+  'scrollWheelZoom': false,
   'tap': false,
-  'touchZoom': true,
+  'touchZoom': false,
   'zoomControl': false,
   'attributionControl': false,
   'doubleClickZoom': false,
   'trackResize': false,
   'boxZoom': false,
-  'dragging': true,
+  'dragging': false,
   'zoomAnimation': false,
   'fadeAnimation': false,
   'markerZoomAnimation': false
@@ -29,10 +28,6 @@ module.exports.getCanvasContainerAssetElement = function (id, width, height, lef
   element.style.width = width + 'px';
   element.style.height = height + 'px';
 
-    // This is necessary because mapbox-gl uses the offsetWidth/Height of the
-    // container element to calculate the canvas size.  But those values are 0 if
-    // the element (or its parent) are hidden. `position: fixed` means it can be
-    // calculated correctly.
   element.style.position = 'fixed';
   element.style.left = left + 'px';
   element.style.top = '0px';
@@ -48,14 +43,6 @@ module.exports.processCanvasElement = function (canvasContainer) {
   const canvas = canvasContainer.querySelector('canvas');
   canvas.setAttribute('id', cuid());
   canvas.setAttribute('crossOrigin', 'anonymous');
-};
-
-module.exports.processStyle = function (style) {
-  if (!style) {
-    return defaultMapStyle;
-  }
-
-  return style;
 };
 
 module.exports.latLonFrom = function (lonLat) {

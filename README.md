@@ -38,6 +38,7 @@ No bathymetry data is included!
 | unproject | _x_, _y_| Gives the longitude and latitude of the world coordinates. |
 | unprojectHeight | _x_, _y_| Gives the depth value (GPU picked from the heightmap) from the pixel coordinates. Value is scaled according to the _displacementScale_ scale and added the _displacementBias_ value. To obtain real height values |
 | unprojectHeightInMeters | _x_, _y_| Gives the height value in meters. No exact values are possible though. Range between 0 and 8900 (Mount Everest) |
+| renderDepthBuffer | | Renders the heightmap depth buffer. Needs to be only called manually if the heigtmap is changed programmtically |
 
 ### Styling
 The Mapzen Tangram are styled within a (set) of YAML files. See the [Tangram documentation](https://mapzen.com/documentation/tangram/) for details. 

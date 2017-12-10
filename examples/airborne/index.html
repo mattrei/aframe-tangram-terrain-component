@@ -9,22 +9,23 @@
     <a-scene>
       <a-assets>
         <a-asset-item id="yaml-austria" src="assets/austria-airborne.yaml" />
+        <a-asset-item id="yaml-esri" src="assets/esri-satellite.yaml" />
       </a-assets>
  
       <a-sky color="#6EBAA7"></a-sky>
  
       <a-entity id="terrain" visible="true"
       
-      geometry="width: 50; height: 50; segmentsWidth: 40; segmentsHeight: 40;"
-      material="wireframe: false; displacementScale: 100;"
+      geometry="width: 20; height: 20; segmentsWidth: 50; segmentsHeight: 50;"
+      material="wireframe: false; displacementScale: 10;"
 
 
       tangram-terrain="
       mapzenAPIKey: mapzen-sfnfVzq;
-      style: #yaml-austria;
-      center: 15.8056, 47.7671;
-      zoom: 15;
-      pxToWorldRatio: 50;
+      style: #yaml-esri;
+      center: 86.92, 27.98;
+      zoom: 13;
+      pxToWorldRatio: 60;
       " 
 
       rotation="-90 0 0"
@@ -37,4 +38,11 @@
     </a-scene>
       
   </body>
+
+  <script>
+    var mapEl = document.querySelector('#terrain');
+    mapEl.addEventListener('tangram-terrain-loaded', function () {
+      console.log("LOADED")
+    });
+  </script>
 </html>

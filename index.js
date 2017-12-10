@@ -42,6 +42,10 @@ AFRAME.registerComponent('tangram-terrain', {
     pxToWorldRatio: {
       default: 10
     },
+    interactive: {
+      type: 'boolean',
+      default: true
+    },
     canvasOffsetPx: {
       type: 'int',
       default: 99999 // debug
@@ -65,7 +69,7 @@ AFRAME.registerComponent('tangram-terrain', {
     var self = this;
     this.el.addEventListener(HEIGHTMAP_LOADED_EVENT, function (e) {
       self._hitCanvasTexture.needsUpdate = true;
-      self.el.sceneEl.renderer.render(self.hitScene, self.hitCamera, self.hitTexture);
+      self.renderDepthBuffer();
       self._mapInstance.setView(Utils.latLonFrom(data.center), data.zoom);
     });
   },
@@ -91,7 +95,7 @@ AFRAME.registerComponent('tangram-terrain', {
   },
   _initHeightMap: function () {
     const self = this;
-    var data = this.data;
+    const data = this.data;
 
     const geomComponent = this.el.components.geometry;
 
@@ -122,16 +126,23 @@ AFRAME.registerComponent('tangram-terrain', {
         Utils.processCanvasElement(canvasContainer);
       },
       view_complete: function () {
+        if (self._heightmapCanvas) return;
+        
         var mesh = self.el.getObject3D('mesh');
 
-        const canvas = document.createElement('canvas');
-        canvas.setAttribute('id', cuid());
-        canvas.setAttribute('width', layer.scene.canvas.width);
-        canvas.setAttribute('height', layer.scene.canvas.height);
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(layer.scene.canvas, 0, 0);
+        if (data.interactive) {
+          self._heightmapCanvas = layer.scene.canvas;
+        } else {
+          const canvas = document.createElement('canvas');
+          canvas.setAttribute('id', cuid());
+          canvas.setAttribute('width', layer.scene.canvas.width);
+          canvas.setAttribute('height', layer.scene.canvas.height);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(layer.scene.canvas, 0, 0);
+          self._heightmapCanvas = canvas;
+        }
 
-        self._heightmapCanvas = canvas;
+        self.el.setAttribute('material', 'displacementMap', self._heightmapCanvas);
 
         const geomComponent = self.el.components.geometry;
         const width = geomComponent.data.width;
@@ -142,14 +153,16 @@ AFRAME.registerComponent('tangram-terrain', {
           geomComponent.data.segmentsWidth, geomComponent.data.segmentsHeight);
         mesh.geometry = plane;
 
-        // self.el.setAttribute('material', 'displacementMap', canvas);
-        self._createHitMesh(canvas);
+        self._createDepthBuffer(self._heightmapCanvas);
 
         self.el.emit(HEIGHTMAP_LOADED_EVENT);
-        // removing all ressources layer after a safe timeout
-        Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
-          layer.remove();
-        });
+
+        if (!data.interactive) {
+          // removing all ressources layer after a safe timeout
+          Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
+            layer.remove();
+          });
+        }
       },
       error: function (e) {
       },
@@ -161,8 +174,8 @@ AFRAME.registerComponent('tangram-terrain', {
 
     this._heightmapInstance = map;
   },
-  _createHitMesh: function (canvas) {
-        // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
+  _createDepthBuffer: function (canvas) {
+    // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
     const imageWidth = canvas.width;
     const imageHeight = canvas.height;
 
@@ -205,11 +218,9 @@ AFRAME.registerComponent('tangram-terrain', {
 
     var map = L.map(canvasContainer, Utils.leafletOptions);
 
-    const sceneStyle = Utils.processStyle(data.style);
-
     var layer = Tangram.leafletLayer({
       scene: {
-        import: sceneStyle,
+        import: data.style,
         global: {
           sdk_mapzen_api_key: data.mapzenAPIKey
         }
@@ -225,26 +236,33 @@ AFRAME.registerComponent('tangram-terrain', {
         Utils.processCanvasElement(canvasContainer);
       },
       view_complete: function () {
-         // copy canvas contents to new canvas so that we can remove Tangram instance later
-        const canvas = document.createElement('canvas');
-        canvas.setAttribute('id', cuid());
-        canvas.setAttribute('width', layer.scene.canvas.width);
-        canvas.setAttribute('height', layer.scene.canvas.height);
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(layer.scene.canvas, 0, 0);
+        if (self._mapCanvas) return;
 
-        self._mapCanvas = canvas;
+        if (data.interactive) {
+          self._mapCanvas = layer.scene.canvas;
+        } else {
+          // copy canvas contents to new canvas so that we can remove Tangram instance later
+          const canvas = document.createElement('canvas');
+          canvas.setAttribute('id', cuid());
+          canvas.setAttribute('width', layer.scene.canvas.width);
+          canvas.setAttribute('height', layer.scene.canvas.height);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(layer.scene.canvas, 0, 0);
+          self._mapCanvas = canvas;
+        }
 
-        self.el.setAttribute('material', 'src', canvas);
-        self.el.setAttribute('material', 'displacementMap', self._heightmapCanvas);
+        self.el.setAttribute('material', 'src', self._mapCanvas);
+//        self.el.setAttribute('material', 'displacementMap', self._heightmapCanvas);
 
         // finally everything is finished
         self.el.emit(TERRAIN_LOADED_EVENT);
 
-        // removing all ressources layer after a safe timeout
-        Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
-          layer.remove();
-        });
+        if (!data.interactive) {
+          // removing all ressources layer after a safe timeout
+          Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
+            layer.remove();
+          });
+        }
       },
       error: function (e) {
       },
@@ -344,8 +362,15 @@ AFRAME.registerComponent('tangram-terrain', {
     return this._getHeight(x, y) * 8900;
   },
 
-  getLeafletInstance: function () {
+  getMapInstance: function () {
     return this._mapInstance;
+  },
+  getHeightmapInstance: function () {
+    return this._heightmapInstance;
+  },
+  renderDepthBuffer: function() {
+    this._hitCanvasTexture.needsUpdate = true;
+    this.el.sceneEl.renderer.render(this.hitScene, this.hitCamera, this.hitTexture);
   }
 });
 

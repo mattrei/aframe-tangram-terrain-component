@@ -1,0 +1,46 @@
+<html>
+    <head>
+      <title>A-Frame Tangram Terrain Component - Airborne</title>
+      <meta name="description" content="Airborne example for Tangram component."></meta>
+  
+      <script src="../build.js"></script>
+      <script src="./map-controls.js"></script>
+    </head>
+    <body>
+      <a-scene>
+        <a-assets>
+            <a-asset-item id="yaml-grayscale" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/grayscale.yaml"
+            />
+          <a-asset-item id="yaml-esri" src="assets/esri-satellite.yaml" />
+        </a-assets>
+   
+        <a-sky color="#6EBAA7"></a-sky>
+   
+        <a-entity id="terrain" visible="true"
+        
+        geometry="width: 60; height: 60; segmentsWidth: 80; segmentsHeight: 80;"
+        material="wireframe: false; displacementScale: 25;"
+  
+  
+        tangram-terrain="
+        mapzenAPIKey: mapzen-sfnfVzq;
+        style: #yaml-esri;
+        center: 86.92, 27.98;
+        zoom: 15;
+        pxToWorldRatio: 20;
+        " 
+        map-controls
+        rotation="-90 0 0"
+        position="0 -18 0"
+        >
+        </a-entity>
+        
+  
+        <a-entity camera look-controls wasd-controls="fly: true;"></a-entity>
+  
+      </a-scene>
+        
+    </body>
+
+  </html>
+  

@@ -58,7 +58,7 @@ AFRAME.registerComponent('tiles', {
 
     this.mainTile.addEventListener('tangram-terrain-loaded', function (e) {
       self._isBusy = false;
-      self.leaflet = e.target.components['tangram-terrain'].getLeafletInstance();
+      self.leaflet = e.target.components['tangram-terrain'].getMapInstance();
     });
 
     this.tick = AFRAME.utils.throttleTick(this.tick, 1500, this);
@@ -108,6 +108,7 @@ AFRAME.registerComponent('tiles', {
         'style': data.style,
         'zoom': data.zoom,
         'pxToWorldRatio': data.pxToWorldRatio,
+        'interactive': false,
         'canvasOffsetPx': 9999
       });
 
@@ -119,7 +120,7 @@ AFRAME.registerComponent('tiles', {
   },
   _checkPosition: function () {
     const data = this.data;
-    var pos = this.getCameraPosition();
+    var pos = this.getCameraPosition(); // camera.getWorldPosition()
 
     const x = Math.floor((pos.x + data.tileSize * 0.5) / data.tileSize);
     const y = Math.floor((-pos.z + data.tileSize * 0.5) / data.tileSize);
