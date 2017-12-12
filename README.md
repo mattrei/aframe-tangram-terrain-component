@@ -23,6 +23,8 @@ No bathymetry data is included!
 | center | Center of the map, in the form of [longitude, latitude] | [0, 0] |
 | zoom | The zoom level of the map. | 13 |
 | pxToWorldRatio | The multiplication factor between meters in A-Frame and the pixels of the map. ie; when set to 100, will display 100 pixels per 1 meter in world space. (see [a note on fidelity](#a-note-on-fidelity)) | 100 |
+| interactive | Tangram instances are (currently) not designed for being instantiated many times on a single document. To overcome this this flag allows to create mulitple tangram terrain 
+instances by creating its own canvases. However then its not possible to programmatically change the contents of the terrain. | true |
 
 
 ##### Events

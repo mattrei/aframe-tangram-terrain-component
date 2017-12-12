@@ -80,11 +80,13 @@ if (typeof AFRAME === 'undefined') {
 
 const cuid = __webpack_require__(1);
 
-const heightmapStyle = __webpack_require__(7);
+const heightmapStyle = __webpack_require__(6);
 
 const HEIGHTMAP_LOADED_EVENT = 'heightmap-loaded';
 const TERRAIN_LOADED_EVENT = 'tangram-terrain-loaded';
 const REMOVETANGRAM_TIMEOUT = 300;
+
+const DEBUG_CANVAS_OFFSET = 99999;
 
 AFRAME.registerComponent('tangram-terrain', {
   dependencies: [
@@ -101,7 +103,6 @@ AFRAME.registerComponent('tangram-terrain', {
       default: ''
     },
     center: {
-      // lat lon
       default: [0, 0],
       type: 'array'
     },
@@ -111,9 +112,9 @@ AFRAME.registerComponent('tangram-terrain', {
     pxToWorldRatio: {
       default: 10
     },
-    canvasOffsetPx: {
-      type: 'int',
-      default: 99999 // debug
+    interactive: {
+      type: 'boolean',
+      default: true
     }
   },
 
@@ -134,7 +135,7 @@ AFRAME.registerComponent('tangram-terrain', {
     var self = this;
     this.el.addEventListener(HEIGHTMAP_LOADED_EVENT, function (e) {
       self._hitCanvasTexture.needsUpdate = true;
-      self.el.sceneEl.renderer.render(self.hitScene, self.hitCamera, self.hitTexture);
+      self.renderDepthBuffer();
       self._mapInstance.setView(Utils.latLonFrom(data.center), data.zoom);
     });
   },
@@ -160,7 +161,7 @@ AFRAME.registerComponent('tangram-terrain', {
   },
   _initHeightMap: function () {
     const self = this;
-    var data = this.data;
+    const data = this.data;
 
     const geomComponent = this.el.components.geometry;
 
@@ -169,7 +170,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
     const _canvasContainerId = cuid();
     const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
-      width, height, data.canvasOffsetPx);
+      width, height, DEBUG_CANVAS_OFFSET);
 
     var map = L.map(canvasContainer, Utils.leafletOptions);
 
@@ -191,16 +192,23 @@ AFRAME.registerComponent('tangram-terrain', {
         Utils.processCanvasElement(canvasContainer);
       },
       view_complete: function () {
+        if (self._heightmapCanvas) return;
+
         var mesh = self.el.getObject3D('mesh');
 
-        const canvas = document.createElement('canvas');
-        canvas.setAttribute('id', cuid());
-        canvas.setAttribute('width', layer.scene.canvas.width);
-        canvas.setAttribute('height', layer.scene.canvas.height);
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(layer.scene.canvas, 0, 0);
+        if (data.interactive) {
+          self._heightmapCanvas = layer.scene.canvas;
+        } else {
+          const canvas = document.createElement('canvas');
+          canvas.setAttribute('id', cuid());
+          canvas.setAttribute('width', layer.scene.canvas.width);
+          canvas.setAttribute('height', layer.scene.canvas.height);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(layer.scene.canvas, 0, 0);
+          self._heightmapCanvas = canvas;
+        }
 
-        self._heightmapCanvas = canvas;
+        self.el.setAttribute('material', 'displacementMap', self._heightmapCanvas);
 
         const geomComponent = self.el.components.geometry;
         const width = geomComponent.data.width;
@@ -211,14 +219,16 @@ AFRAME.registerComponent('tangram-terrain', {
           geomComponent.data.segmentsWidth, geomComponent.data.segmentsHeight);
         mesh.geometry = plane;
 
-        // self.el.setAttribute('material', 'displacementMap', canvas);
-        self._createHitMesh(canvas);
+        self._createDepthBuffer(self._heightmapCanvas);
 
         self.el.emit(HEIGHTMAP_LOADED_EVENT);
-        // removing all ressources layer after a safe timeout
-        Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
-          layer.remove();
-        });
+
+        if (!data.interactive) {
+          // removing all ressources layer after a safe timeout
+          Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
+            layer.remove();
+          });
+        }
       },
       error: function (e) {
       },
@@ -230,8 +240,8 @@ AFRAME.registerComponent('tangram-terrain', {
 
     this._heightmapInstance = map;
   },
-  _createHitMesh: function (canvas) {
-        // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
+  _createDepthBuffer: function (canvas) {
+    // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
     const imageWidth = canvas.width;
     const imageHeight = canvas.height;
 
@@ -270,15 +280,13 @@ AFRAME.registerComponent('tangram-terrain', {
 
     var _canvasContainerId = cuid();
     const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
-      width, height, data.canvasOffsetPx + 999);
+      width, height, DEBUG_CANVAS_OFFSET);
 
     var map = L.map(canvasContainer, Utils.leafletOptions);
 
-    const sceneStyle = Utils.processStyle(data.style);
-
     var layer = Tangram.leafletLayer({
       scene: {
-        import: sceneStyle,
+        import: data.style,
         global: {
           sdk_mapzen_api_key: data.mapzenAPIKey
         }
@@ -294,26 +302,33 @@ AFRAME.registerComponent('tangram-terrain', {
         Utils.processCanvasElement(canvasContainer);
       },
       view_complete: function () {
-         // copy canvas contents to new canvas so that we can remove Tangram instance later
-        const canvas = document.createElement('canvas');
-        canvas.setAttribute('id', cuid());
-        canvas.setAttribute('width', layer.scene.canvas.width);
-        canvas.setAttribute('height', layer.scene.canvas.height);
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(layer.scene.canvas, 0, 0);
+        if (self._mapCanvas) return;
 
-        self._mapCanvas = canvas;
+        if (data.interactive) {
+          self._mapCanvas = layer.scene.canvas;
+        } else {
+          // copy canvas contents to new canvas so that we can remove Tangram instance later
+          const canvas = document.createElement('canvas');
+          canvas.setAttribute('id', cuid());
+          canvas.setAttribute('width', layer.scene.canvas.width);
+          canvas.setAttribute('height', layer.scene.canvas.height);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(layer.scene.canvas, 0, 0);
+          self._mapCanvas = canvas;
+        }
 
-        self.el.setAttribute('material', 'src', canvas);
-        self.el.setAttribute('material', 'displacementMap', self._heightmapCanvas);
+        self.el.setAttribute('material', 'src', self._mapCanvas);
+//        self.el.setAttribute('material', 'displacementMap', self._heightmapCanvas);
 
         // finally everything is finished
         self.el.emit(TERRAIN_LOADED_EVENT);
 
-        // removing all ressources layer after a safe timeout
-        Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
-          layer.remove();
-        });
+        if (!data.interactive) {
+          // removing all ressources layer after a safe timeout
+          Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
+            layer.remove();
+          });
+        }
       },
       error: function (e) {
       },
@@ -413,8 +428,15 @@ AFRAME.registerComponent('tangram-terrain', {
     return this._getHeight(x, y) * 8900;
   },
 
-  getLeafletInstance: function () {
+  getMapInstance: function () {
     return this._mapInstance;
+  },
+  getHeightmapInstance: function () {
+    return this._heightmapInstance;
+  },
+  renderDepthBuffer: function () {
+    this._hitCanvasTexture.needsUpdate = true;
+    this.el.sceneEl.renderer.render(this.hitScene, this.hitCamera, this.hitTexture);
   }
 });
 
@@ -14222,20 +14244,19 @@ r.default=i="v"+n.version},{}],271:[function(e,t,r){"use strict";function n(e){r
 /***/ (function(module, exports, __webpack_require__) {
 
 const cuid = __webpack_require__(1);
-const defaultMapStyle = __webpack_require__(6);
 
 module.exports.leafletOptions = {
   'preferCanvas': true,
   'keyboard': false,
-  'scrollWheelZoom': true,
+  'scrollWheelZoom': false,
   'tap': false,
-  'touchZoom': true,
+  'touchZoom': false,
   'zoomControl': false,
   'attributionControl': false,
   'doubleClickZoom': false,
   'trackResize': false,
   'boxZoom': false,
-  'dragging': true,
+  'dragging': false,
   'zoomAnimation': false,
   'fadeAnimation': false,
   'markerZoomAnimation': false
@@ -14252,10 +14273,6 @@ module.exports.getCanvasContainerAssetElement = function (id, width, height, lef
   element.style.width = width + 'px';
   element.style.height = height + 'px';
 
-    // This is necessary because mapbox-gl uses the offsetWidth/Height of the
-    // container element to calculate the canvas size.  But those values are 0 if
-    // the element (or its parent) are hidden. `position: fixed` means it can be
-    // calculated correctly.
   element.style.position = 'fixed';
   element.style.left = left + 'px';
   element.style.top = '0px';
@@ -14271,14 +14288,6 @@ module.exports.processCanvasElement = function (canvasContainer) {
   const canvas = canvasContainer.querySelector('canvas');
   canvas.setAttribute('id', cuid());
   canvas.setAttribute('crossOrigin', 'anonymous');
-};
-
-module.exports.processStyle = function (style) {
-  if (!style) {
-    return defaultMapStyle;
-  }
-
-  return style;
 };
 
 module.exports.latLonFrom = function (lonLat) {
@@ -14298,148 +14307,6 @@ module.exports.delay = function (duration, func) {
 
 /***/ }),
 /* 6 */
-/***/ (function(module, exports) {
-
-module.exports = {
-	"cameras": {
-		"camera1": {
-			"type": "perspective"
-		}
-	},
-	"lights": {
-		"light1": {
-			"type": "directional",
-			"direction": [
-				0,
-				1,
-				"-.5"
-			],
-			"diffuse": 0.3,
-			"ambient": 1
-		}
-	},
-	"sources": {
-		"osm": {
-			"type": "TopoJSON",
-			"url": "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson",
-			"url_params": {
-				"api_key": "global.sdk_mapzen_api_key"
-			},
-			"max_zoom": 16
-		}
-	},
-	"layers": {
-		"earth": {
-			"data": {
-				"source": "osm"
-			},
-			"draw": {
-				"polygons": {
-					"order": "function() { return feature.sort_rank; }",
-					"color": "#ddeeee"
-				}
-			}
-		},
-		"landuse": {
-			"data": {
-				"source": "osm"
-			},
-			"draw": {
-				"polygons": {
-					"order": "function() { return feature.sort_rank; }",
-					"color": "#aaffaa"
-				}
-			}
-		},
-		"water": {
-			"data": {
-				"source": "osm"
-			},
-			"draw": {
-				"polygons": {
-					"order": "function() { return feature.sort_rank; }",
-					"color": "#88bbee"
-				}
-			}
-		},
-		"roads": {
-			"data": {
-				"source": "osm"
-			},
-			"filter": {
-				"not": {
-					"kind": [
-						"path",
-						"rail",
-						"ferry"
-					]
-				}
-			},
-			"draw": {
-				"lines": {
-					"order": "function() { return feature.sort_rank; }",
-					"color": "gray",
-					"width": 8,
-					"cap": "round"
-				}
-			},
-			"highway": {
-				"filter": {
-					"kind": "highway"
-				},
-				"draw": {
-					"lines": {
-						"order": "function() { return feature.sort_rank; }",
-						"color": "#cc6666",
-						"width": 12,
-						"outline": {
-							"color": "grey",
-							"width": 1.5
-						}
-					}
-				}
-			},
-			"minor_road": {
-				"filter": {
-					"kind": "minor_road"
-				},
-				"draw": {
-					"lines": {
-						"order": "function() { return feature.sort_rank; }",
-						"color": "lightgrey",
-						"width": 5
-					}
-				}
-			}
-		},
-		"buildings": {
-			"data": {
-				"source": "osm"
-			},
-			"draw": {
-				"polygons": {
-					"order": "function() { return feature.sort_rank; }",
-					"color": "function () {\n    var h = feature.height || 20;\n    h = Math.min((h + 50)/ 255, .8); // max brightness: .8\n    h = Math.max(h, .4); // min brightness: .4\n    return [h, h, h];\n}\n"
-				}
-			},
-			"3d-buildings": {
-				"filter": {
-					"$zoom": {
-						"min": 15
-					}
-				},
-				"draw": {
-					"polygons": {
-						"extrude": "function () { return feature.height > 20 || $zoom >= 16; }"
-					}
-				}
-			}
-		}
-	}
-};
-
-/***/ }),
-/* 7 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -14463,7 +14330,7 @@ module.exports = {
 				},
 				"blocks": {
 					"global": "float unpack(vec4 h) {\n    // unpack data to range [-32768, 32768], the range in the raw data\n    // \"* 255.\" is necessary because each the GPU reads each channel as a range from 0 - 1\n    // and we want it in a range from 0-255, as it was encoded in the raster image\n    return (h.r * 256. + h.g + h.b / 256.) * 255. - 32768.;\n}\n",
-					"color": "// unpack color and remove offset\nfloat height = unpack(color);\n// normalize to [0. - 1.]\nfloat new_value = (height - u_min)/(u_max - u_min);\ncolor.rgb = vec3(new_value);\ncolor.a = 1.0;\n"
+					"color": "// unpack color and remove offset\nfloat height = unpack(color);\n\n// normalize to [0. - 1.]\nfloat new_value = (height - u_min)/(u_max - u_min);\n\ncolor.rgb = vec3(new_value);\ncolor.a = 1.0;\n"
 				}
 			}
 		}

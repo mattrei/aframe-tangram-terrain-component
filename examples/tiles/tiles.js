@@ -108,8 +108,7 @@ AFRAME.registerComponent('tiles', {
         'style': data.style,
         'zoom': data.zoom,
         'pxToWorldRatio': data.pxToWorldRatio,
-        'interactive': false,
-        'canvasOffsetPx': 9999
+        'interactive': false
       });
 
     terrain.setAttribute('position', position);

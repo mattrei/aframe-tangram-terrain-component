@@ -19,8 +19,10 @@ const cuid = require('cuid');
 const heightmapStyle = require('./src/heightmap-style.yaml');
 
 const HEIGHTMAP_LOADED_EVENT = 'heightmap-loaded';
-const MODEL_LOADED_EVENT = 'model-loaded';
+const TERRAIN_LOADED_EVENT = 'tangram-terrain-loaded';
 const REMOVETANGRAM_TIMEOUT = 300;
+
+const DEBUG_CANVAS_OFFSET = 99999;
 
 AFRAME.registerComponent('tangram-terrain', {
   dependencies: [
@@ -37,7 +39,6 @@ AFRAME.registerComponent('tangram-terrain', {
       default: ''
     },
     center: {
-      // lat lon
       default: [0, 0],
       type: 'array'
     },
@@ -47,30 +48,56 @@ AFRAME.registerComponent('tangram-terrain', {
     pxToWorldRatio: {
       default: 10
     },
-    canvasOffsetPx: {
-      type: 'int',
-      default: 99999 // debug
+    interactive: {
+      type: 'boolean',
+      default: true
     }
   },
 
   multiple: false,
 
   init: function () {
+    const data = this.data;
+
+    this._heightmapInstance = null;
     this._mapInstance = null;
     this._heightmapCanvas = null;
-    this._overlayCanvas = null;
+    this._mapCanvas = null;
+
+    this._hitCanvasTexture = null;
 
     this._initHeightMap();
+    this._initMap();
     var self = this;
     this.el.addEventListener(HEIGHTMAP_LOADED_EVENT, function (e) {
-      self._initMap();
+      self._hitCanvasTexture.needsUpdate = true;
+      self.renderDepthBuffer();
+      self._mapInstance.setView(Utils.latLonFrom(data.center), data.zoom);
     });
   },
-  update: function (data, oldData) {
+  update: function (oldData) {
+    const data = this.data;
+
+    // Nothing changed
+    if (AFRAME.utils.deepEqual(oldData, data)) {
+      return;
+    }
+
+    var setView = false;
+
+    if (data.center !== oldData.center) {
+      setView = true;
+    }
+    if (data.zoom !== oldData.zoom) {
+      setView = true;
+    }
+    if (setView) {
+      this._heightmapInstance.setView(Utils.latLonFrom(this.data.center), this.data.zoom);
+    }
   },
   _initHeightMap: function () {
     const self = this;
-    var data = this.data;
+    const data = this.data;
 
     const geomComponent = this.el.components.geometry;
 
@@ -79,7 +106,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
     const _canvasContainerId = cuid();
     const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
-      width, height, data.canvasOffsetPx);
+      width, height, DEBUG_CANVAS_OFFSET);
 
     var map = L.map(canvasContainer, Utils.leafletOptions);
 
@@ -101,105 +128,82 @@ AFRAME.registerComponent('tangram-terrain', {
         Utils.processCanvasElement(canvasContainer);
       },
       view_complete: function () {
+        if (self._heightmapCanvas) return;
+
         var mesh = self.el.getObject3D('mesh');
 
-        const canvas = document.createElement('canvas');
-        canvas.setAttribute('id', cuid());
-        canvas.setAttribute('width', layer.scene.canvas.width);
-        canvas.setAttribute('height', layer.scene.canvas.height);
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(layer.scene.canvas, 0, 0);
+        if (data.interactive) {
+          self._heightmapCanvas = layer.scene.canvas;
+        } else {
+          const canvas = document.createElement('canvas');
+          canvas.setAttribute('id', cuid());
+          canvas.setAttribute('width', layer.scene.canvas.width);
+          canvas.setAttribute('height', layer.scene.canvas.height);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(layer.scene.canvas, 0, 0);
+          self._heightmapCanvas = canvas;
+        }
 
-        self._heightmapCanvas = canvas;
+        self.el.setAttribute('material', 'displacementMap', self._heightmapCanvas);
 
-        self.el.setAttribute('material', 'displacementMap', canvas);
-
-        const geometry = self.el.components.geometry.data;
+        const geomComponent = self.el.components.geometry;
+        const width = geomComponent.data.width;
+        const height = geomComponent.data.height;
 
         const plane = new THREE.PlaneBufferGeometry(
-          geometry.width, geometry.height,
-          geometry.segmentsWidth - 1, geometry.segmentsHeight - 1);
+          width, height,
+          geomComponent.data.segmentsWidth, geomComponent.data.segmentsHeight);
         mesh.geometry = plane;
 
+        self._createDepthBuffer(self._heightmapCanvas);
+
         self.el.emit(HEIGHTMAP_LOADED_EVENT);
-        // removing all ressources layer after a safe timeout
-        Utils.delay(REMOVETANGRAM_TIMEOUT, function() {
-          layer.remove()
-        });
+
+        if (!data.interactive) {
+          // removing all ressources layer after a safe timeout
+          Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
+            layer.remove();
+          });
+        }
       },
       error: function (e) {
-        console.log('scene error:', e);
       },
       warning: function (e) {
-        console.log('scene warning:', e);
       }
     });
 
     layer.addTo(map);
 
-    map.setView(Utils.latLonFrom(this.data.center), this.data.zoom);
-    this._mapInstance = map;
+    this._heightmapInstance = map;
   },
-  /*
-  _start_analysis: function (canvas) {
-    var width = canvas.width;
-    var height = canvas.height;
+  _createDepthBuffer: function (canvas) {
+    // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
+    const imageWidth = canvas.width;
+    const imageHeight = canvas.height;
 
-    // based on https://github.com/tangrams/heightmapper/blob/gh-pages/main.js
+    this.hitScene = new THREE.Scene();
+    this.hitCamera = new THREE.OrthographicCamera(imageWidth / -2,
+              imageWidth / 2,
+              imageHeight / 2,
+              imageHeight / -2, -1, 1);
 
-    var ctx = canvas.getContext('2d');
-    // ctx.drawImage(scene.canvas, 0, 0, width, height);
+    this.hitTexture = new THREE.WebGLRenderTarget(imageWidth, imageHeight, {
+      minFilter: THREE.NearestFilter,
+      magFilter: THREE.NearestFilter,
+      type: THREE.UnsignedByteType
+    });
+    this.hitTexture.texture.generateMipMaps = false;
 
-    // get all the pixels
-    var pixels = ctx.getImageData(0, 0, width, height);
+    this._hitCanvasTexture = new THREE.CanvasTexture(canvas);
 
-    var val;
-    var counts = {};
-    var max = 0;
-    var min = 255;
-
-    var left = [];
-    var right = [];
-
-    for (var i = 0; i < height * width * 4; i += 4) {
-      val = pixels.data[i];
-      var alpha = pixels.data[i + 3];
-      if (alpha === 0) { // empty pixel, skip to the next one
-        continue;
-      }
-
-      // update counts, to get a histogram
-      counts[val] = counts[val] ? counts[val] + 1 : 1;
-
-      // update min and max so far
-      min = Math.min(min, val);
-      max = Math.max(max, val);
-
-      this.terrainData.push(val);
-
-      if (i % (width * 4) === 0) {
-        left.push(val);
-      }
-      if (i % (width * 4) === ((width - 1) * 4)) {
-        right.push(val);
-      }
-    }
-    console.log(left);
-    console.log(right);
-
-    // range is 0 to 255 which is 8900 meters according to heightmap-style
-    this._minHeight = min;
-    this._maxHeight = max;
-
-    console.log('Min / Max ' + this._minHeight + ' ' + this._maxHeight);
-
-    var highestMeter = max / 255 * 8900;
-
-    if (this.data.highestAltitudeMeter > 0) {
-      this.altitudeAddition = this.data.highestAltitudeMeter - highestMeter;
-    }
+    const hitMesh = new THREE.Mesh(
+              new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
+              new THREE.MeshBasicMaterial({
+                map: this._hitCanvasTexture
+              })
+          );
+    this.hitScene.add(hitMesh);
   },
-  */
   _initMap: function () {
     var self = this;
 
@@ -212,15 +216,13 @@ AFRAME.registerComponent('tangram-terrain', {
 
     var _canvasContainerId = cuid();
     const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
-      width, height, data.canvasOffsetPx + 999);
+      width, height, DEBUG_CANVAS_OFFSET);
 
     var map = L.map(canvasContainer, Utils.leafletOptions);
 
-    const sceneStyle = Utils.processStyle(data.style);
-
     var layer = Tangram.leafletLayer({
       scene: {
-        import: sceneStyle,
+        import: data.style,
         global: {
           sdk_mapzen_api_key: data.mapzenAPIKey
         }
@@ -236,45 +238,49 @@ AFRAME.registerComponent('tangram-terrain', {
         Utils.processCanvasElement(canvasContainer);
       },
       view_complete: function () {
-        // copy canvas contents to new canvas so that we can remove Tangram instance later
-        const canvas = document.createElement('canvas');
-        canvas.setAttribute('id', cuid());
-        canvas.setAttribute('width', layer.scene.canvas.width);
-        canvas.setAttribute('height', layer.scene.canvas.height);
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(layer.scene.canvas, 0, 0);
+        if (self._mapCanvas) return;
 
-        self._overlayCanvas = canvas;
+        if (data.interactive) {
+          self._mapCanvas = layer.scene.canvas;
+        } else {
+          // copy canvas contents to new canvas so that we can remove Tangram instance later
+          const canvas = document.createElement('canvas');
+          canvas.setAttribute('id', cuid());
+          canvas.setAttribute('width', layer.scene.canvas.width);
+          canvas.setAttribute('height', layer.scene.canvas.height);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(layer.scene.canvas, 0, 0);
+          self._mapCanvas = canvas;
+        }
 
-        self.el.setAttribute('material', 'src', canvas);
+        self.el.setAttribute('material', 'src', self._mapCanvas);
+//        self.el.setAttribute('material', 'displacementMap', self._heightmapCanvas);
 
         // finally everything is finished
-        self.el.emit(MODEL_LOADED_EVENT);
+        self.el.emit(TERRAIN_LOADED_EVENT);
 
-        // removing all ressources layer after a safe timeout
-        Utils.delay(REMOVETANGRAM_TIMEOUT, function() {
-          layer.remove()
-        });
+        if (!data.interactive) {
+          // removing all ressources layer after a safe timeout
+          Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
+            layer.remove();
+          });
+        }
       },
       error: function (e) {
-        console.log('scene error:', e);
       },
       warning: function (e) {
-        console.log('scene warning:', e);
       }
     });
     layer.addTo(map);
 
     this._mapInstance = map;
-
-    this._mapInstance.setView(Utils.latLonFrom(this.data.center), this.data.zoom);
   },
   remove: function () {
     var ctx = this._heigthmapCanvas.getContext('2d');
     ctx.clearRect(0, 0, this._heigthmapCanvas.width, this._heigthmapCanvas.height);
 
-    ctx = this._overlayCanvas.getContext('2d');
-    ctx.clearRect(0, 0, this._overlayCanvas.width, this._overlayCanvas.height);
+    ctx = this._mapCanvas.getContext('2d');
+    ctx.clearRect(0, 0, this._mapCanvas.width, this._mapCanvas.height);
   },
 
   tick: function (delta, time) { },
@@ -283,41 +289,35 @@ AFRAME.registerComponent('tangram-terrain', {
     const data = this.data;
     const el = this.el;
 
+    // pixel space from leaflet
     var px = this._mapInstance.latLngToLayerPoint([lat, lon]);
 
     const geometry = el.components.geometry.data;
 
-    var width = this._heightmapCanvas.width;
-    var height = this._heightmapCanvas.height;
-    var ctx = this._heightmapCanvas.getContext('2d');
-    var pixels = ctx.getImageData(0, 0, width, height);
+    // convert to world space
+    const worldX = (px.x / data.pxToWorldRatio) - (geometry.width / 2);
+    // y-coord is inverted (positive up in world space, positive down in pixel space)
+    const worldY = -(px.y / data.pxToWorldRatio) + (geometry.height / 2);
 
-    const _x = (width - 1) / (geometry.width * data.pxToWorldRatio) * px.x;
-    const _y = (height - 1) / (geometry.height * data.pxToWorldRatio) * px.y;
-
-    const idx = Math.round(width * _y + _x);
-    var z = pixels.data[idx * 4] / 255;
+    // console.log('LEAFLET: ' + px.x + ' ' + px.y);
+    // console.log('WORLD: ' + worldX + ' ' + worldY);
+    var z = this._hitTest(px.x, px.y);
 
     z *= el.components.material.data.displacementScale;
-    // add the bias
     z += el.components.material.data.displacementBias;
 
     return {
-      x: (px.x / data.pxToWorldRatio) - (geometry.width / 2),
-      // y-coord is inverted (positive up in world space, positive down in
-      // pixel space)
-      y: -(px.y / data.pxToWorldRatio) + (geometry.height / 2),
+      x: worldX,
+      y: worldY,
       z: z
     };
   },
   unproject: function (x, y) {
-    const el = this.el.components.geometry.data;
+    const geomData = this.el.components.geometry.data;
 
-    // Converting back to pixel space
-    const pxX = (x + (el.width / 2)) * this.data.pxToWorldRatio;
-    // y-coord is inverted (positive up in world space, positive down in
-    // pixel space)
-    const pxY = ((el.height / 2) - y) * this.data.pxToWorldRatio;
+    // Converting world space to pixel space
+    const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
+    const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
 
     // Return the lat / long of that pixel on the map
     var latLng = this._mapInstance.layerPointToLatLng([pxX, pxY]);
@@ -326,17 +326,53 @@ AFRAME.registerComponent('tangram-terrain', {
       lat: latLng.lat
     };
   },
-  unprojectAlitude: function (x, y) {
-    const idx = this.canvasWidth * y + x;
-    return this.terrainData[idx] / 255 * 8900 + this.altitudeAddition;
+  // needs pixel space
+  _hitTest: function (x, y) {
+    if (!this.hitTexture) return;
+    const pixelBuffer = new Uint8Array(4);
+
+    const renderer = this.el.sceneEl.renderer;
+
+    const geomData = this.el.components.geometry.data;
+    const width = geomData.width * this.data.pxToWorldRatio;
+    const height = geomData.height * this.data.pxToWorldRatio;
+
+    // converting pixel space to texture space
+    const hitX = Math.round((x) / width * this.hitTexture.width);
+    const hitY = Math.round((height - y) / height * this.hitTexture.height);
+
+    renderer.readRenderTargetPixels(this.hitTexture, hitX, hitY, 1, 1, pixelBuffer);
+    // console.log('HIT ' + hitX + ' / ' + hitY + ' : ' + pixelBuffer[0] / 255);
+
+    return pixelBuffer[0] / 255;
   },
-  projectAltitude: function (lng, lat) {
-    const px = this._mapInstance.latLngToLayerPoint([lat, lng]);
-    return this.unprojectAlitude(px.x, px.y);
+  _getHeight: function (x, y) {
+    const geomData = this.el.components.geometry.data;
+
+    // console.log(x + ' ' +y)
+        // Converting world space to pixel space
+    const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
+    const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
+
+    return this._hitTest(pxX, pxY);
+  },
+  unprojectHeight: function (x, y) {
+    const matData = this.el.components.material.data;
+    return this._getHeight(x, y) * matData.displacementScale + matData.displacementBias;
+  },
+  unprojectHeightInMeters: function (x, y) {
+    return this._getHeight(x, y) * 8900;
   },
 
-  getLeafletInstance: function () {
+  getMapInstance: function () {
     return this._mapInstance;
+  },
+  getHeightmapInstance: function () {
+    return this._heightmapInstance;
+  },
+  renderDepthBuffer: function () {
+    this._hitCanvasTexture.needsUpdate = true;
+    this.el.sceneEl.renderer.render(this.hitScene, this.hitCamera, this.hitTexture);
   }
 });
 
@@ -373,7 +409,7 @@ AFRAME.registerPrimitive('a-tangram-terrain', {
 
 // the displacement map scaling does not work. Why I do not know...
 
-},{"./src/heightmap-style.yaml":7,"./src/utils":9,"cuid":4,"leaflet":5,"tangram":6}],3:[function(require,module,exports){
+},{"./src/heightmap-style.yaml":7,"./src/utils":8,"cuid":4,"leaflet":5,"tangram":6}],3:[function(require,module,exports){
 (function (global){
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.AFRAME = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 (function (process){
@@ -96751,25 +96787,22 @@ r.default=i="v"+n.version},{}],271:[function(e,t,r){"use strict";function n(e){r
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],7:[function(require,module,exports){
-module.exports = {"sources":{"elevation":{"type":"Raster","url":"https://tile.mapzen.com/mapzen/terrain/v1/terrarium/{z}/{x}/{y}.png","url_params":{"api_key":"global.sdk_mapzen_api_key"},"max_zoom":15}},"styles":{"hillshade":{"base":"raster","shaders":{"uniforms":{"u_max":8900,"u_min":0},"blocks":{"global":"float unpack(vec4 h) {\n    // unpack data to range [-32768, 32768], the range in the raw data\n    // \"* 255.\" is necessary because each the GPU reads each channel as a range from 0 - 1\n    // and we want it in a range from 0-255, as it was encoded in the raster image\n    return (h.r * 256. + h.g + h.b / 256.) * 255. - 32768.;\n}\n","color":"// unpack color and remove offset\nfloat height = unpack(color);\n// normalize to [0. - 1.]\nfloat new_value = (height - u_min)/(u_max - u_min);\ncolor.rgb = vec3(new_value);\ncolor.a = 1.0;\n"}}}},"layers":{"terrain":{"data":{"source":"elevation","layer":"_default"},"draw":{"hillshade":{"order":0}}}}};
+module.exports = {"sources":{"elevation":{"type":"Raster","url":"https://tile.mapzen.com/mapzen/terrain/v1/terrarium/{z}/{x}/{y}.png","url_params":{"api_key":"global.sdk_mapzen_api_key"},"max_zoom":15}},"styles":{"hillshade":{"base":"raster","shaders":{"uniforms":{"u_max":8900,"u_min":0},"blocks":{"global":"float unpack(vec4 h) {\n    // unpack data to range [-32768, 32768], the range in the raw data\n    // \"* 255.\" is necessary because each the GPU reads each channel as a range from 0 - 1\n    // and we want it in a range from 0-255, as it was encoded in the raster image\n    return (h.r * 256. + h.g + h.b / 256.) * 255. - 32768.;\n}\n","color":"// unpack color and remove offset\nfloat height = unpack(color);\n\n// normalize to [0. - 1.]\nfloat new_value = (height - u_min)/(u_max - u_min);\n\ncolor.rgb = vec3(new_value);\ncolor.a = 1.0;\n"}}}},"layers":{"terrain":{"data":{"source":"elevation","layer":"_default"},"draw":{"hillshade":{"order":0}}}}};
 },{}],8:[function(require,module,exports){
-module.exports = {"cameras":{"camera1":{"type":"perspective"}},"lights":{"light1":{"type":"directional","direction":[0,1,"-.5"],"diffuse":0.3,"ambient":1}},"sources":{"osm":{"type":"TopoJSON","url":"https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson","url_params":{"api_key":"global.sdk_mapzen_api_key"},"max_zoom":16}},"layers":{"earth":{"data":{"source":"osm"},"draw":{"polygons":{"order":"function() { return feature.sort_rank; }","color":"#ddeeee"}}},"landuse":{"data":{"source":"osm"},"draw":{"polygons":{"order":"function() { return feature.sort_rank; }","color":"#aaffaa"}}},"water":{"data":{"source":"osm"},"draw":{"polygons":{"order":"function() { return feature.sort_rank; }","color":"#88bbee"}}},"roads":{"data":{"source":"osm"},"filter":{"not":{"kind":["path","rail","ferry"]}},"draw":{"lines":{"order":"function() { return feature.sort_rank; }","color":"gray","width":8,"cap":"round"}},"highway":{"filter":{"kind":"highway"},"draw":{"lines":{"order":"function() { return feature.sort_rank; }","color":"#cc6666","width":12,"outline":{"color":"grey","width":1.5}}}},"minor_road":{"filter":{"kind":"minor_road"},"draw":{"lines":{"order":"function() { return feature.sort_rank; }","color":"lightgrey","width":5}}}},"buildings":{"data":{"source":"osm"},"draw":{"polygons":{"order":"function() { return feature.sort_rank; }","color":"function () {\n    var h = feature.height || 20;\n    h = Math.min((h + 50)/ 255, .8); // max brightness: .8\n    h = Math.max(h, .4); // min brightness: .4\n    return [h, h, h];\n}\n"}},"3d-buildings":{"filter":{"$zoom":{"min":15}},"draw":{"polygons":{"extrude":"function () { return feature.height > 20 || $zoom >= 16; }"}}}}}};
-},{}],9:[function(require,module,exports){
 const cuid = require('cuid');
-const defaultMapStyle = require('./simple-style.yaml');
 
 module.exports.leafletOptions = {
   'preferCanvas': true,
   'keyboard': false,
-  'scrollWheelZoom': true,
+  'scrollWheelZoom': false,
   'tap': false,
-  'touchZoom': true,
+  'touchZoom': false,
   'zoomControl': false,
   'attributionControl': false,
   'doubleClickZoom': false,
   'trackResize': false,
   'boxZoom': false,
-  'dragging': true,
+  'dragging': false,
   'zoomAnimation': false,
   'fadeAnimation': false,
   'markerZoomAnimation': false
@@ -96786,10 +96819,6 @@ module.exports.getCanvasContainerAssetElement = function (id, width, height, lef
   element.style.width = width + 'px';
   element.style.height = height + 'px';
 
-    // This is necessary because mapbox-gl uses the offsetWidth/Height of the
-    // container element to calculate the canvas size.  But those values are 0 if
-    // the element (or its parent) are hidden. `position: fixed` means it can be
-    // calculated correctly.
   element.style.position = 'fixed';
   element.style.left = left + 'px';
   element.style.top = '0px';
@@ -96807,14 +96836,6 @@ module.exports.processCanvasElement = function (canvasContainer) {
   canvas.setAttribute('crossOrigin', 'anonymous');
 };
 
-module.exports.processStyle = function (style) {
-  if (!style) {
-    return defaultMapStyle;
-  }
-
-  return style;
-};
-
 module.exports.latLonFrom = function (lonLat) {
   return [lonLat[1], lonLat[0]];
 };
@@ -96829,4 +96850,4 @@ module.exports.delay = function (duration, func) {
   });
 };
 
-},{"./simple-style.yaml":8,"cuid":4}]},{},[1]);
+},{"cuid":4}]},{},[1]);

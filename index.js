@@ -17,6 +17,8 @@ const HEIGHTMAP_LOADED_EVENT = 'heightmap-loaded';
 const TERRAIN_LOADED_EVENT = 'tangram-terrain-loaded';
 const REMOVETANGRAM_TIMEOUT = 300;
 
+const DEBUG_CANVAS_OFFSET = 99999;
+
 AFRAME.registerComponent('tangram-terrain', {
   dependencies: [
     'geometry',
@@ -32,7 +34,6 @@ AFRAME.registerComponent('tangram-terrain', {
       default: ''
     },
     center: {
-      // lat lon
       default: [0, 0],
       type: 'array'
     },
@@ -45,10 +46,6 @@ AFRAME.registerComponent('tangram-terrain', {
     interactive: {
       type: 'boolean',
       default: true
-    },
-    canvasOffsetPx: {
-      type: 'int',
-      default: 99999 // debug
     }
   },
 
@@ -104,7 +101,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
     const _canvasContainerId = cuid();
     const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
-      width, height, data.canvasOffsetPx);
+      width, height, DEBUG_CANVAS_OFFSET);
 
     var map = L.map(canvasContainer, Utils.leafletOptions);
 
@@ -127,7 +124,7 @@ AFRAME.registerComponent('tangram-terrain', {
       },
       view_complete: function () {
         if (self._heightmapCanvas) return;
-        
+
         var mesh = self.el.getObject3D('mesh');
 
         if (data.interactive) {
@@ -214,7 +211,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
     var _canvasContainerId = cuid();
     const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
-      width, height, data.canvasOffsetPx + 999);
+      width, height, DEBUG_CANVAS_OFFSET);
 
     var map = L.map(canvasContainer, Utils.leafletOptions);
 
@@ -368,7 +365,7 @@ AFRAME.registerComponent('tangram-terrain', {
   getHeightmapInstance: function () {
     return this._heightmapInstance;
   },
-  renderDepthBuffer: function() {
+  renderDepthBuffer: function () {
     this._hitCanvasTexture.needsUpdate = true;
     this.el.sceneEl.renderer.render(this.hitScene, this.hitCamera, this.hitTexture);
   }
