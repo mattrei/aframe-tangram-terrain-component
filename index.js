@@ -384,7 +384,7 @@ AFRAME.registerPrimitive('a-tangram-terrain', {
       displacementScale: 30
     },
     rotation: { x: -90, y: 0, z: 0 },
-    'tangram-terrain': {},
+    'tangram-terrain': {}
   },
   mappings: {
     'api-key': 'tangram-terrain.mapzenAPIKey',
