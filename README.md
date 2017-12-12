@@ -82,20 +82,15 @@ Install and use by directly including the [browser files](dist):
 <body>
   <a-scene>
 
-      <a-entity 
-        position="0 2.5 -2"
-        geometry="primitive: plane; width: 7; height: 5;"
-        
-        material="shader: flat;"
-
-        tangram-terrain="
-        mapzenAPIKey: mapzen-sfnfVzq;
-        center: 15.8056, 47.7671;
-        zoom: 12;
-        pxToWorldRatio: 100;
-        "
-        >
-      </a-entity>
+    <a-tangram-terrain
+      api-key="mapzen-sfnfVzq" 
+      zoom="10" 
+      center="15.8056, 7.7671" 
+      map-style="#yamlElevation" 
+      px-world-ratio="12"
+      visible="true" wireframe="false" height-scale="40"
+      width="25" depth="25">
+    </a-tangram-terrain>
   </a-scene>
 </body>
 ```

@@ -23,18 +23,24 @@
 
 
 
-    <!--
+    
     <a-tangram-terrain id="terrain" 
-    key="mapzen-sfnfVzq" zoom="10" center="15.8056, 7.7671" style="#yamlElevation" ratio="12"
-    visible="true" wireframe="true" height="40"
+    api-key="mapzen-sfnfVzq" 
+    zoom="10" 
+    center="15.8056, 7.7671" 
+    map-style="#yamlElevation" 
+    px-world-ratio="12"
+
+    visible="true" wireframe="false" height-scale="40"
     width="25" depth="25"
    position="0 -10 -20">
 
       <a-sphere id="marker" color="#EF2D5E" position="0 0 0" visible="true" radius="0.1"></a-sphere>
       <a-sphere id="marker2" color="#AF2D5E" position="0 0 0" visible="true" radius="0.1"></a-sphere>
     </a-tangram-terrain>
-  -->
+  
 
+  <!--
     <a-entity id="terrain" visible="true" 
     geometry="width: 40; height: 40; segmentsWidth: 100; segmentsHeight: 100;" 
     material="side: double; wireframe: true; displacementScale: 30; displacementBias: 0;"
@@ -51,6 +57,7 @@
       <a-sphere id="marker2" color="red" position="0 0 0" visible="true" radius="0.1"></a-sphere>
       <a-sphere id="marker3" color="red" position="0 0 0" visible="true" radius="0.1"></a-sphere>
     </a-entity>
+  -->
 
 
       <a-entity camera="userHeight: 0" look-controls wasd-controls="fly: true;"></a-entity>

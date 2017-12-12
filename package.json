@@ -1,6 +1,6 @@
 {
     "name": "aframe-tangram-terrain-component",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "description": "A Tangram terrain component for A-Frame.",
     "main": "index.js",
     "cdn": "dist/aframe-tangram-terrain-component.min.js",
