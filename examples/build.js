@@ -379,8 +379,6 @@ AFRAME.registerComponent('tangram-terrain', {
 AFRAME.registerPrimitive('a-tangram-terrain', {
   // Defaults the terrain to be parallel to the ground.
   defaultComponents: {
-    'tangram-terrain': {},
-    rotation: { x: -90, y: 0, z: 0 },
     geometry: {
       primitive: 'plane',
       segmentsWidth: 50,
@@ -389,25 +387,24 @@ AFRAME.registerPrimitive('a-tangram-terrain', {
     material: {
       wireframe: false,
       displacementScale: 30
-    }
-
+    },
+    rotation: { x: -90, y: 0, z: 0 },
+    'tangram-terrain': {}
   },
   mappings: {
-    key: 'tangram-terrain.mapzenAPIKey',
+    'api-key': 'tangram-terrain.mapzenAPIKey',
     width: 'geometry.width',
     depth: 'geometry.height',
-    gridwidth: 'geometry.segmentsWidth',
-    griddepth: 'geometry.segmentsHeight',
+    'grid-width': 'geometry.segmentsWidth',
+    'grid-depth': 'geometry.segmentsHeight',
     center: 'tangram-terrain.center',
-    style: 'tangram-terrain.style',
+    'map-style': 'tangram-terrain.style',
     zoom: 'tangram-terrain.zoom',
-    ratio: 'tangram-terrain.pxToWorldRatio',
-    height: 'material.displacementScale',
+    'px-world-ratio': 'tangram-terrain.pxToWorldRatio',
+    'height-scale': 'material.displacementScale',
     wireframe: 'material.wireframe'
   }
 });
-
-// the displacement map scaling does not work. Why I do not know...
 
 },{"./src/heightmap-style.yaml":7,"./src/utils":8,"cuid":4,"leaflet":5,"tangram":6}],3:[function(require,module,exports){
 (function (global){
