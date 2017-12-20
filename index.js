@@ -99,6 +99,12 @@ AFRAME.registerComponent('tangram-terrain', {
     const width = geomComponent.data.width * data.pxToWorldRatio + 1;
     const height = geomComponent.data.height * data.pxToWorldRatio + 1;
 
+    const plane = new THREE.PlaneBufferGeometry(
+      geomComponent.data.width, geomComponent.data.height,
+      geomComponent.data.segmentsWidth, geomComponent.data.segmentsHeight);
+    const mesh = this.el.getObject3D('mesh');
+    mesh.geometry = plane;
+
     const _canvasContainerId = cuid();
     const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
       width, height, DEBUG_CANVAS_OFFSET);
@@ -125,8 +131,6 @@ AFRAME.registerComponent('tangram-terrain', {
       view_complete: function () {
         if (self._heightmapCanvas) return;
 
-        var mesh = self.el.getObject3D('mesh');
-
         if (data.interactive) {
           self._heightmapCanvas = layer.scene.canvas;
         } else {
@@ -140,15 +144,6 @@ AFRAME.registerComponent('tangram-terrain', {
         }
 
         self.el.setAttribute('material', 'displacementMap', self._heightmapCanvas);
-
-        const geomComponent = self.el.components.geometry;
-        const width = geomComponent.data.width;
-        const height = geomComponent.data.height;
-
-        const plane = new THREE.PlaneBufferGeometry(
-          width, height,
-          geomComponent.data.segmentsWidth, geomComponent.data.segmentsHeight);
-        mesh.geometry = plane;
 
         self._createDepthBuffer(self._heightmapCanvas);
 
@@ -249,7 +244,6 @@ AFRAME.registerComponent('tangram-terrain', {
         }
 
         self.el.setAttribute('material', 'src', self._mapCanvas);
-//        self.el.setAttribute('material', 'displacementMap', self._heightmapCanvas);
 
         // finally everything is finished
         self.el.emit(TERRAIN_LOADED_EVENT);
