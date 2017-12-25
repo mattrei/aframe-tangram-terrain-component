@@ -43,7 +43,11 @@ AFRAME.registerComponent('tangram-terrain', {
     pxToWorldRatio: {
       default: 10
     },
-    interactive: {
+    useBuffer: {
+      type: 'boolean',
+      default: true
+    },
+    dispose: {
       type: 'boolean',
       default: true
     }
@@ -129,18 +133,12 @@ AFRAME.registerComponent('tangram-terrain', {
         Utils.processCanvasElement(canvasContainer);
       },
       view_complete: function () {
-        if (self._heightmapCanvas) return;
+        if (self._heightmapCanvas && !data.useBuffer) return;
 
-        if (data.interactive) {
-          self._heightmapCanvas = layer.scene.canvas;
+        if (data.useBuffer) {
+          self._heightmapCanvas = self._copyCanvas(layer.scene.canvas);
         } else {
-          const canvas = document.createElement('canvas');
-          canvas.setAttribute('id', cuid());
-          canvas.setAttribute('width', layer.scene.canvas.width);
-          canvas.setAttribute('height', layer.scene.canvas.height);
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(layer.scene.canvas, 0, 0);
-          self._heightmapCanvas = canvas;
+          self._heightmapCanvas = layer.scene.canvas;
         }
 
         self.el.setAttribute('material', 'displacementMap', self._heightmapCanvas);
@@ -149,7 +147,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
         self.el.emit(HEIGHTMAP_LOADED_EVENT);
 
-        if (!data.interactive) {
+        if (data.dispose) {
           // removing all ressources layer after a safe timeout
           Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
             layer.remove();
@@ -165,6 +163,15 @@ AFRAME.registerComponent('tangram-terrain', {
     layer.addTo(map);
 
     this._heightmapInstance = map;
+  },
+  _copyCanvas: function (canvas) {
+    const copy = document.createElement('canvas');
+    copy.setAttribute('id', cuid());
+    copy.setAttribute('width', canvas.width);
+    copy.setAttribute('height', canvas.height);
+    const ctx = copy.getContext('2d');
+    ctx.drawImage(canvas, 0, 0);
+    return copy;
   },
   _createDepthBuffer: function (canvas) {
     // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
@@ -228,19 +235,12 @@ AFRAME.registerComponent('tangram-terrain', {
         Utils.processCanvasElement(canvasContainer);
       },
       view_complete: function () {
-        if (self._mapCanvas) return;
+        if (self._mapCanvas && !data.useBuffer) return;
 
-        if (data.interactive) {
-          self._mapCanvas = layer.scene.canvas;
+        if (data.useBuffer) {
+          self._mapCanvas = self._copyCanvas(layer.scene.canvas);
         } else {
-          // copy canvas contents to new canvas so that we can remove Tangram instance later
-          const canvas = document.createElement('canvas');
-          canvas.setAttribute('id', cuid());
-          canvas.setAttribute('width', layer.scene.canvas.width);
-          canvas.setAttribute('height', layer.scene.canvas.height);
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(layer.scene.canvas, 0, 0);
-          self._mapCanvas = canvas;
+          self._mapCanvas = layer.scene.canvas;
         }
 
         self.el.setAttribute('material', 'src', self._mapCanvas);
@@ -248,7 +248,7 @@ AFRAME.registerComponent('tangram-terrain', {
         // finally everything is finished
         self.el.emit(TERRAIN_LOADED_EVENT);
 
-        if (!data.interactive) {
+        if (data.dispose) {
           // removing all ressources layer after a safe timeout
           Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
             layer.remove();
@@ -270,6 +270,8 @@ AFRAME.registerComponent('tangram-terrain', {
 
     ctx = this._mapCanvas.getContext('2d');
     ctx.clearRect(0, 0, this._mapCanvas.width, this._mapCanvas.height);
+
+    // TODO remove layer
   },
 
   tick: function (delta, time) { },
@@ -352,7 +354,6 @@ AFRAME.registerComponent('tangram-terrain', {
   unprojectHeightInMeters: function (x, y) {
     return this._getHeight(x, y) * 8900;
   },
-
   getMapInstance: function () {
     return this._mapInstance;
   },
@@ -362,6 +363,12 @@ AFRAME.registerComponent('tangram-terrain', {
   renderDepthBuffer: function () {
     this._hitCanvasTexture.needsUpdate = true;
     this.el.sceneEl.renderer.render(this.hitScene, this.hitCamera, this.hitTexture);
+  },
+  copyHeightmapCanvas: function () {
+    return this._copyCanvas(this._heightmapCanvas);
+  },
+  copyMapCanvas: function () {
+    return this._copyCanvas(this._mapCanvas);
   }
 });
 
