@@ -9,7 +9,6 @@ AFRAME.registerComponent('tiles', {
       default: ''
     },
     center: {
-      // lat lon
       default: [0, 0],
       type: 'array'
     },
