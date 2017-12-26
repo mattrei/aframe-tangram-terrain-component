@@ -34,48 +34,99 @@ AFRAME.registerComponent('tiles', {
     displacementScale: {
       default: 1
     },
+    displacementBias: {
+      default: 0
+    },
     radius: {
       default: 0
     }
   },
 
   init: function () {
+    this._count = 0;
+    var self = this;
+    const data = this.data;
+    this.geomData = {
+      width: data.tileSize,
+      height: data.tileSize,
+      segmentsWidth: data.tileSegments,
+      segmentsHeight: data.tileSegments,
+      primitive: 'plane',
+      buffer: true
+    };
+
+    this.system = this.el.sceneEl.systems['tangram-terrain'];
+    this.heightmap = this.system.createHeightmap(data, this.geomData);
+    this.overlaymap = this.system.createMap(data, this.geomData);
+
+    this.currentEl = null;
+
+    this.el.sceneEl.addEventListener('HEIGHTMAP-LOADED', evt => {
+      console.log("HM LOADED")
+      const canvas = self.system.copyCanvas(evt.detail.canvas);
+      const depthBuffer = evt.detail.depthBuffer;
+
+      self.currentEl.setAttribute('material', 'displacementMap', canvas);
+
+      self.system.renderDepthBuffer(depthBuffer);
+
+      // TODO save depthbuffer to el
+      //self.depthBuffer = depthBuffer;
+
+      this._next();
+      
+    });
+
+
+  this.el.sceneEl.addEventListener('OVERLAYMAP-LOADED', evt => {
+    console.log("MAP LOADED")
+    const canvas = evt.detail.canvas;
+    const copyCanvas = self.system.copyCanvas(canvas);
+    self.currentEl.setAttribute('material', 'src', copyCanvas);
+
+    this._next();
+    
+    console.log("NXT ONE " + copyCanvas.getAttribute('id'))
+  });
+
+
     this.tiles = ['0,0'];
     this.queue = [];
     this._isBusy = true;
 
-    const sceneEl = this.el.sceneEl;
+    //const sceneEl = this.el.sceneEl;
 
-    sceneEl.addEventListener('camera-set-active', (evt) => {
-      this.camera = evt.detail.cameraEl.object3D.children[0];
-    });
-    this.camera = sceneEl.camera;
+    this.camera = this.el.sceneEl.camera;
 
-    this.mainTile = this._addTile('0,0', this.data.center, this.el.components.position);
+    this.mainTile = this._addTile('0,0', 
+      this.data.center, 
+      this.el.components.position);
 
-    var self = this;
-
-    this.mainTile.addEventListener('tangram-terrain-loaded', function (e) {
-      self._isBusy = false;
-      self.leaflet = e.target.components['tangram-terrain'].getMapInstance();
-    });
 
     this.tick = AFRAME.utils.throttleTick(this.tick, 1500, this);
+  },
+  _next:function() {
+    this._count += 1;
+    this._count %= 2;
+    console.log(this._count)
+    if (this._count === 0) {
+      this._isBusy = false;
+      this.queue.shift();
+    }
   },
   _addToQueue: function (tile, center, position) {
     this.queue.push({ tile, center, position });
   },
   _processQueue: function () {
-    var self = this;
 
     if (!this._isBusy && this.queue.length > 0) {
       const first = this.queue[0];
       this._isBusy = true;
-      const tile = this._addTile(first.tile, first.center, first.position);
-      tile.addEventListener('tangram-terrain-loaded', (e) => {
+      this.currentEl = this._addTile(first.tile, first.center, first.position);
+      /*tile.addEventListener('tangram-terrain-loaded', (e) => {
         self._isBusy = false;
         self.queue.shift();
-      });
+      });*/
     }
   },
   _addTile: function (tile, center, position) {
@@ -85,41 +136,40 @@ AFRAME.registerComponent('tiles', {
     const terrain = document.createElement('a-entity');
 
     terrain.setAttribute('id', 'terrainTile_' + tile);
-    var geometry = {
-      width: data.tileSize,
-      height: data.tileSize,
-      segmentsWidth: data.tileSegments,
-      segmentsHeight: data.tileSegments
-    };
-    terrain.setAttribute('geometry', geometry);
 
-    var material = {
+    terrain.setAttribute('geometry', this.geomData);
+
+    const matData = {
       // color: "#aaa",//data.wireframe,
       wireframe: data.wireframe,
-      displacementScale: data.displacementScale
+      displacementScale: data.displacementScale,
+      displacementBias: data.displacementBias
     };
-    terrain.setAttribute('material', material);
-
-    terrain.setAttribute('tangram-terrain',
-      {
-        'mapzenAPIKey': data.mapzenAPIKey,
-        'center': center,
-        'style': data.style,
-        'zoom': data.zoom,
-        'pxToWorldRatio': data.pxToWorldRatio,
-        'useBuffer': true,
-        'dispose': true
-      });
+    terrain.setAttribute('material', matData);
 
     terrain.setAttribute('position', position);
 
     this.el.appendChild(terrain);
 
+    console.log("new terrain ")
+    console.log(this.latLonFrom(center))
+    
+
+    this.currentEl = terrain;
+
+    //TODO
+    this.heightmap.map._loaded = false;
+    this.heightmap.map.setView(this.latLonFrom(center), data.zoom, {animate: false, reset: true});
+    this.overlaymap.map._loaded = false;
+    this.overlaymap.map.setView(this.latLonFrom(center), data.zoom, {animate: false, reset: true});
+
     return terrain;
   },
   _checkPosition: function () {
     const data = this.data;
-    var pos = this.getCameraPosition(); // camera.getWorldPosition()
+    //var pos = this.getCameraPosition(); // camera.getWorldPosition()
+    //const pos = this.camera.getWorldPosition();
+    const pos = new THREE.Vector3() // TODO
 
     const x = Math.floor((pos.x + data.tileSize * 0.5) / data.tileSize);
     const y = Math.floor((-pos.z + data.tileSize * 0.5) / data.tileSize);
@@ -141,20 +191,26 @@ AFRAME.registerComponent('tiles', {
     const data = this.data;
 
     const tile = `${x},${y}`;
+    
     if (!this.tiles.includes(tile)) {
       this.tiles.push(tile);
 
-      var pX = x * (this.data.tileSize);
-      var pY = y * (this.data.tileSize);
-      var latLng = this.mainTile.components['tangram-terrain'].unproject(pX, pY);
+      var pX = x * (data.tileSize);
+      var pY = y * (data.tileSize);
 
-      // console.log(x + ' ' + y)
-      // console.log(latLng)
-      this._addToQueue(tile, [latLng.lon, latLng.lat], new THREE.Vector3(x * this.data.tileSize, y * this.data.tileSize, 0));
+      var latLng = this.system.unproject(data, this.geomData, 
+        this.overlaymap.map, pX, pY);
+      //this.mainTile.components['tangram-terrain'].unproject(pX, pY);
+
+       console.log(x + ' ' + y)
+      console.log(latLng)
+      this._addToQueue(tile, [latLng.lon, latLng.lat], 
+        new THREE.Vector3(x * data.tileSize, y * data.tileSize, 0));
     }
   },
   tick: function (time, delta) {
-    if (!this.leaflet) return;
+    if (!this.heightmap.map) return;
+    if (this._isBusy) return;
 
     this._checkPosition();
     this._processQueue();
@@ -165,5 +221,9 @@ AFRAME.registerComponent('tiles', {
       worldPos.setFromMatrixPosition(this.camera.matrixWorld);
       return worldPos;
     };
-  }()
+  }(),
+  latLonFrom: function (lonLat) {
+    return [lonLat[1].toString(), lonLat[0].toString()];
+  }
+  
 });

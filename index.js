@@ -24,7 +24,7 @@ AFRAME.registerSystem('tangram-terrain', {
   createHeightmap: function (data, geomData) {
     const self = this;
 
-    const width = geomData.width * data.pxToWorldRatio + 1;
+    const width = geomData.width * data.pxToWorldRatio + 1; //TODO check
     const height = geomData.height * data.pxToWorldRatio + 1;
 
 
@@ -53,8 +53,10 @@ AFRAME.registerSystem('tangram-terrain', {
           Utils.processCanvasElement(canvasContainer);
         },
         view_complete: function () {
+          console.log("HEIGHTMAP VC")
           const canvas = layer.scene.canvas;
           const depthBuffer = self._createDepthBuffer(canvas);
+          self.el.emit('HEIGHTMAP-LOADED', {canvas, depthBuffer});
           resolve([canvas, depthBuffer]);
         },
         error: function (e) {
@@ -100,7 +102,9 @@ AFRAME.registerSystem('tangram-terrain', {
           Utils.processCanvasElement(canvasContainer);
         },
         view_complete: function () {
+          console.log("MAP VC")
           const canvas = layer.scene.canvas;
+          self.el.emit('OVERLAYMAP-LOADED', {canvas});
           resolve(canvas);
         },
         error: function (e) {
@@ -258,22 +262,23 @@ AFRAME.registerComponent('tangram-terrain', {
     const geomData = this.el.components.geometry.data;
 
     this.depthBuffer = null;
-    this.heightmap = this.system.createHeightmap(this.data, geomData);
-    this.overlaymap = this.system.createMap(this.data, geomData);
+    this.heightmap = this.system.createHeightmap(data, geomData);
+    this.overlaymap = this.system.createMap(data, geomData);
+
     var self = this;
 
-
     this.heightmap.promise.then(function (arr) {
-      console.log("HM LOADED")
       let canvas = arr[0];
       const depthBuffer = arr[1];
 
+      // TODO needed?
+      
       const plane = new THREE.PlaneBufferGeometry(
         geomData.width, geomData.height,
         geomData.segmentsWidth, geomData.segmentsHeight);
       const mesh = self.el.getObject3D('mesh');
       mesh.geometry = plane;
-
+        
 
       if (data.useBuffer) {
         canvas = self.system.copyCanvas(canvas);
@@ -294,11 +299,10 @@ AFRAME.registerComponent('tangram-terrain', {
 
 
     this.overlaymap.promise.then(function (canvas) {
-
+      console.log("MAP LOAD")
       if (data.useBuffer) {
         canvas = self.system.copyCanvas(canvas);
       }
-
       self.el.setAttribute('material', 'src', canvas);
 
       if (data.dispose) {
@@ -323,7 +327,7 @@ AFRAME.registerComponent('tangram-terrain', {
       setView = true;
     }
     if (setView) {
-      this.heightmap.map.setView(Utils.latLonFrom(this.data.center), this.data.zoom);
+      this.heightmap.map.setView(Utils.latLonFrom(data.center), data.zoom);
       this.overlaymap.map.setView(Utils.latLonFrom(data.center), data.zoom);
     }
   },

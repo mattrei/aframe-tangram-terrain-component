@@ -3,7 +3,7 @@ const cuid = require('cuid');
 module.exports.leafletOptions = {
   'preferCanvas': true,
   'keyboard': false,
-  'scrollWheelZoom': false,
+  'scrollWheelZoom': true,
   'tap': false,
   'touchZoom': false,
   'zoomControl': false,
