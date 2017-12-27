@@ -9,7 +9,7 @@
 </head>
 
 <body>
-  <a-scene>
+  <a-scene stats>
     <a-assets>
       <a-asset-item id="yamlElevation" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/terrarium-elevation.yaml"
       />
@@ -24,14 +24,14 @@
 
 
     <a-entity id="terrain" visible="true" 
-    geometry="width: 40; height: 40; segmentsWidth: 100; segmentsHeight: 100;" 
+    geometry="width: 40; height: 40; segmentsWidth: 50; segmentsHeight: 50; primitive: plane;" 
     material="side: double; wireframe: true; displacementScale: 30; displacementBias: 0;"
       tangram-terrain="
   mapzenAPIKey: mapzen-sfnfVzq;
   style: #yamlElevation;
   center: 15.8056, 47.7671;
   zoom: 10;
-  pxToWorldRatio: 12;
+  pxToWorldRatio: 15;
   " rotation="-90 0 0" position="0 -5 0"
   sphere-matrix>
 

@@ -55,14 +55,19 @@ AFRAME.registerComponent('tiles', {
       buffer: true
     };
 
+    this.camera = this.el.sceneEl.camera;
+    this.el.sceneEl.addEventListener('camera-set-active', (evt) => {
+      this.camera = evt.detail.cameraEl.object3D.children[0];
+    });
+
     this.system = this.el.sceneEl.systems['tangram-terrain'];
     this.heightmap = this.system.createHeightmap(data, this.geomData);
     this.overlaymap = this.system.createMap(data, this.geomData);
 
     this.currentEl = null;
 
-    this.el.sceneEl.addEventListener('HEIGHTMAP-LOADED', evt => {
-      console.log("HM LOADED")
+    this.el.sceneEl.addEventListener('heightmap-loaded', evt => {
+      console.log('HM LOADED');
       const canvas = self.system.copyCanvas(evt.detail.canvas);
       const depthBuffer = evt.detail.depthBuffer;
 
@@ -71,44 +76,37 @@ AFRAME.registerComponent('tiles', {
       self.system.renderDepthBuffer(depthBuffer);
 
       // TODO save depthbuffer to el
-      //self.depthBuffer = depthBuffer;
+      // self.depthBuffer = depthBuffer;
 
       this._next();
-      
     });
 
+    this.el.sceneEl.addEventListener('overlaymap-loaded', evt => {
+      console.log('MAP LOADED');
+      const canvas = evt.detail.canvas;
+      const copyCanvas = self.system.copyCanvas(canvas);
+      self.currentEl.setAttribute('material', 'src', copyCanvas);
 
-  this.el.sceneEl.addEventListener('OVERLAYMAP-LOADED', evt => {
-    console.log("MAP LOADED")
-    const canvas = evt.detail.canvas;
-    const copyCanvas = self.system.copyCanvas(canvas);
-    self.currentEl.setAttribute('material', 'src', copyCanvas);
+      this._next();
+    });
 
-    this._next();
-    
-    console.log("NXT ONE " + copyCanvas.getAttribute('id'))
-  });
-
+    // preload
+    // document.querySelector('a-scene').renderer.setTexture2D(ourTexture, 0);
 
     this.tiles = ['0,0'];
     this.queue = [];
     this._isBusy = true;
 
-    //const sceneEl = this.el.sceneEl;
-
-    this.camera = this.el.sceneEl.camera;
-
-    this.mainTile = this._addTile('0,0', 
-      this.data.center, 
+    this.mainTile = this._addTile('0,0',
+      this.data.center,
       this.el.components.position);
-
 
     this.tick = AFRAME.utils.throttleTick(this.tick, 1500, this);
   },
-  _next:function() {
+  _next: function () {
     this._count += 1;
     this._count %= 2;
-    console.log(this._count)
+    console.log(this._count);
     if (this._count === 0) {
       this._isBusy = false;
       this.queue.shift();
@@ -118,12 +116,11 @@ AFRAME.registerComponent('tiles', {
     this.queue.push({ tile, center, position });
   },
   _processQueue: function () {
-
     if (!this._isBusy && this.queue.length > 0) {
       const first = this.queue[0];
       this._isBusy = true;
       this.currentEl = this._addTile(first.tile, first.center, first.position);
-      /*tile.addEventListener('tangram-terrain-loaded', (e) => {
+      /* tile.addEventListener('tangram-terrain-loaded', (e) => {
         self._isBusy = false;
         self.queue.shift();
       });*/
@@ -151,13 +148,12 @@ AFRAME.registerComponent('tiles', {
 
     this.el.appendChild(terrain);
 
-    console.log("new terrain ")
-    console.log(this.latLonFrom(center))
-    
+    console.log('new terrain ');
+    console.log(this.latLonFrom(center));
 
     this.currentEl = terrain;
 
-    //TODO
+    // TODO
     this.heightmap.map._loaded = false;
     this.heightmap.map.setView(this.latLonFrom(center), data.zoom, {animate: false, reset: true});
     this.overlaymap.map._loaded = false;
@@ -167,9 +163,9 @@ AFRAME.registerComponent('tiles', {
   },
   _checkPosition: function () {
     const data = this.data;
-    //var pos = this.getCameraPosition(); // camera.getWorldPosition()
-    //const pos = this.camera.getWorldPosition();
-    const pos = new THREE.Vector3() // TODO
+    // var pos = this.getCameraPosition(); // camera.getWorldPosition()
+    // const pos = this.camera.getWorldPosition();
+    const pos = new THREE.Vector3(); // TODO
 
     const x = Math.floor((pos.x + data.tileSize * 0.5) / data.tileSize);
     const y = Math.floor((-pos.z + data.tileSize * 0.5) / data.tileSize);
@@ -191,20 +187,20 @@ AFRAME.registerComponent('tiles', {
     const data = this.data;
 
     const tile = `${x},${y}`;
-    
+
     if (!this.tiles.includes(tile)) {
       this.tiles.push(tile);
 
       var pX = x * (data.tileSize);
       var pY = y * (data.tileSize);
 
-      var latLng = this.system.unproject(data, this.geomData, 
+      var latLng = this.system.unproject(data, this.geomData,
         this.overlaymap.map, pX, pY);
-      //this.mainTile.components['tangram-terrain'].unproject(pX, pY);
+      // this.mainTile.components['tangram-terrain'].unproject(pX, pY);
 
-       console.log(x + ' ' + y)
-      console.log(latLng)
-      this._addToQueue(tile, [latLng.lon, latLng.lat], 
+      console.log(x + ' ' + y);
+      console.log(latLng);
+      this._addToQueue(tile, [latLng.lon, latLng.lat],
         new THREE.Vector3(x * data.tileSize, y * data.tileSize, 0));
     }
   },
@@ -225,5 +221,5 @@ AFRAME.registerComponent('tiles', {
   latLonFrom: function (lonLat) {
     return [lonLat[1].toString(), lonLat[0].toString()];
   }
-  
+
 });

@@ -13,10 +13,9 @@ AFRAME.registerComponent('map-controls', {
       this.heightmapInstance = this.el.components['tangram-terrain'].getHeightmapInstance();
       this.mapInstance = this.el.components['tangram-terrain'].getMapInstance();
 
-
-      this.mapInstance.addEventListener('move', e =>  {
-        //console.log("Moved")
-      })
+      this.mapInstance.addEventListener('move', e => {
+        // console.log("Moved")
+      });
     });
   },
   getForward: function () {
