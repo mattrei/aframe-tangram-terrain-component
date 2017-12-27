@@ -133,11 +133,11 @@ AFRAME.registerSystem('tangram-terrain', {
     const texture = new THREE.WebGLRenderTarget(imageWidth, imageHeight, {
       minFilter: THREE.NearestFilter,
       magFilter: THREE.NearestFilter,
-      type: THREE.UnsignedByteType,
-      generateMipMaps: false
+      type: THREE.UnsignedByteType
     });
 
     const canvasTexture = new THREE.CanvasTexture(canvas);
+    canvasTexture.generateMipmaps = false;
 
     const mesh = new THREE.Mesh(
               new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
@@ -206,10 +206,11 @@ AFRAME.registerSystem('tangram-terrain', {
 
     return pixelBuffer[0] / 255;
   },
-  // TODO
+  
   renderDepthBuffer: function (depthBuffer) {
     depthBuffer.canvasTexture.needsUpdate = true;
-    //this.el.renderer.render(depthBuffer.scene, depthBuffer.camera, depthBuffer.texture);
+    // TODO wrong width & height on mobile devices
+    this.el.renderer.render(depthBuffer.scene, depthBuffer.camera, depthBuffer.texture);
   },
   dispose: function (obj) {
     // removing all ressources layer after a safe timeout
