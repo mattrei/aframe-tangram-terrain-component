@@ -37,10 +37,7 @@ AFRAME.registerSystem('tangram-terrain', {
 
     const layer = Tangram.leafletLayer({
       scene: {
-        import: heightmapStyle,
-        global: {
-          sdk_mapzen_api_key: data.mapzenAPIKey
-        }
+        import: heightmapStyle
       },
       webGLContextOptions: {
         preserveDrawingBuffer: true
@@ -86,10 +83,7 @@ AFRAME.registerSystem('tangram-terrain', {
 
     const layer = Tangram.leafletLayer({
       scene: {
-        import: data.style,
-        global: {
-          sdk_mapzen_api_key: data.mapzenAPIKey
-        }
+        import: data.style
       },
       webGLContextOptions: {
         preserveDrawingBuffer: true
@@ -231,9 +225,6 @@ AFRAME.registerComponent('tangram-terrain', {
   ],
 
   schema: {
-    mapzenAPIKey: {
-      default: ''
-    },
     style: {
       type: 'asset',
       default: ''
@@ -405,7 +396,6 @@ AFRAME.registerPrimitive('a-tangram-terrain', {
     'tangram-terrain': {}
   },
   mappings: {
-    'api-key': 'tangram-terrain.mapzenAPIKey',
     width: 'geometry.width',
     depth: 'geometry.height',
     'grid-width': 'geometry.segmentsWidth',
