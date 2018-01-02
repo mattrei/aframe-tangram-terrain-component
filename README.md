@@ -10,21 +10,22 @@ A [Mapzen Tangram](https://mapzen.com/products/tangram/) terrain component for [
 
 #### `tangram-terrain` component
 
-This component obtains a heightmap from the Mapzen servers and applies a overlay texture according the 
-_style_ specification. The heightmap is used as a _displacement_ map and so is used in conjunction with 
-GPU picking technique to obtain fast results.
-No bathymetry data is included!
+This component obtains a heightmap from the Mapzen servers and applies a overlay texture according the `style` specification. The heightmap is used as a `displacement` map and so is used in conjunction with GPU picking technique to obtain fast results.
+
+_Note that no bathymetry data is included!_
 
 ##### Schema
 | Property | Description | Default Value |
 | -------- | ----------- | ------------- |
-| mapzenAPIKey | Your Mapzen API key to make use of the Tangram API. May be empty depending if your style defines it. See [here](https://mapzen.com/documentation/overview/api-keys) for more details. | "" |
+| mapzenAPIKey | Your Mapzen API key to make use of the _Tangram_ API. May be empty depending if your style defines it. See [here](https://mapzen.com/documentation/overview/api-keys) for more details. | "" |
 | style | The style definition document for the ovleray style. Must point to a custom style or to a [basemap style](https://mapzen.com/documentation/cartography/styles/). | "" |
 | center | Center of the map, in the form of [longitude, latitude] | [0, 0] |
 | zoom | The zoom level of the map. | 13 |
 | pxToWorldRatio | The multiplication factor between meters in A-Frame and the pixels of the map. ie; when set to 100, will display 100 pixels per 1 meter in world space. (see [a note on fidelity](#a-note-on-fidelity)) | 100 |
 | interactive | Tangram instances are (currently) not designed for being instantiated many times on a single document. To overcome this this flag allows to create mulitple tangram terrain 
 instances by creating its own canvases. However then its not possible to programmatically change the contents of the terrain. | true |
+| depthBuffer | Renders a depth buffer to an external scene, so that you can get the height from the terrain by GPU picking. Set to _false_ for performance reasons if you do not need it. | false |
+| dispose | Disposes the _Tangram_ instance after creating the terrain to free up memory. Set to _false_ if you need to modify the terrain via the _Leaflet_ API. | true |
 
 
 ##### Events
@@ -38,7 +39,7 @@ instances by creating its own canvases. However then its not possible to program
 | -------- | ----------- | ------------- |
 | project | _lon_, _lat_| Returns the pixel x and y and z (depth) coordinates of the given longitude and latitude. |
 | unproject | _x_, _y_| Gives the longitude and latitude of the world coordinates. |
-| unprojectHeight | _x_, _y_| Gives the depth value (GPU picked from the heightmap) from the pixel coordinates. Value is scaled according to the _displacementScale_ scale and added the _displacementBias_ value. To obtain real height values |
+| unprojectHeight | _x_, _y_| Gives the depth value (GPU picked from the heightmap) from the pixel coordinates, only if the `depthBuffer` value is set to _true_. Value is scaled according to the `displacementScale` scale and added the `displacementBias` value. To obtain real height values |
 | unprojectHeightInMeters | _x_, _y_| Gives the height value in meters. No exact values are possible though. Range between 0 and 8900 (Mount Everest) |
 | renderDepthBuffer | | Renders the heightmap depth buffer. Needs to be only called manually if the heigtmap is changed programmtically |
 

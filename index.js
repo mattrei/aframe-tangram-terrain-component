@@ -55,7 +55,8 @@ AFRAME.registerSystem('tangram-terrain', {
         },
         view_complete: function () {
           const canvas = layer.scene.canvas;
-          const depthBuffer = self._createDepthBuffer(canvas);
+          
+          const depthBuffer = data.depthBuffer ? self._createDepthBuffer(canvas) : undefined;
           self.el.emit(HEIGHTMAP_LOADED, {canvas: canvas, depthBuffer: depthBuffer});
           resolve([canvas, depthBuffer]);
         },
@@ -137,7 +138,10 @@ AFRAME.registerSystem('tangram-terrain', {
     });
 
     const canvasTexture = new THREE.CanvasTexture(canvas);
-    canvasTexture.generateMipmaps = false;
+    //canvasTexture.generateMipmaps = false;
+
+    canvas.width = imageWidth;
+    canvas.height = imageHeight;
 
     const mesh = new THREE.Mesh(
               new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
@@ -192,7 +196,8 @@ AFRAME.registerSystem('tangram-terrain', {
   },
   // needs pixel space
   hitTest: function (data, geomData, depthBuffer, x, y) {
-    if (!depthBuffer.texture) return;
+    if (!depthBuffer) return 0;
+
     const pixelBuffer = new Uint8Array(4);
 
     const width = geomData.width * data.pxToWorldRatio;
@@ -206,10 +211,9 @@ AFRAME.registerSystem('tangram-terrain', {
 
     return pixelBuffer[0] / 255;
   },
-  
   renderDepthBuffer: function (depthBuffer) {
-    depthBuffer.canvasTexture.needsUpdate = true;
-    // TODO wrong width & height on mobile devices
+    //depthBuffer.canvasTexture.needsUpdate = true;
+    // TODO vwrong width & height on mobile devices
     this.el.renderer.render(depthBuffer.scene, depthBuffer.camera, depthBuffer.texture);
   },
   dispose: function (obj) {
@@ -244,13 +248,16 @@ AFRAME.registerComponent('tangram-terrain', {
     pxToWorldRatio: {
       default: 10
     },
+    depthBuffer: {
+      default: false
+    },
     useBuffer: {
       type: 'boolean',
       default: true
     },
     dispose: {
       type: 'boolean',
-      default: false
+      default: true
     }
   },
 
@@ -262,19 +269,23 @@ AFRAME.registerComponent('tangram-terrain', {
 
     this.depthBuffer = null;
     this.heightmap = this.system.createHeightmap(data, geomData);
+    this.heightmapDisposed = false;
     this.overlaymap = this.system.createMap(data, geomData);
+    this.overlaymapDisposed = false;
 
     var self = this;
 
     this.heightmap.promise.then(function (arr) {
       const canvas = data.useBuffer ? self.system.copyCanvas(arr[0]) : arr[0];
-      const depthBuffer = arr[1];
 
       self.el.setAttribute('material', 'displacementMap', canvas);
 
-      self.system.renderDepthBuffer(depthBuffer);
+      if (data.depthBuffer) {
+        const depthBuffer = arr[1];
+        self.system.renderDepthBuffer(depthBuffer);
+        self.depthBuffer = depthBuffer;
+      }
 
-      self.depthBuffer = depthBuffer;
       // self.overlaymap.map.setView(Utils.latLonFrom(data.center), data.zoom);
 
       if (data.dispose) {
@@ -319,7 +330,9 @@ AFRAME.registerComponent('tangram-terrain', {
   },
   remove: function () {
     this.system.dispose(this.heightmap);
+    this.heightmapDisposed = true;
     this.system.dispose(this.overlaymap);
+    this.overlaymapDisposed = true;
   },
   _fire: function () {
     this._count = this._count || 0;
@@ -361,9 +374,15 @@ AFRAME.registerComponent('tangram-terrain', {
     return this._getHeight(x, y) * 8900;
   },
   getMapInstance: function () {
+    if (this.overlaymapDisposed) {
+      throw new Error('Overlaymap disposed.');
+    }
     return this.overlaymap.map;
   },
   getHeightmapInstance: function () {
+    if (this.heightmapDisposed) {
+      throw new Error('Heightmap disposed.');
+    }
     return this.heightmap.map;
   }
 });
@@ -373,12 +392,14 @@ AFRAME.registerPrimitive('a-tangram-terrain', {
   defaultComponents: {
     geometry: {
       primitive: 'plane',
+      buffer: 'true',
       segmentsWidth: 50,
       segmentsHeight: 50
     },
     material: {
       wireframe: false,
-      displacementScale: 30
+      displacementScale: 30,
+      displacementBias: 0
     },
     rotation: { x: -90, y: 0, z: 0 },
     'tangram-terrain': {}
@@ -394,6 +415,7 @@ AFRAME.registerPrimitive('a-tangram-terrain', {
     zoom: 'tangram-terrain.zoom',
     'px-world-ratio': 'tangram-terrain.pxToWorldRatio',
     'height-scale': 'material.displacementScale',
-    wireframe: 'material.wireframe'
+    wireframe: 'material.wireframe',
+    'depth-buffer': 'tangram-terrain.depthBuffer'
   }
 });
