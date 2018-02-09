@@ -286,7 +286,6 @@ AFRAME.registerComponent('tangram-terrain', {
     });
 
     this.overlaymap.promise.then(function (canvas) {
-      console.log('MAP LOAD');
       if (data.useBuffer) {
         canvas = self.system.copyCanvas(canvas);
       }
