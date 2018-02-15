@@ -12,13 +12,14 @@ A [Mapzen Tangram](https://mapzen.com/products/tangram/) terrain component for [
 
 This component obtains a heightmap from the Mapzen servers and applies a overlay texture according the `style` specification. The heightmap is used as a `displacement` map and so is used in conjunction with GPU picking technique to obtain fast results.
 
+The terrain tiles are received from the [Amazon public dataset S3](https://aws.amazon.com/public-datasets/terrain/).
+
 _Note that no bathymetry data is included!_
 
 ##### Schema
 | Property | Description | Default Value |
 | -------- | ----------- | ------------- |
-| mapzenAPIKey | Your Mapzen API key to make use of the _Tangram_ API. May be empty depending if your style defines it. See [here](https://mapzen.com/documentation/overview/api-keys) for more details. | "" |
-| style | The style definition document for the ovleray style. Must point to a custom style or to a [basemap style](https://mapzen.com/documentation/cartography/styles/). | "" |
+| style | The style definition document for the ovleray style. Must point to a custom style or to a [basemap style](https://www.nextzen.org/). | "" |
 | center | Center of the map, in the form of [longitude, latitude] | [0, 0] |
 | zoom | The zoom level of the map. | 13 |
 | pxToWorldRatio | The multiplication factor between meters in A-Frame and the pixels of the map. ie; when set to 100, will display 100 pixels per 1 meter in world space. (see [a note on fidelity](#a-note-on-fidelity)) | 100 |
@@ -84,7 +85,6 @@ Install and use by directly including the [browser files](dist):
   <a-scene>
 
     <a-tangram-terrain
-      api-key="mapzen-sfnfVzq" 
       zoom="10" 
       center="15.8056, 7.7671" 
       map-style="#yamlElevation" 
