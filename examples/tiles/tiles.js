@@ -64,19 +64,20 @@ AFRAME.registerComponent('tiles', {
     this.heightmap = this.system.createHeightmap(data, this.geomData);
     this.overlaymap = this.system.createMap(data, this.geomData);
 
+    this.depthBuffers = []  
+
     this.currentEl = null;
 
     this.el.sceneEl.addEventListener('heightmap-loaded', evt => {
-      console.log('HM LOADED');
       const canvas = self.system.copyCanvas(evt.detail.canvas);
       const depthBuffer = evt.detail.depthBuffer;
 
       self.currentEl.setAttribute('material', 'displacementMap', canvas);
 
-      // TODO
-      //self.system.renderDepthBuffer(depthBuffer);
+      
+      self.system.renderDepthBuffer(depthBuffer);
 
-      // TODO save depthbuffer to el
+      // TODO save depthbuffer to each tile 
       // self.depthBuffer = depthBuffer;
 
       this._next();
@@ -107,7 +108,6 @@ AFRAME.registerComponent('tiles', {
   _next: function () {
     this._count += 1;
     this._count %= 2;
-    console.log(this._count);
     if (this._count === 0) {
       this._isBusy = false;
       this.queue.shift();
@@ -154,7 +154,6 @@ AFRAME.registerComponent('tiles', {
 
     this.currentEl = terrain;
 
-    // TODO
     this.heightmap.map._loaded = false;
     this.heightmap.map.setView(this.latLonFrom(center), data.zoom, {animate: false, reset: true});
     this.overlaymap.map._loaded = false;
@@ -195,8 +194,7 @@ AFRAME.registerComponent('tiles', {
       var pX = x * (data.tileSize);
       var pY = y * (data.tileSize);
 
-      var latLng = this.system.unproject(data, this.geomData,
-        this.overlaymap.map, pX, pY);
+      var latLng = this.system.unproject(data, this.geomData, this.overlaymap.map, pX, pY);
       // this.mainTile.components['tangram-terrain'].unproject(pX, pY);
 
       console.log(x + ' ' + y);
@@ -221,6 +219,24 @@ AFRAME.registerComponent('tiles', {
   }(),
   latLonFrom: function (lonLat) {
     return [lonLat[1].toString(), lonLat[0].toString()];
+  },
+
+  // TODO
+  _getHeight: function (x, y) {
+    const geomData = this.geomData;
+
+    const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
+    const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
+
+    const depthBuffer = null //TODO get depthbuffer from array
+
+    const data = this.data;
+
+    return this.system.hitTest(data, geomData, depthBuffer, pxX, pxY);
+  },
+  unprojectHeight: function (x, y) {
+    const matData = this.el.components.material.data;
+    return this._getHeight(x, y) * matData.displacementScale + matData.displacementBias;
   }
 
 });

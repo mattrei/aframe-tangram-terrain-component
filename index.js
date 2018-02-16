@@ -26,7 +26,7 @@ AFRAME.registerSystem('tangram-terrain', {
   createHeightmap: function (data, geomData) {
     const self = this;
 
-    const width = geomData.width * data.pxToWorldRatio + 1; // TODO check
+    const width = geomData.width * data.pxToWorldRatio + 1; // +1 is really needed here for the displacment map
     const height = geomData.height * data.pxToWorldRatio + 1;
 
     const _canvasContainerId = cuid();
@@ -53,8 +53,6 @@ AFRAME.registerSystem('tangram-terrain', {
         },
         view_complete: function () {
           const canvas = layer.scene.canvas;
-
-          console.log('HM: ' + canvas.width + ' x ' + canvas.height )
           
           const depthBuffer = data.depthBuffer ? self._createDepthBuffer(canvas) : undefined;
           self.el.emit(HEIGHTMAP_LOADED, {canvas: canvas, depthBuffer: depthBuffer});
@@ -106,7 +104,6 @@ AFRAME.registerSystem('tangram-terrain', {
         },
         view_complete: function () {
           const canvas = layer.scene.canvas;
-          console.log(canvas.width + ' x ' + canvas.height )
           self.el.emit(OVERLAYMAP_LOADED, {canvas: canvas});
           resolve(canvas);
         },
@@ -146,12 +143,12 @@ AFRAME.registerSystem('tangram-terrain', {
     canvas.width = imageWidth;
     canvas.height = imageHeight;
 
-        const mesh = new THREE.Mesh(
-              new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
-              new THREE.MeshBasicMaterial({
-                map: canvasTexture
-              })
-          );
+    const mesh = new THREE.Mesh(
+          new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
+          new THREE.MeshBasicMaterial({
+            map: canvasTexture
+          })
+      );
     scene.add(mesh);
 
     return { scene: scene, camera: camera, mesh: mesh, texture: texture, canvasTexture: canvasTexture };
@@ -216,7 +213,6 @@ AFRAME.registerSystem('tangram-terrain', {
   },
   renderDepthBuffer: function (depthBuffer) {
     //depthBuffer.canvasTexture.needsUpdate = true;
-    // TODO vwrong width & height on mobile devices
     this.el.renderer.render(depthBuffer.scene, depthBuffer.camera, depthBuffer.texture);
   },
   dispose: function (obj) {
