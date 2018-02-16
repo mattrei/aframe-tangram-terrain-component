@@ -73,7 +73,8 @@ AFRAME.registerComponent('tiles', {
 
       self.currentEl.setAttribute('material', 'displacementMap', canvas);
 
-      self.system.renderDepthBuffer(depthBuffer);
+      // TODO
+      //self.system.renderDepthBuffer(depthBuffer);
 
       // TODO save depthbuffer to el
       // self.depthBuffer = depthBuffer;

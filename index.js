@@ -42,6 +42,7 @@ AFRAME.registerSystem('tangram-terrain', {
       webGLContextOptions: {
         preserveDrawingBuffer: true
       },
+      highDensityDisplay: false,
       attribution: ''
     });
 
@@ -52,6 +53,8 @@ AFRAME.registerSystem('tangram-terrain', {
         },
         view_complete: function () {
           const canvas = layer.scene.canvas;
+
+          console.log('HM: ' + canvas.width + ' x ' + canvas.height )
           
           const depthBuffer = data.depthBuffer ? self._createDepthBuffer(canvas) : undefined;
           self.el.emit(HEIGHTMAP_LOADED, {canvas: canvas, depthBuffer: depthBuffer});
@@ -83,8 +86,13 @@ AFRAME.registerSystem('tangram-terrain', {
 
     const layer = Tangram.leafletLayer({
       scene: {
-        import: data.style
+        import: data.style,
+        global: {
+          sdk_mapzen_api_key: data.apiKey
+          // language
+        }
       },
+      highDensityDisplay: false,
       webGLContextOptions: {
         preserveDrawingBuffer: true
       },
@@ -98,6 +106,7 @@ AFRAME.registerSystem('tangram-terrain', {
         },
         view_complete: function () {
           const canvas = layer.scene.canvas;
+          console.log(canvas.width + ' x ' + canvas.height )
           self.el.emit(OVERLAYMAP_LOADED, {canvas: canvas});
           resolve(canvas);
         },
@@ -137,7 +146,7 @@ AFRAME.registerSystem('tangram-terrain', {
     canvas.width = imageWidth;
     canvas.height = imageHeight;
 
-    const mesh = new THREE.Mesh(
+        const mesh = new THREE.Mesh(
               new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
               new THREE.MeshBasicMaterial({
                 map: canvasTexture
@@ -225,6 +234,9 @@ AFRAME.registerComponent('tangram-terrain', {
   ],
 
   schema: {
+    apiKey: {
+      default: ''
+    },
     style: {
       type: 'asset',
       default: ''
@@ -395,6 +407,7 @@ AFRAME.registerPrimitive('a-tangram-terrain', {
     'tangram-terrain': {}
   },
   mappings: {
+    'api-key': 'tangram-map.apiKey',
     width: 'geometry.width',
     depth: 'geometry.height',
     'grid-width': 'geometry.segmentsWidth',

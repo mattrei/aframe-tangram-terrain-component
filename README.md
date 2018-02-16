@@ -19,7 +19,8 @@ _Note that no bathymetry data is included!_
 ##### Schema
 | Property | Description | Default Value |
 | -------- | ----------- | ------------- |
-| style | The style definition document for the ovleray style. Must point to a custom style or to a [basemap style](https://www.nextzen.org/). | "" |
+| apiKey | Sets the global API key of the overlay map. May be empty if the style needs no API. | "" |
+| style | The style definition document for the ovleray style. Must point to a custom style or to a [basemap style](https://www.nextzen.org/). May need an API key set. | "" |
 | center | Center of the map, in the form of [longitude, latitude] | [0, 0] |
 | zoom | The zoom level of the map. | 13 |
 | pxToWorldRatio | The multiplication factor between meters in A-Frame and the pixels of the map. ie; when set to 100, will display 100 pixels per 1 meter in world space. (see [a note on fidelity](#a-note-on-fidelity)) | 100 |

@@ -7,7 +7,7 @@
     <script src="./tiles.js"></script>
   </head>
   <body>
-    <a-scene stats fog="type: exponential; color: #AAA; density: 0.09;">
+    <a-scene stats fog="type: exponential; color: #AAA; density: 0.005;">
       <a-assets>
           <a-asset-item id="yaml-austria" src="assets/austria-airborne.yaml" />
       </a-assets>
@@ -16,7 +16,6 @@
  
 
   <a-entity tiles="
-      mapzenAPIKey: mapzen-sfnfVzq;
       style: #yaml-austria;
       center: 12.6875, 47.188056;
       zoom: 13;
