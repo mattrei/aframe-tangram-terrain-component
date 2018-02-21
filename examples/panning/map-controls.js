@@ -4,6 +4,12 @@ AFRAME.registerComponent('map-controls', {
 
   dependencies: ['tangram-terrain'],
 
+  schema: {
+    speed: {
+      default: 1
+    }
+  },
+
   init: function () {
     // this.tick = AFRAME.utils.throttleTick(this.tick, 1000, this);
 
@@ -29,7 +35,7 @@ AFRAME.registerComponent('map-controls', {
   tick: function (time, delta) {
     if (!this.mapInstance || !this.heightmapInstance) return;
     const forward = this.getForward();
-    forward.multiplyScalar(0.1 * delta);
+    forward.multiplyScalar(0.1 * this.data.speed * delta);
 
     var azimuth = Math.atan2(forward.x, forward.z);
     var azimuth2 = Math.atan2(-forward.z, forward.x);

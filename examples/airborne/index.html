@@ -9,7 +9,7 @@
     <a-scene stats>
       <a-assets>
         <a-asset-item id="yaml-austria" src="assets/austria-airborne.yaml" />
-        <a-asset-item id="yaml-esri" src="assets/esri-satellite.yaml" />
+        <a-asset-item id="yaml-esri" src="assets/esri-airborne.yaml" />
       </a-assets>
  
       <a-sky color="#6EBAA7"></a-sky>
@@ -26,11 +26,20 @@
       zoom: 13;
       pxToWorldRatio: 60;
       " 
+
       
 
       rotation="-90 0 0"
       position="0 -10 -10"
       >
+
+<!--
+        style: #yaml-austria;
+        center: 12.722753, 47.170529;
+        zoom: 14;
+        pxToWorldRatio: 50;
+        -->
+
       </a-entity>
 
       <a-entity camera look-controls wasd-controls="fly: true;"></a-entity>
