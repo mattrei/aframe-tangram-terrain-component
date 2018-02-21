@@ -38,7 +38,7 @@
     },
     "homepage": "https://github.com/mattrei/aframe-tangram-terrain-component#readme",
     "devDependencies": {
-        "aframe": "^0.7.1",
+        "aframe": "*",
         "browserify": "^13.0.0",
         "budo": "^9.4.7",
         "chai": "^3.4.1",
