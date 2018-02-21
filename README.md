@@ -1,8 +1,8 @@
 ## aframe-tangram-terrain-component
 
-A [Mapzen Tangram](https://mapzen.com/products/tangram/) terrain component for [A-Frame](https://aframe.io). 
+A [Tangram](https://github.com/tangrams/tangram) terrain component for [A-Frame](https://aframe.io). 
 
-> Supports A-Frame 0.7.0.
+> Supports A-Frame 0.8.0.
 
 ![Example](doc/example.jpg)
 
@@ -10,9 +10,7 @@ A [Mapzen Tangram](https://mapzen.com/products/tangram/) terrain component for [
 
 #### `tangram-terrain` component
 
-This component obtains a heightmap from the Mapzen servers and applies a overlay texture according the `style` specification. The heightmap is used as a `displacement` map and so is used in conjunction with GPU picking technique to obtain fast results.
-
-The terrain tiles are received from the [Amazon public dataset S3](https://aws.amazon.com/public-datasets/terrain/).
+This component obtains a heightmap from the [Amazon public dataset S3](https://aws.amazon.com/public-datasets/terrain/) servers and applies a overlay texture according the `style` specification. The heightmap is used as a `displacement` map and so is used in conjunction with GPU picking technique to obtain fast results.
 
 _Note that no bathymetry data is included!_
 
@@ -46,7 +44,7 @@ instances by creating its own canvases. However then its not possible to program
 | renderDepthBuffer | | Renders the heightmap depth buffer. Needs to be only called manually if the heigtmap is changed programmtically |
 
 ### Styling
-The Mapzen Tangram are styled within a (set) of YAML files. See the [Tangram documentation](https://mapzen.com/documentation/tangram/) for details. 
+The Tangram map is styled within a (set) of YAML files. See the [Tangram documentation](https://mapzen.com/documentation/tangram/) for details. 
 
 ### A note on fidelity
 
@@ -137,5 +135,5 @@ See also [here](https://github.com/tangrams/tangram-play/wiki/Advanced-Tangram-f
 
 ### Known issues
 * The maximum texture size (configured by the _pxToWorldRatio_ and _size_ parameters of the overlay map is restricted on mobile devies.  
-* Mapzen Tangram only allows [one instance on a page] (https://github.com/tangrams/tangram/issues/350) that means a tiling algorithm cannot instance terrain entities in parallel! Hopefully this restriction may fall in the future.
+* The Tangram library only allows [one instance on a page] (https://github.com/tangrams/tangram/issues/350) that means a tiling algorithm cannot instance terrain entities in parallel! Hopefully this restriction may fall in the future.
 
