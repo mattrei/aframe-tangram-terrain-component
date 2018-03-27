@@ -10,9 +10,9 @@ A [Tangram](https://github.com/tangrams/tangram) terrain component for [A-Frame]
 
 #### `tangram-terrain` component
 
-This component obtains a heightmap from the [Amazon public dataset S3](https://aws.amazon.com/public-datasets/terrain/) servers and applies a overlay texture according the `style` specification. The heightmap is used as a `displacement` map and so is used in conjunction with GPU picking technique to obtain fast results.
+This component obtains a heightmap from the [Amazon public dataset S3](https://aws.amazon.com/public-datasets/terrain/) servers and applies a overlay texture according the `style` specification. The heightmap is used as a `displacement` map and so is used in conjunction with GPU picking technique to obtain fast height results. Has Level-of-Detail (LOD) feature both on texture and geometry.
 
-_Note that no bathymetry data is included!_
+_Note that unfortunately no bathymetry data is included in the public terrain data!_
 
 ##### Schema
 | Property | Description | Default Value |
