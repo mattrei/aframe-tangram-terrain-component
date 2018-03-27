@@ -9,6 +9,8 @@ if (typeof AFRAME === 'undefined') {
   throw new Error('Component attempted to register before AFRAME was available.');
 }
 
+const PRESERVE_DRAWING_BUFFER = AFRAME.utils.device.isMobile();
+
 const cuid = require('cuid');
 
 const heightmapStyle = require('./src/heightmap-style.yaml');
@@ -21,8 +23,7 @@ const REMOVETANGRAM_TIMEOUT = 300;
 const DEBUG_CANVAS_OFFSET = 99999;
 
 AFRAME.registerSystem('tangram-terrain', {
-  init: function () {
-  },
+  init: function () {},
   createHeightmap: function (data, geomData) {
     const self = this;
 
@@ -40,9 +41,10 @@ AFRAME.registerSystem('tangram-terrain', {
         import: heightmapStyle
       },
       webGLContextOptions: {
-        preserveDrawingBuffer: true
+        preserveDrawingBuffer: PRESERVE_DRAWING_BUFFER
       },
       highDensityDisplay: false,
+      disableRenderLoop: false,
       attribution: ''
     });
 
@@ -53,9 +55,12 @@ AFRAME.registerSystem('tangram-terrain', {
         },
         view_complete: function () {
           const canvas = layer.scene.canvas;
-          
+
           const depthBuffer = data.depthBuffer ? self._createDepthBuffer(canvas) : undefined;
-          self.el.emit(HEIGHTMAP_LOADED, {canvas: canvas, depthBuffer: depthBuffer});
+          self.el.emit(HEIGHTMAP_LOADED, {
+            canvas: canvas,
+            depthBuffer: depthBuffer
+          });
           resolve([canvas, depthBuffer]);
         },
         error: function (e) {
@@ -68,7 +73,11 @@ AFRAME.registerSystem('tangram-terrain', {
     });
     layer.addTo(map);
 
-    return {map: map, layer: layer, promise: promise};
+    return {
+      map: map,
+      layer: layer,
+      promise: promise
+    };
   },
   createMap: function (data, geomData) {
     var self = this;
@@ -91,8 +100,9 @@ AFRAME.registerSystem('tangram-terrain', {
         }
       },
       highDensityDisplay: false,
+      disableRenderLoop: true,
       webGLContextOptions: {
-        preserveDrawingBuffer: true
+        preserveDrawingBuffer: PRESERVE_DRAWING_BUFFER
       },
       attribution: ''
     });
@@ -102,9 +112,13 @@ AFRAME.registerSystem('tangram-terrain', {
         load: function () {
           Utils.processCanvasElement(canvasContainer);
         },
+        pre_update: function () {},
         view_complete: function () {
           const canvas = layer.scene.canvas;
-          self.el.emit(OVERLAYMAP_LOADED, {canvas: canvas});
+          console.log("VIEW_COMPLETE", canvas.width)
+          self.el.emit(OVERLAYMAP_LOADED, {
+            canvas: canvas
+          });
           resolve(canvas);
         },
         error: function (e) {
@@ -117,7 +131,12 @@ AFRAME.registerSystem('tangram-terrain', {
     });
     layer.addTo(map);
 
-    return {map: map, layer: layer, promise: promise};
+    return {
+      map: map,
+      layer: layer,
+      canvasContainer: canvasContainer,
+      promise: promise
+    };
   },
   _createDepthBuffer: function (canvas) {
     // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
@@ -126,10 +145,10 @@ AFRAME.registerSystem('tangram-terrain', {
 
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(
-              imageWidth / -2,
-              imageWidth / 2,
-              imageHeight / 2,
-              imageHeight / -2, -1, 1);
+      imageWidth / -2,
+      imageWidth / 2,
+      imageHeight / 2,
+      imageHeight / -2, -1, 1);
 
     const texture = new THREE.WebGLRenderTarget(imageWidth, imageHeight, {
       minFilter: THREE.NearestFilter,
@@ -144,14 +163,20 @@ AFRAME.registerSystem('tangram-terrain', {
     canvas.height = imageHeight;
 
     const mesh = new THREE.Mesh(
-          new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
-          new THREE.MeshBasicMaterial({
-            map: canvasTexture
-          })
-      );
+      new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
+      new THREE.MeshBasicMaterial({
+        map: canvasTexture
+      })
+    );
     scene.add(mesh);
 
-    return { scene: scene, camera: camera, mesh: mesh, texture: texture, canvasTexture: canvasTexture };
+    return {
+      scene: scene,
+      camera: camera,
+      mesh: mesh,
+      texture: texture,
+      canvasTexture: canvasTexture
+    };
   },
   copyCanvas: function (canvas) {
     const copy = document.createElement('canvas');
@@ -256,7 +281,10 @@ AFRAME.registerComponent('tangram-terrain', {
     },
     dispose: {
       type: 'boolean',
-      default: true
+      default: false
+    },
+    lod: {
+      default: 1
     }
   },
 
@@ -265,6 +293,8 @@ AFRAME.registerComponent('tangram-terrain', {
   init: function () {
     const data = this.data;
     const geomData = this.el.components.geometry.data;
+
+    //console.log("GEOM ", this.el.components.geometry.geometry)
 
     this.depthBuffer = null;
     this.heightmap = this.system.createHeightmap(data, geomData);
@@ -293,14 +323,20 @@ AFRAME.registerComponent('tangram-terrain', {
       self._fire();
     });
 
-    this.overlaymap.promise.then(function (canvas) {
+    this.el.sceneEl.addEventListener(OVERLAYMAP_LOADED, function (event) {
+      let canvas = event.detail.canvas;
+
+      console.log("setting attirbute", canvas.width)
+
       if (data.useBuffer) {
         canvas = self.system.copyCanvas(canvas);
       }
+
+
       self.el.setAttribute('material', 'src', canvas);
 
       if (data.dispose) {
-        self.system.dispose(self.overlaymap);
+        //self.system.dispose(self.overlaymap);
       }
       self._fire();
     });
@@ -314,17 +350,40 @@ AFRAME.registerComponent('tangram-terrain', {
     }
 
     var setView = false;
+    const overlaymap = this.overlaymap.map;
 
-    if (data.center !== oldData.center) {
+    if (!AFRAME.utils.deepEqual(data.center, oldData.center) || data.zoom !== oldData.zoom) {
       setView = true;
+      const pixelBounds = overlaymap.getPixelBounds(Utils.latLonFrom(data.center), data.zoom);
+      const sw = overlaymap.unproject(pixelBounds.getBottomLeft(), data.zoom);
+      const ne = overlaymap.unproject(pixelBounds.getTopRight(), data.zoom);
+
+      this.bounds = new L.LatLngBounds(sw, ne);
     }
-    if (data.zoom !== oldData.zoom) {
-      setView = true;
-    }
-    if (setView) {
+    if (setView || data.lod !== oldData.lod) {
+      const geomData = this.el.components.geometry.data;
+      const width = geomData.width * data.pxToWorldRatio;
+      const height = geomData.height * data.pxToWorldRatio;
+
       this.heightmap.map.setView(Utils.latLonFrom(data.center), data.zoom);
-      this.overlaymap.map.setView(Utils.latLonFrom(data.center), data.zoom);
+
+      //overlaymap.setView(Utils.latLonFrom(data.center), data.zoom);
+
+      //console.log("1", overlaymap.getBounds()._southWest)
+      overlaymap.fitBounds(this.bounds);
+      if (data.lod !== oldData.lod) {
+        const container = this.overlaymap.canvasContainer;
+        container.style.width = (width * data.lod) + 'px';
+        container.style.height = (height * data.lod) + 'px';
+        console.log("Changing container size to", container.style.width);
+        overlaymap.invalidateSize({
+          animate: false
+        });
+        overlaymap.fitBounds(this.bounds);
+        // tangram reload?
+      }
     }
+
   },
   remove: function () {
     this.system.dispose(this.heightmap);
@@ -399,7 +458,11 @@ AFRAME.registerPrimitive('a-tangram-terrain', {
       displacementScale: 30,
       displacementBias: 0
     },
-    rotation: { x: -90, y: 0, z: 0 },
+    rotation: {
+      x: -90,
+      y: 0,
+      z: 0
+    },
     'tangram-terrain': {}
   },
   mappings: {
@@ -414,6 +477,7 @@ AFRAME.registerPrimitive('a-tangram-terrain', {
     'px-world-ratio': 'tangram-terrain.pxToWorldRatio',
     'height-scale': 'material.displacementScale',
     wireframe: 'material.wireframe',
-    'depth-buffer': 'tangram-terrain.depthBuffer'
+    'depth-buffer': 'tangram-terrain.depthBuffer',
+    lod: 'tangram-terrain.lod'
   }
 });

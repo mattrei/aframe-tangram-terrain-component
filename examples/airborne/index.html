@@ -4,9 +4,11 @@
     <meta name="description" content="Airborne example for Tangram component."></meta>
 
     <script src="../build.js"></script>
+  <script src="./lod-controls.js"></script>
+
   </head>
   <body>
-    <a-scene stats>
+    <a-scene>
       <a-assets>
         <a-asset-item id="yaml-austria" src="assets/austria-airborne.yaml" />
         <a-asset-item id="yaml-esri" src="assets/esri-airborne.yaml" />
@@ -21,24 +23,32 @@
 
 
       tangram-terrain="
-      style: #yaml-esri;
-      center: 86.92, 27.98;
-      zoom: 13;
-      pxToWorldRatio: 60;
+style: #yaml-austria;
+        center: 12.722753, 47.170529;
+        zoom: 14;
+        pxToWorldRatio: 50;
+      lod: 1;
       " 
 
-      
+      lod-controls
 
       rotation="-90 0 0"
       position="0 -10 -10"
       >
 
-<!--
+      <!--
+        ESRI
+        style: #yaml-esri;
+        center: 86.92, 27.98;
+        zoom: 13;
+        pxToWorldRatio: 60;
+
+        AUSTRIA
         style: #yaml-austria;
         center: 12.722753, 47.170529;
         zoom: 14;
         pxToWorldRatio: 50;
-        -->
+      -->
 
       </a-entity>
 
@@ -51,7 +61,7 @@
   <script>
     var mapEl = document.querySelector('#terrain');
     mapEl.addEventListener('tangram-terrain-loaded', function () {
-      console.log("LOADED")
+      
     });
   </script>
 </html>

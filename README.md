@@ -22,16 +22,15 @@ _Note that no bathymetry data is included!_
 | center | Center of the map, in the form of [longitude, latitude] | [0, 0] |
 | zoom | The zoom level of the map. | 13 |
 | pxToWorldRatio | The multiplication factor between meters in A-Frame and the pixels of the map. ie; when set to 100, will display 100 pixels per 1 meter in world space. (see [a note on fidelity](#a-note-on-fidelity)) | 100 |
-| interactive | Tangram instances are (currently) not designed for being instantiated many times on a single document. To overcome this this flag allows to create mulitple tangram terrain 
-instances by creating its own canvases. However then its not possible to programmatically change the contents of the terrain. | true |
 | depthBuffer | Renders a depth buffer to an external scene, so that you can get the height from the terrain by GPU picking. Set to _false_ for performance reasons if you do not need it. | false |
 | dispose | Disposes the _Tangram_ instance after creating the terrain to free up memory. Set to _false_ if you need to modify the terrain via the _Leaflet_ API. | true |
-
+| lod | Level-Of-Detail. Between 1 and 0.1. Multiplicaiton Factor of Overlay and Heightmap pixels. If you modify during runtime to not dispose the instance. | 1 |
 
 ##### Events
 | Name | Data | Description |
 | -------- | ----------- | ------------- |
-| tangram-terrain-loaded | None| Fired when the terrain that means the elevation data and the overlay map has finished loading. Only by then the public API will be usable. |
+| tangram-terrain-loaded | None| Fired when the terrain that means the elevation data and the overlay map has finished loading or the corresponding Level-Of-Detail has been loaded. Only by then the public API will be usable. |
+
 
 
 ##### API
@@ -136,4 +135,4 @@ See also [here](https://github.com/tangrams/tangram-play/wiki/Advanced-Tangram-f
 ### Known issues
 * The maximum texture size (configured by the _pxToWorldRatio_ and _size_ parameters of the overlay map is restricted on mobile devies.  
 * The Tangram library only allows [one instance on a page] (https://github.com/tangrams/tangram/issues/350) that means a tiling algorithm cannot instance terrain entities in parallel! Hopefully this restriction may fall in the future.
-
+* 
