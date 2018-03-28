@@ -18,16 +18,16 @@
  
       <a-entity id="terrain" visible="true"
       
-      geometry="primitive: plane; width: 20; height: 20; segmentsWidth: 50; segmentsHeight: 50;"
-      material="wireframe: false; displacementScale: 10;"
+      geometry="primitive: plane; buffer: true; width: 20; height: 20; segmentsWidth: 50; segmentsHeight: 50;"
+      material="wireframe: true; displacementScale: 10;"
 
 
       tangram-terrain="
-style: #yaml-austria;
+        style: #yaml-austria;
         center: 12.722753, 47.170529;
         zoom: 14;
         pxToWorldRatio: 50;
-      lod: 1;
+        lod: 1;
       " 
 
       lod-controls

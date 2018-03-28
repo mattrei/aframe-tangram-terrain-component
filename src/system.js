@@ -62,6 +62,7 @@ AFRAME.registerSystem('tangram-terrain', {
             depthBuffer: depthBuffer
           });
           resolve([canvas, depthBuffer]);
+          
         },
         error: function (e) {
           reject(e);
@@ -107,8 +108,6 @@ AFRAME.registerSystem('tangram-terrain', {
       attribution: ''
     });
 
-    const renderer = this.el.renderer;
-
     const promise = new Promise(function (resolve, reject) {
       layer.scene.subscribe({
         load: function () {
@@ -119,12 +118,9 @@ AFRAME.registerSystem('tangram-terrain', {
           const canvas = layer.scene.canvas;
           console.log("VIEW_COMPLETE", canvas.width)
 
-          
-
           self.el.emit(OVERLAYMAP_LOADED, {
             canvas: canvas
           });
-
 
           resolve(canvas);
         },

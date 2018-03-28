@@ -1,11 +1,15 @@
 /* global AFRAME THREE */
 
+const BufferGeometryUtils = require('./lib/BufferGeometryUtils')
 const Utils = require('./utils');
 
 const TERRAIN_LOADED_EVENT = 'tangram-terrain-loaded';
 
 const OVERLAYMAP_LOADED = 'overlaymap-loaded';
 const HEIGHTMAP_LOADED = 'heightmap-loaded';
+
+const GEOMETRY_LOD_FACTOR = 4;
+const MATERIAL_LOD_FACTOR = 4;
 
 AFRAME.registerComponent('tangram-terrain', {
     dependencies: [
@@ -47,7 +51,7 @@ AFRAME.registerComponent('tangram-terrain', {
             default: 1
         },
         lodCount: {
-            default: 3,
+            default: 4,
             oneOf: [1, 2, 3, 4]
         }
     },
@@ -57,56 +61,22 @@ AFRAME.registerComponent('tangram-terrain', {
     init: function () {
         const data = this.data;
         const geomData = this.el.components.geometry.data;
-        const matData = this.el.components.material.data;
-
-        //console.log("GEOM ", this.el.components.geometry.geometry)
 
         this.depthBuffer = null;
+
         this.heightmap = this.system.createHeightmap(data, geomData);
         this.heightmapDisposed = false;
         this.overlaymap = this.system.createMap(data, geomData);
         this.overlaymapDisposed = false;
 
-        const renderer = this.el.sceneEl.renderer;
-
-        var self = this;
-
         this.displacementMap = null;
 
-        //this.lodMaterials = []
         this.lods = []
 
-        this.heightmap.promise.then(function (arr) {
-            const canvas = data.useBuffer ? self.system.copyCanvas(arr[0]) : arr[0];
-
-            console.log("setting heightmap")
-            const texture = new THREE.CanvasTexture(canvas);
-            renderer.setTexture2D(texture, 0);
-            self.displacementMap = texture;
-
-            for (let lod of self.lods) {
-                lod.material.displacementMap = texture;
-                lod.material.needsUpdate = true;
-                //console.log(lodMaterial)
-            }
-
-            //self.el.setAttribute('material', 'displacementMap', canvas);
-
-
-            if (data.depthBuffer) {
-                const depthBuffer = arr[1];
-                self.system.renderDepthBuffer(depthBuffer);
-                self.depthBuffer = depthBuffer;
-            }
-
-            if (data.dispose) {
-                self.system.dispose(self.heightmap);
-            }
-            self._fire();
-        });
-
-
+        this.el.sceneEl.addEventListener(HEIGHTMAP_LOADED, this.handleHeightmapCanvas.bind(this));
         this.el.sceneEl.addEventListener(OVERLAYMAP_LOADED, this.handleOverlayCanvas.bind(this));
+
+        this.createGeometryLODs();
     },
     update: function (oldData) {
         const data = this.data;
@@ -129,19 +99,23 @@ AFRAME.registerComponent('tangram-terrain', {
         }
         if (setView || data.lod !== oldData.lod) {
             const geomData = this.el.components.geometry.data;
-            
+
 
             this.heightmap.map.setView(Utils.latLonFrom(data.center), data.zoom);
 
             overlaymap.fitBounds(this.bounds);
-            if (data.lod !== oldData.lod) {
-                console.log("Loading LOD", data.lod)
+
+        }
+
+        if (data.lod !== oldData.lod) {
+            if (data.lod >= 1 && data.lod <= data.lodCount) {
                 this.loadOrApplyLOD(data.lod)
             }
         }
-
     },
     handleOverlayCanvas: function (event) {
+
+        console.log("handle overlay canvas")
         const data = this.data;
         const el = this.el;
         const renderer = this.el.sceneEl.renderer;
@@ -151,35 +125,27 @@ AFRAME.registerComponent('tangram-terrain', {
         let canvas = event.detail.canvas;
         const factor = canvas.width / (geomData.width * data.pxToWorldRatio);
 
-
-        
         if (data.useBuffer) {
             canvas = this.system.copyCanvas(canvas);
         }
 
         console.log("factor", factor)
 
-
         let material = null;
         //self.el.setAttribute('material', 'src', canvas);
         const mesh = el.getObject3D('mesh')
 
-        console.log("before")
         for (let lod of this.lods) {
-            if (lod.factor === factor) {
-                lod.visible = true;
-                lod.material = lodMaterial;
-                console.log("resuing material")
-            } else {
-                lod.visible = false;
+            //if (lod.factor === factor) {
+            if (lod.lod === data.lod) {
+                material = lod.material;
             }
         }
-
+        
 
         if (!material) {
-            console.log("Creating material")
             //const schemaMaterial = mesh.material.constructor === Array ? mesh.material[0] : mesh.material
-
+            console.log("Creating material", this.lods)
             // upload to GPU
             const texture = new THREE.CanvasTexture(canvas);
             renderer.setTexture2D(texture, 0);
@@ -191,38 +157,43 @@ AFRAME.registerComponent('tangram-terrain', {
             material.displacementMap = this.displacementMap; //mesh.material.displacementMap;
             material.displacementScale = matData.displacementScale;
             material.map = texture;
-            material.userData = {
-                factor: factor
-            };
-            material.visible = true;
-            material.needsUpdate = true;
 
-            this.lods.push({
-                factor: factor,
-                visible: true,
-                material: material
-            });
+            for (let lod of this.lods) {
+                if (lod.lod === data.lod) {
+                    lod.material = material;
+                }
+            }
         }
-        mesh.material = material
+        
+        console.log("Creating material2", this.lods)
+        this.loadOrApplyLOD(data.lod);
 
         if (data.dispose) {
             //self.system.dispose(self.overlaymap);
         }
         this._fire();
     },
-    loadOrApplyLOD: function (factor) {
+    loadOrApplyLOD: function (lod) {
+
+        console.log("apply LOD", lod)
+
         const el = this.el;
         const data = this.data;
-        const geomData = this.el.components.geometry.data;
+        const geomData = el.components.geometry.data;
+
+        const factor = 1 / lod;
 
         let foundLOD = null;
-        for (let lod of this.lods) {
-            if (lod.factor === factor) {
-                foundLOD = lod;
+        for (let lodObj of this.lods) {
+            if (lodObj.lod === lod) {
+                foundLOD = lodObj;
             }
         }
+        console.log(foundLOD)
 
-        if (!foundLOD) {
+        const mesh = el.getObject3D('mesh')
+        if (!foundLOD.material) {
+
             const width = geomData.width * data.pxToWorldRatio;
             const height = geomData.height * data.pxToWorldRatio;
 
@@ -230,17 +201,107 @@ AFRAME.registerComponent('tangram-terrain', {
             container.style.width = (width * factor) + 'px';
             container.style.height = (height * factor) + 'px';
             console.log("Changing container size to", container.style.width);
-            
+
             this.overlaymap.map.invalidateSize({
                 animate: false
             });
             this.overlaymap.map.fitBounds(this.bounds);
             // tangram reload?
+            this.overlaymap.layer.scene.immediateRedraw();
+
         } else {
-            const mesh = el.getObject3D('mesh')
+
+            console.log("setting LOD", lod)
             mesh.material = foundLOD.material
-            
         }
+
+        console.log(foundLOD.geometry)
+        mesh.geometry.setDrawRange(foundLOD.geometry.start, foundLOD.geometry.count)
+        
+    },
+    createGeometryLODs: function () {
+
+        const el = this.el;
+        const data = this.data;
+        const geomData = el.components.geometry.data;
+        
+        const mesh = el.getObject3D('mesh')
+        const lodGeometries = [mesh.geometry]
+
+        for (let i = 1; i < data.lodCount; i++) {
+            const factor = i * GEOMETRY_LOD_FACTOR;
+
+            let lodGeometry = new THREE.PlaneGeometry(
+                geomData.width, geomData.height, 
+                Math.floor(geomData.segmentsWidth / factor), Math.floor(geomData.segmentsHeight / factor)
+            )
+
+            lodGeometry = new THREE.BufferGeometry().fromGeometry(lodGeometry);
+/*
+            const lodGeometry = new THREE.PlaneBufferGeometry(
+                geomData.width, geomData.height, 
+                Math.floor(geomData.segmentsWidth / factor), Math.floor(geomData.segmentsHeight / factor)
+            )
+            */
+            //console.log(lodGeometry)
+            //console.log(lodGeometry.index.count)
+            lodGeometries.push(lodGeometry)
+        }
+        let start = 0;
+        for (let i=0; i < lodGeometries.length; i++) {
+            const count = lodGeometries[i].attributes.position.count;
+
+            this.lods.push({
+                lod: i + 1,
+                geometry: {
+                    start: start,
+                    count: count
+                }
+            });
+
+            start += count;
+        }
+
+        const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(lodGeometries);
+        console.log(mergedGeometry)
+
+        mesh.geometry = mergedGeometry;
+
+    },
+    handleHeightmapCanvas: function (event) {
+
+        const data = this.data;
+        const renderer = this.el.sceneEl.renderer;
+
+        let canvas = event.detail.canvas;
+        const depthBuffer = event.detail.depthBuffer;
+
+        canvas = data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
+
+        const texture = new THREE.CanvasTexture(canvas);
+        renderer.setTexture2D(texture, 0);
+        this.displacementMap = texture;
+
+        for (let lod of this.lods) {
+            if (lod.material) {
+                lod.material.displacementMap = texture;
+                lod.material.needsUpdate = true;
+            }
+        }
+
+        // displacementMap gets set later via material
+        //this.el.setAttribute('material', 'displacementMap', canvas);
+
+        if (data.depthBuffer) {
+            this.system.renderDepthBuffer(depthBuffer);
+            this.depthBuffer = depthBuffer;
+        }
+
+        // TODO?
+        //if (data.dispose) {
+        this.system.dispose(this.heightmap);
+        //}
+        this._fire();
     },
     remove: function () {
         this.system.dispose(this.heightmap);
