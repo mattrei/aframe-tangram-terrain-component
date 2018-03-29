@@ -35,6 +35,7 @@ AFRAME.registerPrimitive('a-tangram-terrain', {
       'height-scale': 'material.displacementScale',
       wireframe: 'material.wireframe',
       'depth-buffer': 'tangram-terrain.depthBuffer',
-      lod: 'tangram-terrain.lod'
+      lod: 'tangram-terrain.lod',
+      lodCount: 'tangram-terrain.lodCount'
     }
   });

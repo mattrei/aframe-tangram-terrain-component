@@ -73,8 +73,12 @@ AFRAME.registerComponent('tangram-terrain', {
 
         this.lods = []
 
-        this.el.sceneEl.addEventListener(HEIGHTMAP_LOADED, this.handleHeightmapCanvas.bind(this));
+        //this.el.sceneEl.addEventListener(HEIGHTMAP_LOADED, this.handleHeightmapCanvas.bind(this));
         this.el.sceneEl.addEventListener(OVERLAYMAP_LOADED, this.handleOverlayCanvas.bind(this));
+        this.handleHeightmapCanvas = this.handleHeightmapCanvas.bind(this);
+        this.heightmap.promise.then(this.handleHeightmapCanvas);
+        this.handleOverlayCanvas = this.handleOverlayCanvas.bind(this);
+        this.overlaymap.promise.then(this.handleOverlayCanvas);
 
         this.createGeometryLODs();
     },
@@ -123,11 +127,13 @@ AFRAME.registerComponent('tangram-terrain', {
         const geomData = this.el.components.geometry.data;
         const matData = this.el.components.material.data;
 
-        let canvas = event.detail.canvas;
+        let canvas = event.canvas || event.detail.canvas;
+        
         const factor = canvas.width / (geomData.width * data.pxToWorldRatio);
 
         if (data.useBuffer) {
             canvas = this.system.copyCanvas(canvas);
+            
         }
 
         let material = null;
@@ -142,20 +148,21 @@ AFRAME.registerComponent('tangram-terrain', {
         }
         
 
+
         if (!material) {
-            //const schemaMaterial = mesh.material.constructor === Array ? mesh.material[0] : mesh.material
-            console.log("Creating material", this.lods)
+            
             // upload to GPU
             const texture = new THREE.CanvasTexture(canvas);
             renderer.setTexture2D(texture, 0);
 
             material = new THREE.MeshStandardMaterial()
-            material.copy(mesh.material); // does not work yet
+            material.copy(mesh.material);
 
             material.displacementBias = matData.displacementBias;
-            material.displacementMap = this.displacementMap; //mesh.material.displacementMap;
+            material.displacementMap = this.displacementMap;
             material.displacementScale = matData.displacementScale;
             material.map = texture;
+            material.needsUpdate = true;
 
             for (let lod of this.lods) {
                 if (lod.lod === data.lod) {
@@ -204,6 +211,8 @@ AFRAME.registerComponent('tangram-terrain', {
             this.overlaymap.map.fitBounds(this.bounds);
             // tangram reload?
             //this.overlaymap.layer.scene.immediateRedraw();
+
+            //this.overlaymap.promise.then(this.handleOverlayCanvas)
 
         } else {
             mesh.material = foundLOD.material
@@ -263,8 +272,8 @@ AFRAME.registerComponent('tangram-terrain', {
         const data = this.data;
         const renderer = this.el.sceneEl.renderer;
 
-        let canvas = event.detail.canvas;
-        const depthBuffer = event.detail.depthBuffer;
+        let canvas = event.canvas;
+        const depthBuffer = event.depthBuffer;
 
         canvas = data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
 

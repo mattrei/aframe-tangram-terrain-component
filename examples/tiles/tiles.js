@@ -1,11 +1,21 @@
 /* global AFRAME THREE */
 
+// https://github.com/felixpalmer/lod-terrain/blob/master/js/app/terrain.js
+
+const Edge = {
+  NONE: 0,
+  TOP: 1,
+  LEFT: 2,
+  BOTTOM: 4,
+  RIGHT: 8
+};
+
 AFRAME.registerComponent('tiles', {
   dependencies: [
     'position'
   ],
   schema: {
-    mapzenAPIKey: {
+    apiKey: {
       default: ''
     },
     center: {
@@ -37,13 +47,19 @@ AFRAME.registerComponent('tiles', {
     displacementBias: {
       default: 0
     },
-    radius: {
-      default: 0
+
+    worldWidth: {
+      default: 1024
+    },
+    levels: {
+      default: 6
     }
   },
 
   init: function () {
     this._count = 0;
+
+
     var self = this;
     const data = this.data;
     this.geomData = {
@@ -56,9 +72,11 @@ AFRAME.registerComponent('tiles', {
     };
 
     this.camera = this.el.sceneEl.camera;
+    /*
     this.el.sceneEl.addEventListener('camera-set-active', (evt) => {
       this.camera = evt.detail.cameraEl.object3D.children[0];
     });
+    */
 
     this.system = this.el.sceneEl.systems['tangram-terrain'];
     this.heightmap = this.system.createHeightmap(data, this.geomData);
@@ -72,10 +90,10 @@ AFRAME.registerComponent('tiles', {
       const canvas = self.system.copyCanvas(evt.detail.canvas);
       const depthBuffer = evt.detail.depthBuffer;
 
-      self.currentEl.setAttribute('material', 'displacementMap', canvas);
-
+      //self.currentEl.setAttribute('material', 'displacementMap', canvas);
       
-      self.system.renderDepthBuffer(depthBuffer);
+      // TODO
+      //self.system.renderDepthBuffer(depthBuffer);
 
       // TODO save depthbuffer to each tile 
       // self.depthBuffer = depthBuffer;
@@ -85,9 +103,10 @@ AFRAME.registerComponent('tiles', {
 
     this.el.sceneEl.addEventListener('overlaymap-loaded', evt => {
       console.log('MAP LOADED');
+      if (!self.currentEl) return;
       const canvas = evt.detail.canvas;
-      const copyCanvas = self.system.copyCanvas(canvas);
-      self.currentEl.setAttribute('material', 'src', copyCanvas);
+      //const copyCanvas = self.system.copyCanvas(canvas);
+      //self.currentEl.setAttribute('material', 'src', copyCanvas);
 
       this._next();
     });
@@ -95,13 +114,59 @@ AFRAME.registerComponent('tiles', {
     // preload
     // document.querySelector('a-scene').renderer.setTexture2D(ourTexture, 0);
 
-    this.tiles = ['0,0'];
+    this.tiles = [] //'0,0'];
     this.queue = [];
-    this._isBusy = true;
+    this._isBusy = false;
 
-    this.mainTile = this._addTile('0,0',
-      this.data.center,
-      this.el.components.position);
+    this.isInitiated = false;
+
+    const center = [data.center[1], data.center[0]];
+
+    const overlaymap = this.overlaymap.map;
+
+    const pixelBounds = overlaymap.getPixelBounds(center, data.zoom);
+    const sw = overlaymap.unproject(pixelBounds.getBottomLeft(), data.zoom);
+    const ne = overlaymap.unproject(pixelBounds.getTopRight(), data.zoom);
+    this.bounds = new L.LatLngBounds(sw, ne);
+    console.log("Bounds", this.bounds)
+    //this.heightmap.map.fitBounds(this.bounds);
+    //overlaymap.fitBounds(this.bounds);
+
+    const initialScale = data.worldWidth / Math.pow( 2, data.levels );
+    // Create center layer first
+    //    +---+---+
+    //    | O | O |
+    //    +---+---+
+    //    | O | O |
+    //    +---+---+
+
+    /*
+    this.createTile( -initialScale, -initialScale, initialScale, Edge.NONE );
+    this.createTile( -initialScale, 0, initialScale, Edge.NONE );
+    this.createTile( 0, 0, initialScale, Edge.NONE );
+    this.createTile( 0, -initialScale, initialScale, Edge.NONE );
+    */
+
+    
+    const pos = new THREE.Vector3(); // TODO
+    
+    const x = Math.floor((pos.x + data.tileSize * 0.5) / data.tileSize);
+    const y = Math.floor((-pos.z + data.tileSize * 0.5) / data.tileSize);
+    
+    console.log("adding " + x + " " +y)
+    /*
+    this._addTileFor(-x, -y);
+    this._addTileFor(-x, y);
+    this._addTileFor(x, y);
+    this._addTileFor(x, -y);
+    */
+
+    //this._addTile('0,0', this.data.center, this.el.components.position);
+    this._addTileFor(0, 0);
+    this._addTileFor(0, 1);
+    //this._addTileFor(1, 1);
+    //this._addTileFor(0, 1);
+    
 
     this.tick = AFRAME.utils.throttleTick(this.tick, 1500, this);
   },
@@ -117,17 +182,31 @@ AFRAME.registerComponent('tiles', {
     this.queue.push({ tile, center, position });
   },
   _processQueue: function () {
+    const data = this.data;
     if (!this._isBusy && this.queue.length > 0) {
       const first = this.queue[0];
       this._isBusy = true;
-      this.currentEl = this._addTile(first.tile, first.center, first.position);
+
+
+      let latLng = null;
+      if (!this.isInitiated) {
+        this.isInitiated = true;
+        latLng = {
+          lon: data.center[0],
+          lat: data.center[1]
+        }
+      } else {
+        latLng = this.system.unproject(data, this.geomData, this.overlaymap.map, first.center.pX, first.center.pY);
+      }
+
+      this.currentEl = this._addTile(first.tile, latLng, first.position);
       /* tile.addEventListener('tangram-terrain-loaded', (e) => {
         self._isBusy = false;
         self.queue.shift();
       });*/
     }
   },
-  _addTile: function (tile, center, position) {
+  _addTile: function (tile, latLng, position) {
     this._isBusy = true;
     const data = this.data;
 
@@ -149,15 +228,14 @@ AFRAME.registerComponent('tiles', {
 
     this.el.appendChild(terrain);
 
-    console.log('new terrain ');
-    console.log(this.latLonFrom(center));
+    console.log('new terrain ', latLng);
 
     this.currentEl = terrain;
 
     this.heightmap.map._loaded = false;
-    this.heightmap.map.setView(this.latLonFrom(center), data.zoom, {animate: false, reset: true});
+    this.heightmap.map.setView(latLng, data.zoom, {animate: false, reset: true});
     this.overlaymap.map._loaded = false;
-    this.overlaymap.map.setView(this.latLonFrom(center), data.zoom, {animate: false, reset: true});
+    this.overlaymap.map.setView(latLng, data.zoom, {animate: false, reset: true});
 
     return terrain;
   },
@@ -193,21 +271,22 @@ AFRAME.registerComponent('tiles', {
 
       var pX = x * (data.tileSize);
       var pY = y * (data.tileSize);
-
-      var latLng = this.system.unproject(data, this.geomData, this.overlaymap.map, pX, pY);
+      
       // this.mainTile.components['tangram-terrain'].unproject(pX, pY);
 
       console.log(x + ' ' + y);
-      console.log(latLng);
-      this._addToQueue(tile, [latLng.lon, latLng.lat],
-        new THREE.Vector3(x * data.tileSize, y * data.tileSize, 0));
+      this._addToQueue(
+        tile,
+        {pX: pX, pY: pY},
+        new THREE.Vector3(x * data.tileSize, y * data.tileSize, 0)
+      );
     }
   },
   tick: function (time, delta) {
     if (!this.heightmap.map) return;
     if (this._isBusy) return;
 
-    this._checkPosition();
+    //this._checkPosition();
     this._processQueue();
   },
   getCameraPosition: function () {

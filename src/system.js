@@ -9,7 +9,7 @@ if (typeof AFRAME === 'undefined') {
   throw new Error('Component attempted to register before AFRAME was available.');
 }
 
-const PRESERVE_DRAWING_BUFFER = AFRAME.utils.device.isMobile();
+const PRESERVE_DRAWING_BUFFER = true//AFRAME.utils.device.isMobile();
 
 const cuid = require('cuid');
 
@@ -23,7 +23,10 @@ const REMOVETANGRAM_TIMEOUT = 300;
 const DEBUG_CANVAS_OFFSET = 99999;
 
 AFRAME.registerSystem('tangram-terrain', {
-  init: function () {},
+  init: function () {
+    console.log("CALLING SYSTEM")
+
+  },
   createHeightmap: function (data, geomData) {
     const self = this;
 
@@ -59,11 +62,16 @@ AFRAME.registerSystem('tangram-terrain', {
           const canvas = layer.scene.canvas;
 
           const depthBuffer = data.depthBuffer ? self._createDepthBuffer(canvas) : undefined;
+          
           self.el.emit(HEIGHTMAP_LOADED, {
             canvas: canvas,
             depthBuffer: depthBuffer
           });
-          resolve([canvas, depthBuffer]);
+          
+          resolve({
+            canvas: canvas, 
+            depthBuffer: depthBuffer
+          });
         },
         error: function (e) {
           reject(e);
@@ -118,12 +126,14 @@ AFRAME.registerSystem('tangram-terrain', {
         view_complete: function () {
           const canvas = layer.scene.canvas;
           console.log("VIEW_COMPLETE", canvas.width)
-
+          
           self.el.emit(OVERLAYMAP_LOADED, {
             canvas: canvas
           });
 
-          resolve(canvas);
+          resolve({
+            canvas: canvas
+          });
         },
         error: function (e) {
           reject(e);
