@@ -51,7 +51,7 @@ AFRAME.registerComponent('tangram-terrain', {
             default: 1
         },
         lodCount: {
-            default: 4,
+            default: 1,
             oneOf: [1, 2, 3, 4]
         }
     },
@@ -95,13 +95,15 @@ AFRAME.registerComponent('tangram-terrain', {
             const sw = overlaymap.unproject(pixelBounds.getBottomLeft(), data.zoom);
             const ne = overlaymap.unproject(pixelBounds.getTopRight(), data.zoom);
 
+            
             this.bounds = new L.LatLngBounds(sw, ne);
         }
         if (setView || data.lod !== oldData.lod) {
             const geomData = this.el.components.geometry.data;
 
 
-            this.heightmap.map.setView(Utils.latLonFrom(data.center), data.zoom);
+            this.heightmap.map.fitBounds(this.bounds);
+            //this.heightmap.map.setView(Utils.latLonFrom(data.center), data.zoom);
 
             overlaymap.fitBounds(this.bounds);
 
@@ -115,7 +117,6 @@ AFRAME.registerComponent('tangram-terrain', {
     },
     handleOverlayCanvas: function (event) {
 
-        console.log("handle overlay canvas")
         const data = this.data;
         const el = this.el;
         const renderer = this.el.sceneEl.renderer;
@@ -128,8 +129,6 @@ AFRAME.registerComponent('tangram-terrain', {
         if (data.useBuffer) {
             canvas = this.system.copyCanvas(canvas);
         }
-
-        console.log("factor", factor)
 
         let material = null;
         //self.el.setAttribute('material', 'src', canvas);
@@ -165,7 +164,6 @@ AFRAME.registerComponent('tangram-terrain', {
             }
         }
         
-        console.log("Creating material2", this.lods)
         this.loadOrApplyLOD(data.lod);
 
         if (data.dispose) {
@@ -189,8 +187,6 @@ AFRAME.registerComponent('tangram-terrain', {
                 foundLOD = lodObj;
             }
         }
-        console.log(foundLOD)
-
         const mesh = el.getObject3D('mesh')
         if (!foundLOD.material) {
 
@@ -207,15 +203,12 @@ AFRAME.registerComponent('tangram-terrain', {
             });
             this.overlaymap.map.fitBounds(this.bounds);
             // tangram reload?
-            this.overlaymap.layer.scene.immediateRedraw();
+            //this.overlaymap.layer.scene.immediateRedraw();
 
         } else {
-
-            console.log("setting LOD", lod)
             mesh.material = foundLOD.material
         }
 
-        console.log(foundLOD.geometry)
         mesh.geometry.setDrawRange(foundLOD.geometry.start, foundLOD.geometry.count)
         
     },
@@ -263,10 +256,7 @@ AFRAME.registerComponent('tangram-terrain', {
         }
 
         const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(lodGeometries);
-        console.log(mergedGeometry)
-
         mesh.geometry = mergedGeometry;
-
     },
     handleHeightmapCanvas: function (event) {
 
@@ -299,7 +289,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
         // TODO?
         //if (data.dispose) {
-        this.system.dispose(this.heightmap);
+        //this.system.dispose(this.heightmap);
         //}
         this._fire();
     },

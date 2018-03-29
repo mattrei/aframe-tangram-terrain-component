@@ -27,8 +27,10 @@ AFRAME.registerSystem('tangram-terrain', {
   createHeightmap: function (data, geomData) {
     const self = this;
 
-    const width = geomData.width * data.pxToWorldRatio + 1; // +1 is really needed here for the displacment map
-    const height = geomData.height * data.pxToWorldRatio + 1;
+    const factor = 4;
+    // +1 is really needed here for the displacment map
+    const width = geomData.width * data.pxToWorldRatio / factor + 1; 
+    const height = geomData.height * data.pxToWorldRatio / factor + 1;
 
     const _canvasContainerId = cuid();
     const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
@@ -62,7 +64,6 @@ AFRAME.registerSystem('tangram-terrain', {
             depthBuffer: depthBuffer
           });
           resolve([canvas, depthBuffer]);
-          
         },
         error: function (e) {
           reject(e);
