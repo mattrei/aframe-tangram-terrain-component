@@ -15,8 +15,6 @@ const cuid = require('cuid');
 
 const heightmapStyle = require('./heightmap-style.yaml');
 
-const OVERLAYMAP_LOADED = 'overlaymap-loaded';
-const HEIGHTMAP_LOADED = 'heightmap-loaded';
 
 const REMOVETANGRAM_TIMEOUT = 300;
 
@@ -26,21 +24,40 @@ const DEFAULT_CANVAS_SIZE = 256;
 AFRAME.registerSystem('tangram-terrain', {
   init: function () {
     this.heightmap = null;
+    this.heightmapLayer = null;
     this.overlaymap = null;
+    this.overlaymapLayer = null;
   },
-  createHeightmap: function (data, geomData) {
+  getOrCreateHeightmap: function (data, geomData, onComplete) {
     const self = this;
 
-    if (data.singleton && this.heightmap) return this.heightmap;
+    const viewComplete = function() {
+      const canvas = self.heightmapLayer.scene.canvas;
+      console.log("HEIGHTMAP VIEW_COMPLETE", canvas.width)
+      const depthBuffer = data.depthBuffer ? self._createDepthBuffer(canvas) : undefined;
+      onComplete({
+        canvas: canvas,
+        depthBuffer: depthBuffer
+      });
+    }
+
+    if (data.singleton && this.heightmap) {
+      this.heightmap._loaded = false;
+      this.heightmapLayer.scene.unsubscribeAll();
+      this.heightmapLayer.scene.subscribe({
+        view_complete: viewComplete
+      })
+      return this.heightmap;
+    }
 
     const factor = 4;
     // +1 is really needed here for the displacment map
-    const width = geomData.width * data.pxToWorldRatio / factor + 1;
-    const height = geomData.height * data.pxToWorldRatio / factor + 1;
+    const width = 32//geomData.width * data.pxToWorldRatio / factor + 0;
+    const height = 32//geomData.height * data.pxToWorldRatio / factor + 0;
 
     const canvasContainer = Utils.getCanvasContainerAssetElement(
       cuid(),
-      DEFAULT_CANVAS_SIZE, DEFAULT_CANVAS_SIZE, DEBUG_CANVAS_OFFSET);
+      width, height, DEBUG_CANVAS_OFFSET);
 
     const map = L.map(canvasContainer, Utils.leafletOptions);
     this.heightmap = map;
@@ -57,34 +74,40 @@ AFRAME.registerSystem('tangram-terrain', {
       attribution: ''
     });
 
+    this.heightmapLayer = layer;
+
     layer.scene.subscribe({
       load: function () {
         Utils.processCanvasElement(canvasContainer);
       },
-      view_complete: function () {
-        const canvas = layer.scene.canvas;
-
-        const depthBuffer = data.depthBuffer ? self._createDepthBuffer(canvas) : undefined;
-
-        self.el.emit(HEIGHTMAP_LOADED, {
-          canvas: canvas,
-          depthBuffer: depthBuffer
-        });
-
-      },
-      error: function (e) {},
-      warning: function (e) {}
+      view_complete: viewComplete
     });
     layer.addTo(map);
 
     return map;
 
   },
-  getOrCreateMap: function (data, geomData) {
+  getOrCreateMap: function (data, geomData, onComplete) {
 
-    if (data.singleton && this.overlaymap) return this.overlaymap;
+    const self = this;
 
-    var self = this;
+    function viewComplete() {
+      const canvas = self.overlaymapLayer.scene.canvas;
+      //console.log("OVERLAY VIEW_COMPLETE", canvas.width)
+
+      onComplete({
+        canvas: canvas
+      })
+    }
+
+    if (data.singleton && this.overlaymap) {
+      this.overlaymap._loaded = false;
+      this.overlaymapLayer.scene.unsubscribeAll();
+      this.overlaymapLayer.scene.subscribe({
+        view_complete: viewComplete
+      })
+      return this.overlaymap;
+    }
 
     const width = geomData.width * data.pxToWorldRatio;
     const height = geomData.height * data.pxToWorldRatio;
@@ -94,6 +117,7 @@ AFRAME.registerSystem('tangram-terrain', {
       width, height, DEBUG_CANVAS_OFFSET + 100);
 
     const map = L.map(canvasContainer, Utils.leafletOptions);
+    this.overlaymap = map;
 
     const layer = Tangram.leafletLayer({
       scene: {
@@ -111,22 +135,13 @@ AFRAME.registerSystem('tangram-terrain', {
       attribution: ''
     });
     layer.addTo(map);
+    this.overlaymapLayer = layer;
 
     layer.scene.subscribe({
       load: function () {
         Utils.processCanvasElement(canvasContainer);
       },
-      pre_update: function () {},
-      view_complete: function () {
-        const canvas = layer.scene.canvas;
-        console.log("VIEW_COMPLETE", canvas.width)
-
-        self.el.emit(OVERLAYMAP_LOADED, {
-          canvas: canvas
-        });
-      },
-      error: function (e) {},
-      warning: function (e) {}
+      view_complete: viewComplete
     });
 
     return map;
@@ -136,9 +151,9 @@ AFRAME.registerSystem('tangram-terrain', {
     const container = map.getContainer();
     container.style.width = (width) + 'px';
     container.style.height = (height) + 'px';
-    console.log("Changing container size to", container.style.width);
+    //console.log("Changing container size to", container.style.width);
 
-    const bounds = map.getBounds()
+    const bounds = map.getBounds();
 
     map.invalidateSize({
       animate: false
