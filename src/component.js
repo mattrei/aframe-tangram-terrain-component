@@ -53,6 +53,9 @@ AFRAME.registerComponent('tangram-terrain', {
         lodCount: {
             default: 1,
             oneOf: [1, 2, 3, 4]
+        },
+        singleton: {
+            default: false
         }
     },
 
@@ -66,19 +69,18 @@ AFRAME.registerComponent('tangram-terrain', {
 
         this.heightmap = this.system.createHeightmap(data, geomData);
         this.heightmapDisposed = false;
-        this.overlaymap = this.system.createMap(data, geomData);
+        this.overlaymap = this.system.getOrCreateMap(data, geomData);
         this.overlaymapDisposed = false;
 
         this.displacementMap = null;
 
         this.lods = []
 
-        //this.el.sceneEl.addEventListener(HEIGHTMAP_LOADED, this.handleHeightmapCanvas.bind(this));
-        this.el.sceneEl.addEventListener(OVERLAYMAP_LOADED, this.handleOverlayCanvas.bind(this));
         this.handleHeightmapCanvas = this.handleHeightmapCanvas.bind(this);
-        this.heightmap.promise.then(this.handleHeightmapCanvas);
+        this.el.sceneEl.addEventListener(HEIGHTMAP_LOADED, this.handleHeightmapCanvas.bind(this));
         this.handleOverlayCanvas = this.handleOverlayCanvas.bind(this);
-        this.overlaymap.promise.then(this.handleOverlayCanvas);
+        this.el.sceneEl.addEventListener(OVERLAYMAP_LOADED, this.handleOverlayCanvas.bind(this));
+        
 
         this.createGeometryLODs();
     },
@@ -91,7 +93,7 @@ AFRAME.registerComponent('tangram-terrain', {
         }
 
         var setView = false;
-        const overlaymap = this.overlaymap.map;
+        const overlaymap = this.overlaymap;
 
         if (!AFRAME.utils.deepEqual(data.center, oldData.center) || data.zoom !== oldData.zoom) {
             setView = true;
@@ -106,7 +108,7 @@ AFRAME.registerComponent('tangram-terrain', {
             const geomData = this.el.components.geometry.data;
 
 
-            this.heightmap.map.fitBounds(this.bounds);
+            this.heightmap.fitBounds(this.bounds);
             //this.heightmap.map.setView(Utils.latLonFrom(data.center), data.zoom);
 
             overlaymap.fitBounds(this.bounds);
@@ -127,7 +129,7 @@ AFRAME.registerComponent('tangram-terrain', {
         const geomData = this.el.components.geometry.data;
         const matData = this.el.components.material.data;
 
-        let canvas = event.canvas || event.detail.canvas;
+        let canvas = event.detail.canvas;
         
         const factor = canvas.width / (geomData.width * data.pxToWorldRatio);
 
@@ -147,8 +149,6 @@ AFRAME.registerComponent('tangram-terrain', {
             }
         }
         
-
-
         if (!material) {
             
             // upload to GPU
@@ -173,10 +173,11 @@ AFRAME.registerComponent('tangram-terrain', {
         
         this.loadOrApplyLOD(data.lod);
 
-        if (data.dispose) {
-            //self.system.dispose(self.overlaymap);
-        }
         this._fire();
+
+        if (!data.singleton) {  // TODO needed?
+            this.el.sceneEl.removeEventListener(OVERLAYMAP_LOADED, this.handleOverlayCanvas)
+        }
     },
     loadOrApplyLOD: function (lod) {
 
@@ -197,21 +198,12 @@ AFRAME.registerComponent('tangram-terrain', {
         const mesh = el.getObject3D('mesh')
         if (!foundLOD.material) {
 
-            const width = geomData.width * data.pxToWorldRatio;
-            const height = geomData.height * data.pxToWorldRatio;
+            const width = geomData.width * data.pxToWorldRatio * factor; 
+            const height = geomData.height * data.pxToWorldRatio * factor;
 
-            const container = this.overlaymap.canvasContainer;
-            container.style.width = (width * factor) + 'px';
-            container.style.height = (height * factor) + 'px';
-            console.log("Changing container size to", container.style.width);
+            
 
-            this.overlaymap.map.invalidateSize({
-                animate: false
-            });
-            this.overlaymap.map.fitBounds(this.bounds);
-            // tangram reload?
-            //this.overlaymap.layer.scene.immediateRedraw();
-
+            this.system.resize(this.overlaymap, width, height)
             //this.overlaymap.promise.then(this.handleOverlayCanvas)
 
         } else {
@@ -272,8 +264,8 @@ AFRAME.registerComponent('tangram-terrain', {
         const data = this.data;
         const renderer = this.el.sceneEl.renderer;
 
-        let canvas = event.canvas;
-        const depthBuffer = event.depthBuffer;
+        let canvas = event.detail.canvas;
+        const depthBuffer = event.detail.depthBuffer;
 
         canvas = data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
 
@@ -288,19 +280,13 @@ AFRAME.registerComponent('tangram-terrain', {
             }
         }
 
-        // displacementMap gets set later via material
-        //this.el.setAttribute('material', 'displacementMap', canvas);
-
         if (data.depthBuffer) {
             this.system.renderDepthBuffer(depthBuffer);
             this.depthBuffer = depthBuffer;
         }
-
-        // TODO?
-        //if (data.dispose) {
-        //this.system.dispose(this.heightmap);
-        //}
         this._fire();
+
+        this.el.sceneEl.removeEventListener(HEIGHTMAP_LOADED, this.handleHeightmapCanvas)
     },
     remove: function () {
         this.system.dispose(this.heightmap);
@@ -321,14 +307,14 @@ AFRAME.registerComponent('tangram-terrain', {
         const matData = this.el.components.material.data;
 
         return this.system.project(this.data, geomData, matData,
-            this.overlaymap.map,
+            this.overlaymap,
             this.depthBuffer,
             lon, lat);
     },
     unproject: function (x, y) {
         const geomData = this.el.components.geometry.data;
 
-        return this.system.unproject(this.data, geomData, this.overlaymap.map, x, y);
+        return this.system.unproject(this.data, geomData, this.overlaymap, x, y);
     },
     _getHeight: function (x, y) {
         const geomData = this.el.components.geometry.data;
@@ -351,12 +337,12 @@ AFRAME.registerComponent('tangram-terrain', {
         if (this.overlaymapDisposed) {
             throw new Error('Overlaymap disposed.');
         }
-        return this.overlaymap.map;
+        return this.overlaymap;
     },
     getHeightmapInstance: function () {
         if (this.heightmapDisposed) {
             throw new Error('Heightmap disposed.');
         }
-        return this.heightmap.map;
+        return this.heightmap;
     }
 });

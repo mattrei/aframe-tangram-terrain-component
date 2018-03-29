@@ -9,7 +9,7 @@ if (typeof AFRAME === 'undefined') {
   throw new Error('Component attempted to register before AFRAME was available.');
 }
 
-const PRESERVE_DRAWING_BUFFER = true//AFRAME.utils.device.isMobile();
+const PRESERVE_DRAWING_BUFFER = true //AFRAME.utils.device.isMobile();
 
 const cuid = require('cuid');
 
@@ -21,25 +21,29 @@ const HEIGHTMAP_LOADED = 'heightmap-loaded';
 const REMOVETANGRAM_TIMEOUT = 300;
 
 const DEBUG_CANVAS_OFFSET = 99999;
+const DEFAULT_CANVAS_SIZE = 256;
 
 AFRAME.registerSystem('tangram-terrain', {
   init: function () {
-    console.log("CALLING SYSTEM")
-
+    this.heightmap = null;
+    this.overlaymap = null;
   },
   createHeightmap: function (data, geomData) {
     const self = this;
 
+    if (data.singleton && this.heightmap) return this.heightmap;
+
     const factor = 4;
     // +1 is really needed here for the displacment map
-    const width = geomData.width * data.pxToWorldRatio / factor + 1; 
+    const width = geomData.width * data.pxToWorldRatio / factor + 1;
     const height = geomData.height * data.pxToWorldRatio / factor + 1;
 
-    const _canvasContainerId = cuid();
-    const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
-      width, height, DEBUG_CANVAS_OFFSET);
+    const canvasContainer = Utils.getCanvasContainerAssetElement(
+      cuid(),
+      DEFAULT_CANVAS_SIZE, DEFAULT_CANVAS_SIZE, DEBUG_CANVAS_OFFSET);
 
     const map = L.map(canvasContainer, Utils.leafletOptions);
+    this.heightmap = map;
 
     const layer = Tangram.leafletLayer({
       scene: {
@@ -53,50 +57,40 @@ AFRAME.registerSystem('tangram-terrain', {
       attribution: ''
     });
 
-    const promise = new Promise(function (resolve, reject) {
-      layer.scene.subscribe({
-        load: function () {
-          Utils.processCanvasElement(canvasContainer);
-        },
-        view_complete: function () {
-          const canvas = layer.scene.canvas;
+    layer.scene.subscribe({
+      load: function () {
+        Utils.processCanvasElement(canvasContainer);
+      },
+      view_complete: function () {
+        const canvas = layer.scene.canvas;
 
-          const depthBuffer = data.depthBuffer ? self._createDepthBuffer(canvas) : undefined;
-          
-          self.el.emit(HEIGHTMAP_LOADED, {
-            canvas: canvas,
-            depthBuffer: depthBuffer
-          });
-          
-          resolve({
-            canvas: canvas, 
-            depthBuffer: depthBuffer
-          });
-        },
-        error: function (e) {
-          reject(e);
-        },
-        warning: function (e) {
-          reject(e);
-        }
-      });
+        const depthBuffer = data.depthBuffer ? self._createDepthBuffer(canvas) : undefined;
+
+        self.el.emit(HEIGHTMAP_LOADED, {
+          canvas: canvas,
+          depthBuffer: depthBuffer
+        });
+
+      },
+      error: function (e) {},
+      warning: function (e) {}
     });
     layer.addTo(map);
 
-    return {
-      map: map,
-      layer: layer,
-      promise: promise
-    };
+    return map;
+
   },
-  createMap: function (data, geomData) {
+  getOrCreateMap: function (data, geomData) {
+
+    if (data.singleton && this.overlaymap) return this.overlaymap;
+
     var self = this;
 
     const width = geomData.width * data.pxToWorldRatio;
     const height = geomData.height * data.pxToWorldRatio;
 
-    const _canvasContainerId = cuid();
-    const canvasContainer = Utils.getCanvasContainerAssetElement(_canvasContainerId,
+    const canvasContainer = Utils.getCanvasContainerAssetElement(
+      cuid(),
       width, height, DEBUG_CANVAS_OFFSET + 100);
 
     const map = L.map(canvasContainer, Utils.leafletOptions);
@@ -116,41 +110,43 @@ AFRAME.registerSystem('tangram-terrain', {
       },
       attribution: ''
     });
-
-    const promise = new Promise(function (resolve, reject) {
-      layer.scene.subscribe({
-        load: function () {
-          Utils.processCanvasElement(canvasContainer);
-        },
-        pre_update: function () {},
-        view_complete: function () {
-          const canvas = layer.scene.canvas;
-          console.log("VIEW_COMPLETE", canvas.width)
-          
-          self.el.emit(OVERLAYMAP_LOADED, {
-            canvas: canvas
-          });
-
-          resolve({
-            canvas: canvas
-          });
-        },
-        error: function (e) {
-          reject(e);
-        },
-        warning: function (e) {
-          reject(e);
-        }
-      });
-    });
     layer.addTo(map);
 
-    return {
-      map: map,
-      layer: layer,
-      canvasContainer: canvasContainer,
-      promise: promise
-    };
+    layer.scene.subscribe({
+      load: function () {
+        Utils.processCanvasElement(canvasContainer);
+      },
+      pre_update: function () {},
+      view_complete: function () {
+        const canvas = layer.scene.canvas;
+        console.log("VIEW_COMPLETE", canvas.width)
+
+        self.el.emit(OVERLAYMAP_LOADED, {
+          canvas: canvas
+        });
+      },
+      error: function (e) {},
+      warning: function (e) {}
+    });
+
+    return map;
+  },
+  resize: function (map, width, height) {
+
+    const container = map.getContainer();
+    container.style.width = (width) + 'px';
+    container.style.height = (height) + 'px';
+    console.log("Changing container size to", container.style.width);
+
+    const bounds = map.getBounds()
+
+    map.invalidateSize({
+      animate: false
+    });
+    map.fitBounds(bounds);
+    // tangram reload?
+    //this.overlaymap.layer.scene.immediateRedraw();
+
   },
   _createDepthBuffer: function (canvas) {
     // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
@@ -261,4 +257,3 @@ AFRAME.registerSystem('tangram-terrain', {
     });
   }
 });
-
