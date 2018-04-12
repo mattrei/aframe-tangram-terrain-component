@@ -1,0 +1,61 @@
+sources:
+    normals:
+        type: Raster
+        url: https://s3.amazonaws.com/elevation-tiles-prod/normal/{z}/{x}/{y}.png
+        max_zoom: 15
+
+textures:
+    decoder:
+        #url: ./img/decoder.png
+        url: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAP8AAAAKCAYAAAB7V4hgAAAA6UlEQVRoQ+2aQQqDMBBFX7Cbdu26h/BMHqWH9RYtaimxKMWaSCBvESJB4wTmzfxJEoDn0MBw+d0eDXTAHbgBVyAAbYB27Pe0vd/sff8su876T4XrH32tC7PPLdqRsRxzHrEn+rYH+gBTHz+nHnvPPbIr/HHQKhWyUu3KGPyE/ysIpAoIwr+hVEqFrFS7hD+ZOjHzb5UOFTr/ooyqcP1mfjP/vJdQofMLvzV/FjWg7Ff2r27QFhRkzfxmfjN/pcpH+IVf+IXfo76Ux3/KfmW/sj+6P5DorP5zH+GP+bLU92t3BIRf+IW/bvhfCfDIgiJO/7sAAAAASUVORK5CYII=
+
+
+
+styles:
+    hillshade:
+        base: raster
+        lighting: false
+        shaders:
+            blocks:
+                color: color.a = 1.0;
+    combo:
+        base: raster
+        shaders:
+            uniforms:
+                u_scale: 2
+                u_decoder: decoder
+                #u_palette: hypsometric
+            blocks:
+                global: |
+                    float unpack(vec4 h) {
+                        // GPU reads each 0-255 channel as range 0-1, right where we want it
+                        // assemble to get un-normalized height
+                        return (h.r * 1. + h.g / 256. + h.b / 65536.);
+                    }
+                color: |
+                    // elevation from normal tile alpha
+                    float height = 1.0 - color.a;
+                    // set alpha to 1 so map isn't transparent
+                    color.a = 1.;
+                    // check height against decoder ring image to un-quantize it
+                    vec3 ring = texture2D(u_decoder, vec2(height,0.5)).rgb;
+                    ring.r *= 256.;
+                    ring.g *= 256. * 256.;
+                    height = (ring.r + ring.g);
+                    // range is now 0 - 19900, squish into 0 - 1:
+                    height /= 19900.;
+                    // height from normal alpha
+                    //color.rgb = vec3(height);
+                    //// exaggerate
+                    //color.rgb = color.rgb * u_scale - (u_scale - 1.);
+
+                    // hypsometric gradient from texture
+                    // color.rgb = texture2D(u_palette, vec2(color.r,0.5)).rgb;
+layers:
+    terrain:
+        data: { source: normals }
+        draw:
+            combo:
+                order: 0
+    
+    

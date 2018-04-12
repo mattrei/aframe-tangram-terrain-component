@@ -9,7 +9,7 @@
 </head>
 
 <body>
-  <a-scene stats>
+  <a-scene statss>
     <a-assets>
       <a-asset-item id="yamlElevation" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/terrarium-elevation.yaml"
       />
@@ -24,8 +24,11 @@
 
 
     <a-entity id="terrain" visible="true" 
-    geometry="width: 40; height: 40; segmentsWidth: 50; segmentsHeight: 50; primitive: plane;" 
-    material="side: double; wireframe: true; displacementScale: 30; displacementBias: 0;"
+    geometry="width: 40; height: 40; 
+    segmentsWidth: 80; segmentsHeight: 80; 
+    primitive: plane;" 
+    material="side: double; wireframe: true; 
+    displacementScale: 30; displacementBias: 0;"
       tangram-terrain="
       apiKey: UJcQwnnfQnWcPtKe2aYaEw;
   style: #yamlElevation;
@@ -33,7 +36,7 @@
   zoom: 10;
   pxToWorldRatio: 15;
   depthBuffer: true;
-  " rotation="-90 0 0" position="0 -5 0"
+  " rotation="-90 0 0" position="0 -25 0"
   sphere-matrix>
 
       <a-sphere id="marker" color="red" position="0 0 0" visible="true" radius="0.1"></a-sphere>

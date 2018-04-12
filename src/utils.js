@@ -3,7 +3,7 @@ const cuid = require('cuid');
 module.exports.leafletOptions = {
   'preferCanvas': true,
   'keyboard': false,
-  'scrollWheelZoom': true,
+  'scrollWheelZoom': false,
   'tap': false,
   'touchZoom': false,
   'zoomControl': false,
@@ -14,7 +14,8 @@ module.exports.leafletOptions = {
   'dragging': false,
   'zoomAnimation': false,
   'fadeAnimation': false,
-  'markerZoomAnimation': false
+  'markerZoomAnimation': false,
+  'inertia': false
 };
 
 module.exports.getCanvasContainerAssetElement = function (id, width, height, left) {

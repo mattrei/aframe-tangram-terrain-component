@@ -9,17 +9,20 @@ if (typeof AFRAME === 'undefined') {
   throw new Error('Component attempted to register before AFRAME was available.');
 }
 
-const PRESERVE_DRAWING_BUFFER = true //AFRAME.utils.device.isMobile();
+const PRESERVE_DRAWING_BUFFER = AFRAME.utils.device.isMobile();
 
 const cuid = require('cuid');
 
-const heightmapStyle = require('./heightmap-style.yaml');
+//const elevationStyle = require('./styles/elevation-tiles.yaml');
+const elevationStyle = require('./styles/normal-alpha-elevation.yaml');
 
 
 const REMOVETANGRAM_TIMEOUT = 300;
 
+const DEBUG_HM_CANVAS_OFFSET = 99;
 const DEBUG_CANVAS_OFFSET = 99999;
-const DEFAULT_CANVAS_SIZE = 256;
+
+const HM_RESOLUTION_FACTOR = 1;
 
 AFRAME.registerSystem('tangram-terrain', {
   init: function () {
@@ -27,6 +30,9 @@ AFRAME.registerSystem('tangram-terrain', {
     this.heightmapLayer = null;
     this.overlaymap = null;
     this.overlaymapLayer = null;
+
+    this.mapPool = [];
+    this.poolSize = 1;
   },
   getOrCreateHeightmap: function (data, geomData, onComplete) {
     const self = this;
@@ -50,27 +56,29 @@ AFRAME.registerSystem('tangram-terrain', {
       return this.heightmap;
     }
 
-    const factor = 4;
-    // +1 is really needed here for the displacment map
-    const width = 32//geomData.width * data.pxToWorldRatio / factor + 0;
-    const height = 32//geomData.height * data.pxToWorldRatio / factor + 0;
+    
+    const width = geomData.segmentsWidth * HM_RESOLUTION_FACTOR + 1;
+    const height = geomData.segmentsHeight * HM_RESOLUTION_FACTOR + 1;
+
+    //const width = geomData.width * data.pxToWorldRatio;
+    //const height = geomData.height * data.pxToWorldRatio;
+
 
     const canvasContainer = Utils.getCanvasContainerAssetElement(
       cuid(),
-      width, height, DEBUG_CANVAS_OFFSET);
+      width, height, DEBUG_HM_CANVAS_OFFSET);
 
     const map = L.map(canvasContainer, Utils.leafletOptions);
     this.heightmap = map;
 
     const layer = Tangram.leafletLayer({
       scene: {
-        import: heightmapStyle
+        import: elevationStyle
       },
       webGLContextOptions: {
         preserveDrawingBuffer: PRESERVE_DRAWING_BUFFER
       },
       highDensityDisplay: false,
-      disableRenderLoop: false,
       attribution: ''
     });
 
@@ -84,30 +92,65 @@ AFRAME.registerSystem('tangram-terrain', {
     });
     layer.addTo(map);
 
+    console.log("SCENE", layer.scene)
+
     return map;
 
   },
   getOrCreateMap: function (data, geomData, onComplete) {
 
-    const self = this;
-
-    function viewComplete() {
-      const canvas = self.overlaymapLayer.scene.canvas;
-      //console.log("OVERLAY VIEW_COMPLETE", canvas.width)
-
+    function viewComplete(tangram) {
+      const canvas = tangram.layer.scene.canvas;
+      console.log("OVERLAY VIEW_COMPLETE", canvas.width)
       onComplete({
         canvas: canvas
       })
+      tangram.used = false;
     }
 
+    /*
     if (data.singleton && this.overlaymap) {
       this.overlaymap._loaded = false;
       this.overlaymapLayer.scene.unsubscribeAll();
       this.overlaymapLayer.scene.subscribe({
-        view_complete: viewComplete
+        view_complete: function () {
+          onComplete(map, layer);
+        }
       })
       return this.overlaymap;
     }
+    */
+
+
+    if (this.mapPool.length < this.poolSize) {
+      console.log("SYS creating map")
+      const tangram = this._createTangram(data, geomData, viewComplete);
+      tangram.used = true;
+      tangram.id = this.mapPool.length;
+      this.mapPool.push(tangram);
+      return tangram.map;
+
+    } else {
+
+      for (let tangram of this.mapPool) {
+        if (!tangram.used) {
+          console.log("SYS using map", tangram.id);
+          tangram.map._loaded = false;
+          tangram.layer.scene.unsubscribeAll();
+          tangram.layer.scene.subscribe({
+            view_complete: function () {
+              viewComplete(tangram);
+            }
+          });
+          tangram.used = true;
+          return tangram.map;
+        }
+      }
+      
+      
+    }
+  },
+  _createTangram: function (data, geomData, onComplete) {
 
     const width = geomData.width * data.pxToWorldRatio;
     const height = geomData.height * data.pxToWorldRatio;
@@ -117,7 +160,7 @@ AFRAME.registerSystem('tangram-terrain', {
       width, height, DEBUG_CANVAS_OFFSET + 100);
 
     const map = L.map(canvasContainer, Utils.leafletOptions);
-    this.overlaymap = map;
+
 
     const layer = Tangram.leafletLayer({
       scene: {
@@ -128,23 +171,28 @@ AFRAME.registerSystem('tangram-terrain', {
         }
       },
       highDensityDisplay: false,
-      disableRenderLoop: true,
       webGLContextOptions: {
         preserveDrawingBuffer: PRESERVE_DRAWING_BUFFER
       },
       attribution: ''
     });
     layer.addTo(map);
-    this.overlaymapLayer = layer;
+
+    const tangram = {
+      map: map,
+      layer: layer
+    };
 
     layer.scene.subscribe({
       load: function () {
         Utils.processCanvasElement(canvasContainer);
       },
-      view_complete: viewComplete
+      view_complete: function () {
+        onComplete(tangram);
+      }
     });
 
-    return map;
+    return tangram;
   },
   resize: function (map, width, height) {
 
@@ -203,13 +251,36 @@ AFRAME.registerSystem('tangram-terrain', {
       canvasTexture: canvasTexture
     };
   },
-  copyCanvas: function (canvas) {
+  copyCanvas: function (canvas, x, y, width, height) {
     const copy = document.createElement('canvas');
     copy.setAttribute('id', cuid());
-    copy.setAttribute('width', canvas.width);
-    copy.setAttribute('height', canvas.height);
+
+    const w = width || canvas.width;
+    const h = height || canvas.height;
+
+    copy.setAttribute('width', w);
+    copy.setAttribute('height', h);
     const ctx = copy.getContext('2d');
-    ctx.drawImage(canvas, 0, 0);
+
+    ctx.drawImage(canvas, x || 0, y || 0, w, h);
+    return copy;
+  },
+  copyCanvasTile: function (canvas, x, y, width, height) {
+    const copy = document.createElement('canvas');
+    copy.setAttribute('id', cuid());
+
+    const w = width || canvas.width;
+    const h = height || canvas.height;
+
+    copy.setAttribute('width', w);
+    copy.setAttribute('height', h);
+    const ctx = copy.getContext('2d');
+
+    ctx.drawImage(canvas, x || 0, y || 0, w, h);
+
+    var imgData = canvas.getContext('2d').getImageData(x, y, w, h );
+    ctx.putImageData(imgData, 0, 0);
+
     return copy;
   },
   project: function (data, geomData, matData, map, depthBuffer, lon, lat) {

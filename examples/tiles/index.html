@@ -7,7 +7,7 @@
     <script src="./tiles.js"></script>
   </head>
   <body>
-    <a-scene stats fog="type: exponential; color: #AAA; density: 0.005;">
+    <a-scene fog="type: exponential; color: #AAA; density: 0.005;">
       <a-assets>
           <a-asset-item id="yaml-austria" src="assets/austria-airborne.yaml" />
       </a-assets>
@@ -19,18 +19,18 @@
       style: #yaml-austria;
       center: 12.6875, 47.188056;
       zoom: 13;
-      tileSize: 15;
-      tileSegments: 20;
+      tileSize: 10;
+      tileSegments: 15;
       displacementScale: 20;
-      pxToWorldRatio: 80;
+      pxToWorldRatio: 50;
       wireframe: false;
       
       " 
       rotation="-90 0 0"
-      position="0 -15 0">
+      position="0 -12 0">
     </a-entity>
 
-    <a-entity id="player" position="0 0 20">
+    <a-entity id="player" position="0 0 0">
       <a-entity camera look-controls wasd-controls="fly: true;"></a-entity>
     </a-entity>
     </a-scene>

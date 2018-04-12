@@ -8,25 +8,37 @@
 
   </head>
   <body>
-    <a-scene stats>
+    <a-scene statss>
       <a-assets>
         <a-asset-item id="yaml-austria" src="assets/austria-airborne.yaml" />
         <a-asset-item id="yaml-esri" src="assets/esri-airborne.yaml" />
       </a-assets>
  
       <a-sky color="#6EBAA7"></a-sky>
- 
+
+      <!--
+          <a-entity position="0.0 -13 -8">
+        <a-entity light="type: point; color: #fff; intensity: 3.5; distance: 10.0;"></a-entity>
+      </a-entity>
+      -->
+
+      <a-light type="directional" position="0 0 0" rotation="-90 0 0" target="#directionaltarget">
+  <a-entity id="directionaltarget" position="0 -1 -1"></a-entity>
+</a-light>
+
       <a-entity id="terrain" visible="true"
       
-      geometry="primitive: plane; buffer: true; width: 20; height: 20; segmentsWidth: 50; segmentsHeight: 50;"
+      geometry="primitive: plane; buffer: true; 
+      width: 20; height: 20; 
+      segmentsWidth: 50; segmentsHeight: 50;"
       material="wireframe: false; displacementScale: 20;"
 
 
       tangram-terrain="
         style: #yaml-austria;
-        center: 12.722753, 47.170529;
+        center: 12.6875, 47.188056;
         zoom: 14;
-        pxToWorldRatio: 100;
+        pxToWorldRatio: 80;
         lodCount: 4;
         lod: 1;
       " 
@@ -34,7 +46,7 @@
       lod-controls
 
       rotation="-90 0 0"
-      position="0 -10 -10"
+      position="0 -15 -10"
       >
 
       <!--

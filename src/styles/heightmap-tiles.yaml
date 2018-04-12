@@ -1,0 +1,21 @@
+sources:
+    normals:
+        type: Raster
+        url: https://s3.amazonaws.com/elevation-tiles-prod/normal/{z}/{x}/{y}.png
+        max_zoom: 15
+
+styles: 
+    hillshade:
+        base: raster
+        lighting: false
+        shaders:
+            blocks:
+                color: |
+                    color.rgb = 1.0 - color.aaa;
+                    color.a = 1.0;
+layers:
+    terrain:
+        data: { source: normals, layer: _default }
+        draw:
+            hillshade:
+              order: 0

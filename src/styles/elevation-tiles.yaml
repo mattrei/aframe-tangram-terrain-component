@@ -13,6 +13,7 @@ styles:
                 u_max: 8900. # everest = 8848
                 u_min: 0. # sea level
                 # u_min: -11000. # challenger deep = -10916
+                # scene.styles.hillshade.shaders.uniforms.u_min = global_min;
             blocks:
                 global: |
                     float unpack(vec4 h) {
