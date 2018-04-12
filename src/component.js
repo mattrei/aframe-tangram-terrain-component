@@ -3,6 +3,8 @@
 const BufferGeometryUtils = require('./lib/BufferGeometryUtils')
 const Utils = require('./utils');
 
+const MeshCustomMaterial = require('./lib/MeshCustomMaterial')
+
 const TERRAIN_LOADED_EVENT = 'tangram-terrain-loaded';
 
 const OVERLAYMAP_LOADED = 'overlaymap-loaded';
@@ -58,6 +60,9 @@ AFRAME.registerComponent('tangram-terrain', {
         },
         useHeightmap: {
             default: true
+        },
+        vertexNormals: {
+            default: false
         }
     },
 
@@ -79,12 +84,15 @@ AFRAME.registerComponent('tangram-terrain', {
         this.overlaymap = this.system.getOrCreateMap(data, geomData, this.handleOverlayCanvas);
         this.overlaymapDisposed = false;
 
-        this.displacementMap = null;
+        this.map = null;
+        this.normalmap = null;
 
         this.lods = []
-        
+
 
         this.createGeometryLODs();
+
+        this.allLoaded = false;
     },
     update: function (oldData) {
         const data = this.data;
@@ -110,16 +118,20 @@ AFRAME.registerComponent('tangram-terrain', {
             const ne = this.overlaymap.unproject(pixelBounds.getTopRight(), data.zoom);
             this.bounds = new L.LatLngBounds(sw, ne);
         }
-        if (setView /*|| data.lod !== oldData.lod*/) {
+        if (setView /*|| data.lod !== oldData.lod*/ ) {
 
             this.overlaymap.fitBounds(this.bounds);
-            this.overlaymap.invalidateSize({animate: false});
+            this.overlaymap.invalidateSize({
+                animate: false
+            });
             this.overlaymap.fitBounds(this.bounds);
-            
+
             if (this.heightmap) {
-                
+
                 this.heightmap.fitBounds(this.overlaymap.getBounds());
-                this.heightmap.invalidateSize({animate: false});
+                this.heightmap.invalidateSize({
+                    animate: false
+                });
                 this.heightmap.fitBounds(this.overlaymap.getBounds());
 
                 console.log("bounds ", this.bounds)
@@ -134,7 +146,7 @@ AFRAME.registerComponent('tangram-terrain', {
     },
     handleOverlayCanvas: function (event) {
 
-        
+
         const data = this.data;
         const el = this.el;
         const renderer = this.el.sceneEl.renderer;
@@ -143,16 +155,16 @@ AFRAME.registerComponent('tangram-terrain', {
 
 
         let canvas = event.canvas;
-        
+
 
         if (data.useBuffer) {
-            canvas = this.system.copyCanvas(canvas);            
+            canvas = this.system.copyCanvas(canvas);
         }
 
         const factor = canvas.width / (geomData.width * data.pxToWorldRatio);
-        
 
-        this.el.setAttribute('material', 'src', canvas);
+
+        //this.el.setAttribute('material', 'src', canvas);
         /*
         let material = null;
         
@@ -187,21 +199,21 @@ AFRAME.registerComponent('tangram-terrain', {
             }
         }
         */
-        
+        this.map = canvas;
+
         this.loadOrApplyLOD(data.lod);
 
         this._fire();
 
-        if (!data.singleton) {  // TODO needed?
+        if (!data.singleton) { // TODO needed?
             this.el.sceneEl.removeEventListener(OVERLAYMAP_LOADED, this.handleOverlayCanvas)
         }
     },
     loadOrApplyLOD: function (lod) {
 
-        
-
         const el = this.el;
         const data = this.data;
+        const matData = this.el.components.material.data;
 
         let foundLOD = null;
         for (let lodObj of this.lods) {
@@ -209,7 +221,7 @@ AFRAME.registerComponent('tangram-terrain', {
                 foundLOD = lodObj;
             }
         }
-        
+
         const mesh = el.getObject3D('mesh')
         mesh.geometry.setDrawRange(foundLOD.geometry.start, foundLOD.geometry.count)
 
@@ -230,16 +242,13 @@ AFRAME.registerComponent('tangram-terrain', {
             mesh.material = foundLOD.material
         }
         */
-
-        
-        
     },
     createGeometryLODs: function () {
 
         const el = this.el;
         const data = this.data;
         const geomData = el.components.geometry.data;
-        
+
         const mesh = el.getObject3D('mesh')
         const lodGeometries = [mesh.geometry]
 
@@ -247,23 +256,23 @@ AFRAME.registerComponent('tangram-terrain', {
             const factor = i * GEOMETRY_LOD_FACTOR;
 
             let lodGeometry = new THREE.PlaneGeometry(
-                geomData.width, geomData.height, 
+                geomData.width, geomData.height,
                 Math.floor(geomData.segmentsWidth / factor), Math.floor(geomData.segmentsHeight / factor)
             )
 
             lodGeometry = new THREE.BufferGeometry().fromGeometry(lodGeometry);
-/*
-            const lodGeometry = new THREE.PlaneBufferGeometry(
-                geomData.width, geomData.height, 
-                Math.floor(geomData.segmentsWidth / factor), Math.floor(geomData.segmentsHeight / factor)
-            )
-            */
+            /*
+                        const lodGeometry = new THREE.PlaneBufferGeometry(
+                            geomData.width, geomData.height, 
+                            Math.floor(geomData.segmentsWidth / factor), Math.floor(geomData.segmentsHeight / factor)
+                        )
+                        */
             //console.log(lodGeometry)
             //console.log(lodGeometry.index.count)
             lodGeometries.push(lodGeometry)
         }
         let start = 0;
-        for (let i=0; i < lodGeometries.length; i++) {
+        for (let i = 0; i < lodGeometries.length; i++) {
             const count = lodGeometries[i].attributes.position.count;
 
             this.lods.push({
@@ -287,32 +296,72 @@ AFRAME.registerComponent('tangram-terrain', {
 
         let canvas = event.canvas;
         const depthBuffer = event.depthBuffer;
-        
+
         canvas = data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
-        console.log("Pixel",  canvas.getContext('2d').getImageData(0, 0, 1, 1).data);
-/*
-        const texture = new THREE.CanvasTexture(canvas);
-        renderer.setTexture2D(texture, 0);
-        this.displacementMap = texture;
+        /*
+                const texture = new THREE.CanvasTexture(canvas);
+                renderer.setTexture2D(texture, 0);
+                this.displacementMap = texture;
 
-        for (let lod of this.lods) {
-            if (lod.material) {
-                lod.material.displacementMap = texture;
-                lod.material.needsUpdate = true;
-            }
-        }
-        */
+                for (let lod of this.lods) {
+                    if (lod.material) {
+                        lod.material.displacementMap = texture;
+                        lod.material.needsUpdate = true;
+                    }
+                }
+                */
 
-        
-        this.el.setAttribute('material', 'displacementMap', canvas);
-        this.el.setAttribute('material', 'normalMap', canvas);
+
+        //this.el.setAttribute('material', 'displacementMap', canvas);
+        //this.el.setAttribute('material', 'normalMap', canvas);
         //this.el.setAttribute('material', 'src', canvas);
+
+        this.normalmap = canvas;
 
         if (data.depthBuffer) {
             this.system.renderDepthBuffer(depthBuffer);
             this.depthBuffer = depthBuffer;
         }
         this._fire();
+    },
+    applyMaterial: function () {
+
+
+        if (this.data.vertexNormals) {
+
+            const mesh = this.el.getObject3D('mesh')
+            const matData = this.el.components.material.data;
+
+            const normalmap = new THREE.CanvasTexture(this.normalmap);
+            const map = new THREE.CanvasTexture(this.map);
+    
+            const material = new MeshCustomMaterial();
+            //material.copy(mesh.material);
+            console.log("Setting material", material)
+            console.log("Setting material", this.map)
+            material.displacementScale = matData.displacementScale;
+            material.displacementBias = matData.displacementBias;
+            
+            /*
+            material.displacementMap = normalmap;
+            material.uniforms.displacementMap.value = normalmap;
+            material.normalMap = normalmap;
+            material.uniforms.normalMap.value = normalmap;
+            */
+            material.displacementMap = normalmap;
+            material.normalMap = normalmap;
+            material.map = map;
+
+            material.needsUpdate = true;
+    
+            mesh.material = material;
+        } else {
+            // use standard material
+            this.el.setAttribute('material', 'displacementMap', this.normalmap);
+            this.el.setAttribute('material', 'src', this.map);
+        }
+
+        
     },
     remove: function () {
         this.system.dispose(this.heightmap);
@@ -325,6 +374,8 @@ AFRAME.registerComponent('tangram-terrain', {
         this._count += 1;
         this._count %= this.data.useHeightmap ? 2 : 1;
         if (this._count === 0) {
+            this.allLoaded = true
+            this.applyMaterial();
             this.el.emit(TERRAIN_LOADED_EVENT);
         }
     },

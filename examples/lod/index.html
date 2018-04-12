@@ -1,0 +1,70 @@
+<html>
+  <head>
+    <title>A-Frame Tangram Terrain Component - LOD</title>
+    <meta name="description" content="Airborne example for Tangram component."></meta>
+
+    <script src="../build.js"></script>
+  <script src="./lod-controls.js"></script>
+
+  </head>
+  <body>
+    <a-scene statss>
+      <a-assets>
+        <a-asset-item id="yaml-austria" src="assets/austria-airborne.yaml" />
+        <a-asset-item id="yaml-esri" src="assets/esri-airborne.yaml" />
+      </a-assets>
+ 
+      <a-sky color="#6EBAA7"></a-sky>
+      
+      <a-entity id="terrain" visible="true"
+      
+      geometry="primitive: plane; buffer: true; 
+      width: 20; height: 20; 
+      segmentsWidth: 50; segmentsHeight: 50;"
+      material="wireframe: false; displacementScale: 20;"
+
+
+      tangram-terrain="
+        style: #yaml-austria;
+        center: 12.6875, 47.188056;
+        zoom: 14;
+        pxToWorldRatio: 80;
+        lodCount: 4;
+        lod: 1;
+      " 
+
+      lod-controls
+
+      rotation="-90 0 0"
+      position="0 -15 -10"
+      >
+
+      <!--
+        ESRI
+        style: #yaml-esri;
+        center: 86.92, 27.98;
+        zoom: 13;
+        pxToWorldRatio: 60;
+
+        AUSTRIA
+        style: #yaml-austria;
+        center: 12.722753, 47.170529;
+        zoom: 14;
+        pxToWorldRatio: 50;
+      -->
+
+      </a-entity>
+
+      <a-entity camera look-controls wasd-controls="fly: true;"></a-entity>
+
+    </a-scene>
+      
+  </body>
+
+  <script>
+    var mapEl = document.querySelector('#terrain');
+    mapEl.addEventListener('tangram-terrain-loaded', function () {
+      
+    });
+  </script>
+</html>

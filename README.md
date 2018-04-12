@@ -134,5 +134,7 @@ See also [here](https://github.com/tangrams/tangram-play/wiki/Advanced-Tangram-f
 
 ### Known issues
 * The maximum texture size (configured by the _pxToWorldRatio_ and _size_ parameters of the overlay map is restricted on mobile devies.  
-* The Tangram library only allows [one instance on a page] (https://github.com/tangrams/tangram/issues/350) that means a tiling algorithm cannot instance terrain entities in parallel! Hopefully this restriction may fall in the future.
-* 
+* The _Tangram_ library only allows [one instance on a page] (https://github.com/tangrams/tangram/issues/350) that means a tiling algorithm cannot instance terrain entities in parallel! Hopefully this restriction of the _Tangram_ library may fall in the future.
+
+### Implementation details
+To save bandwith and increase speed the elevation data is backed into the [normal map of the tiling webservice](https://s3.amazonaws.com/elevation-tiles-prod/normal/{z}/{x}/{y}.png), which is all done in a shader by the _Tangram_ library. _Three.JS_ does not support normals with displacement alpha channels so I created a custom _MeshStandardImplementation_ that respects this format. 

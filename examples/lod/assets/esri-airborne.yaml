@@ -1,0 +1,12 @@
+sources:
+    esri:
+        type: Raster
+        url: https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.jpg
+
+layers:
+    esri_global:
+        data: { source: esri, layer: _default }
+        draw:
+             raster:
+                order: 0
+                

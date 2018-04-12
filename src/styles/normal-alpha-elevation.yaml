@@ -6,25 +6,19 @@ sources:
 
 textures:
     decoder:
-        #url: ./img/decoder.png
+        #url: ./img/decoder.png # use base64 of decoder.img
         url: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAP8AAAAKCAYAAAB7V4hgAAAA6UlEQVRoQ+2aQQqDMBBFX7Cbdu26h/BMHqWH9RYtaimxKMWaSCBvESJB4wTmzfxJEoDn0MBw+d0eDXTAHbgBVyAAbYB27Pe0vd/sff8su876T4XrH32tC7PPLdqRsRxzHrEn+rYH+gBTHz+nHnvPPbIr/HHQKhWyUu3KGPyE/ysIpAoIwr+hVEqFrFS7hD+ZOjHzb5UOFTr/ooyqcP1mfjP/vJdQofMLvzV/FjWg7Ff2r27QFhRkzfxmfjN/pcpH+IVf+IXfo76Ux3/KfmW/sj+6P5DorP5zH+GP+bLU92t3BIRf+IW/bvhfCfDIgiJO/7sAAAAASUVORK5CYII=
 
-
-
-styles:
-    hillshade:
-        base: raster
-        lighting: false
-        shaders:
-            blocks:
-                color: color.a = 1.0;
+styles:    
     combo:
         base: raster
+        lighting: false 
         shaders:
             uniforms:
                 u_scale: 2
                 u_decoder: decoder
-                #u_palette: hypsometric
+            defines:
+                USE_NORMALS: true
             blocks:
                 global: |
                     float unpack(vec4 h) {
@@ -42,18 +36,22 @@ styles:
                     ring.r *= 256.;
                     ring.g *= 256. * 256.;
                     height = (ring.r + ring.g);
-                    // range is now 0 - 19900, squish into 0 - 1:
+                    // range is now 0 - 19900, squish into 0 - 1
                     height /= 19900.;
-                    // height from normal alpha
-                    //color.rgb = vec3(height);
-                    //// exaggerate
-                    //color.rgb = color.rgb * u_scale - (u_scale - 1.);
 
-                    // hypsometric gradient from texture
-                    // color.rgb = texture2D(u_palette, vec2(color.r,0.5)).rgb;
+                    
+                    #ifdef USE_NORMALS
+                        // height from normal alpha
+                        color.a = height * u_scale - (u_scale - 1.);
+                    #else
+                        color.rgb = vec3(height);
+                        // exaggerate
+                        color.rgb = color.rgb * u_scale - (u_scale - 1.);
+                    #endif
+      
 layers:
     terrain:
-        data: { source: normals }
+        data: { source: normals, layer: _default }
         draw:
             combo:
                 order: 0

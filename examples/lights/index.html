@@ -1,11 +1,11 @@
 <html>
   <head>
-    <title>A-Frame Tangram Terrain Component - Airborne</title>
+    <title>A-Frame Tangram Terrain Component - Lightning</title>
     <meta name="description" content="Airborne example for Tangram component."></meta>
 
     <script src="../build.js"></script>
-  <script src="./lod-controls.js"></script>
-
+    <script src="https://unpkg.com/aframe-sun-sky@3.0.3/dist/aframe-sun-sky.min.js"></script>
+    <script src="./sun-position-setter.js"></script>
   </head>
   <body>
     <a-scene statss>
@@ -13,24 +13,25 @@
         <a-asset-item id="yaml-austria" src="assets/austria-airborne.yaml" />
         <a-asset-item id="yaml-esri" src="assets/esri-airborne.yaml" />
       </a-assets>
+
+
+      <a-sun-sky material="side: back" sun-position-setter>
+        <a-entity id="orbit">
+          <a-entity light="type: directional; color: #fff; intensity: 1." 
+            position="0 0 -1"></a-entity>
+          <a-animation attribute="rotation" 
+            from="0 0 0" to="0 360 0" 
+            dur="15000"
+            repeat="indefinite" easing="linear"></a-animation>
+        </a-entity>
+      </a-sun-sky>
  
-      <a-sky color="#6EBAA7"></a-sky>
-
-      <!--
-          <a-entity position="0.0 -13 -8">
-        <a-entity light="type: point; color: #fff; intensity: 3.5; distance: 10.0;"></a-entity>
-      </a-entity>
-      -->
-
-      <a-light type="directional" position="0 0 0" rotation="-90 0 0" target="#directionaltarget">
-  <a-entity id="directionaltarget" position="0 -1 -1"></a-entity>
-</a-light>
 
       <a-entity id="terrain" visible="true"
       
       geometry="primitive: plane; buffer: true; 
       width: 20; height: 20; 
-      segmentsWidth: 50; segmentsHeight: 50;"
+      segmentsWidth: 100; segmentsHeight: 100;"
       material="wireframe: false; displacementScale: 20;"
 
 
@@ -41,9 +42,8 @@
         pxToWorldRatio: 80;
         lodCount: 4;
         lod: 1;
+        vertexNormals: true;
       " 
-
-      lod-controls
 
       rotation="-90 0 0"
       position="0 -15 -10"
@@ -70,11 +70,4 @@
     </a-scene>
       
   </body>
-
-  <script>
-    var mapEl = document.querySelector('#terrain');
-    mapEl.addEventListener('tangram-terrain-loaded', function () {
-      
-    });
-  </script>
 </html>

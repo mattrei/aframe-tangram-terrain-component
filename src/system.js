@@ -22,7 +22,7 @@ const REMOVETANGRAM_TIMEOUT = 300;
 const DEBUG_HM_CANVAS_OFFSET = 99;
 const DEBUG_CANVAS_OFFSET = 99999;
 
-const HM_RESOLUTION_FACTOR = 1;
+const HM_RESOLUTION_FACTOR = 2;
 
 AFRAME.registerSystem('tangram-terrain', {
   init: function () {
@@ -82,17 +82,18 @@ AFRAME.registerSystem('tangram-terrain', {
       attribution: ''
     });
 
+
     this.heightmapLayer = layer;
 
     layer.scene.subscribe({
       load: function () {
+
+        layer.scene.config.styles.combo.shaders.defines.USE_NORMALS = data.vertexNormals;
         Utils.processCanvasElement(canvasContainer);
       },
       view_complete: viewComplete
     });
     layer.addTo(map);
-
-    console.log("SCENE", layer.scene)
 
     return map;
 
