@@ -66,7 +66,6 @@ AFRAME.registerComponent('tiles', {
 
     this.numTangrams = 0;
 
-
     var self = this;
     const data = this.data;
     this.geomData = {
@@ -81,18 +80,15 @@ AFRAME.registerComponent('tiles', {
     this.system = this.el.sceneEl.systems['tangram-terrain'];
 
     this.camera = this.el.sceneEl.camera;
-    this.depthBuffers = []
+    this.depthBuffers = [];
 
     this.pivotEl = null;
-    this.entities = []
+    this.entities = [];
 
     // preload
     // document.querySelector('a-scene').renderer.setTexture2D(ourTexture, 0);
 
-
-
-
-    this.tiles = [] //'0,0'];
+    this.tiles = []; // '0,0'];
     this.queue = [];
     this._isBusy = false;
 
@@ -100,7 +96,6 @@ AFRAME.registerComponent('tiles', {
 
     this.tilesLoaded = 0;
     this.tilesTotal = 0;
-
 
     const initialScale = data.worldWidth / Math.pow(2, data.levels);
     this.lastX = 0;
@@ -112,15 +107,12 @@ AFRAME.registerComponent('tiles', {
     //    | O | O |
     //    +---+---+
 
-
-
     /*
     this.createTile(0, 0, initialScale);
     this.createTile(0, initialScale, initialScale);
     this.createTile(initialScale, initialScale, initialScale);
     this.createTile(initialScale, 0, initialScale);
 */
-
 
     this.createTile(-initialScale, -initialScale, initialScale, Edge.NONE);
     this.createTile(-initialScale, 0, initialScale, Edge.NONE);
@@ -160,67 +152,63 @@ AFRAME.registerComponent('tiles', {
           this.createTile( scale, 0, scale, Edge.RIGHT );
           this.createTile( scale, scale, scale, Edge.TOP | Edge.RIGHT );
         }
-        
+
         */
 
     const geomData = {
       segmentsWidth: (data.tileSegments) * Math.sqrt(this.tilesTotal),
       segmentsHeight: (data.tileSegments) * Math.sqrt(this.tilesTotal)
 
-    }
+    };
     const hmData = {
       singleton: true
-    }
+    };
 
-    this.handleHeightmapCanvas = this.handleHeightmapCanvas.bind(this)
+    this.handleHeightmapCanvas = this.handleHeightmapCanvas.bind(this);
     this.heightmap = this.system.getOrCreateHeightmap(hmData, geomData, this.handleHeightmapCanvas);
 
     this.tick = AFRAME.utils.throttleTick(this.tick, 1000, this);
   },
   handleHeightmapCanvas: function (event) {
-
     const data = this.data;
     const renderer = this.el.sceneEl.renderer;
 
-    const canvas = this.system.copyCanvas(event.canvas)
+    const canvas = this.system.copyCanvas(event.canvas);
     const depthBuffer = event.depthBuffer;
 
-
     const worldWidth = data.worldWidth / Math.pow(2, data.levels);
-    console.log(worldWidth)
-    const f = Math.sqrt(this.tilesTotal) // 2
+    console.log(worldWidth);
+    const f = Math.sqrt(this.tilesTotal); // 2
 
     for (let entity of this.entities) {
       if (!entity.hm) {
         const el = entity.el;
-        const pos = el.object3D.position
+        const pos = el.object3D.position;
         // canvas coordinate start from upper-left
 
-        let x = pos.x + data.tileSize * data.worldWidth
-        let y = pos.y + data.tileSize * data.worldWidth
-        console.log(x + ' ' + y)
+        let x = pos.x + data.tileSize * data.worldWidth;
+        let y = pos.y + data.tileSize * data.worldWidth;
+        console.log(x + ' ' + y);
 
-        x = x / data.tileSize
-        y = f - (y / data.tileSize) - 1
+        x = x / data.tileSize;
+        y = f - (y / data.tileSize) - 1;
 
-        x = (canvas.width - 1) / f * x
-        y = (canvas.height - 1) / f * y
-        //const x = canvas.width / f - Math.abs(pos.x);
-        //const y = canvas.height / f - Math.abs(pos.y);
+        x = (canvas.width - 1) / f * x;
+        y = (canvas.height - 1) / f * y;
+        // const x = canvas.width / f - Math.abs(pos.x);
+        // const y = canvas.height / f - Math.abs(pos.y);
         const w = data.tileSegments + 1;
         const h = data.tileSegments + 1;
 
-        console.log(pos)
-        console.log('copy ' + x + ' ' + y + ' ' + w + ' ' + h)
+        console.log(pos);
+        console.log('copy ' + x + ' ' + y + ' ' + w + ' ' + h);
 
-        const tileCanvas = this.system.copyCanvasTile(canvas, x, y, w, h)
-        //console.log("Pixel",  tileCanvas.getContext('2d').getImageData(0, 0, 1, 1).data);
-        el.setAttribute('material', 'displacementMap', tileCanvas)
+        const tileCanvas = this.system.copyCanvasTile(canvas, x, y, w, h);
+        // console.log("Pixel",  tileCanvas.getContext('2d').getImageData(0, 0, 1, 1).data);
+        el.setAttribute('material', 'displacementMap', tileCanvas);
         entity.hm = true;
       }
-
     }
-
 
     /*
     if (data.depthBuffer) {
@@ -228,7 +216,6 @@ AFRAME.registerComponent('tiles', {
         this.depthBuffer = depthBuffer;
     }
     */
-
   },
   _addToQueue: function (tile, center, position) {
     this.queue.push({
@@ -253,57 +240,45 @@ AFRAME.registerComponent('tiles', {
         latLng = {
           lon: data.center[0],
           lat: data.center[1]
-        }
+        };
 
         this.pivotEl = this._addTile(first.tile, latLng, first.position);
-
-
       } else {
-
         latLng = this.pivotEl.components['tangram-terrain'].unproject(first.center.pX, first.center.pY);
         this.pivotEl = this._addTile(first.tile, latLng, first.position);
-
       }
 
       center = first.center;
       this.pivotEl.addEventListener('tangram-terrain-loaded', (evt) => {
-
-
         this.tilesLoaded++;
 
         const map = evt.target.components['tangram-terrain'].getMap();
-        const bounds = map.getBounds()
-
+        const bounds = map.getBounds();
 
         if (!this.heightmapBounds) {
-          this.heightmapBounds = new L.LatLngBounds(bounds.getSouthWest(), bounds.getNorthEast())
+          this.heightmapBounds = new L.LatLngBounds(bounds.getSouthWest(), bounds.getNorthEast());
         } else {
-          this.heightmapBounds.extend(bounds)
+          this.heightmapBounds.extend(bounds);
         }
-
 
         this.entities.push({
           el: this.pivotEl,
           center: center,
           hm: false
-        })
-
+        });
 
         if (this.tilesLoaded === this.tilesTotal) {
-          
           if (this.heightmap) {
-              console.log("FIT hm bounds", this.heightmapBounds)
-              this.heightmap.fitBounds(this.heightmapBounds)
-              this.heightmap.invalidateSize();
-              this.heightmap.fitBounds(this.heightmapBounds)
+            console.log('FIT hm bounds', this.heightmapBounds);
+            this.heightmap.fitBounds(this.heightmapBounds);
+            this.heightmap.invalidateSize();
+            this.heightmap.fitBounds(this.heightmapBounds);
           }
         }
 
         this.numTangrams--;
-        console.log("LOADED")
-        
+        console.log('LOADED');
       });
-
 
       this.queue.shift();
     }
@@ -337,9 +312,9 @@ AFRAME.registerComponent('tiles', {
       center: [latLng.lon, latLng.lat],
       zoom: data.zoom,
       useHeightmap: !this.heightmap
-    }
+    };
 
-    terrain.setAttribute('tangram-terrain', terrainData)
+    terrain.setAttribute('tangram-terrain', terrainData);
 
     this.el.appendChild(terrain);
     return terrain;
@@ -360,8 +335,8 @@ AFRAME.registerComponent('tiles', {
 
       // this.mainTile.components['tangram-terrain'].unproject(pX, pY);
 
-      console.log("Tile", x + ' ' + y);
-      console.log("Tile p", pX + ' ' + pY);
+      console.log('Tile', x + ' ' + y);
+      console.log('Tile p', pX + ' ' + pY);
 
       this.tilesTotal++;
 
@@ -372,12 +347,10 @@ AFRAME.registerComponent('tiles', {
         },
         new THREE.Vector3(x * data.tileSize / scale, y * data.tileSize / scale, 0)
       );
-
-
     }
   },
   tick: function (time, delta) {
-    //if (this._isBusy) return;
+    // if (this._isBusy) return;
 
     this._processQueue();
     if (this.data.useLOD) {
@@ -385,17 +358,14 @@ AFRAME.registerComponent('tiles', {
     }
   },
   checkLOD: function () {
-
     const cameraPos = this.el.sceneEl.camera.getWorldPosition();
 
     for (let entity of this.entities) {
-
       const el = entity.el;
 
       const terrainPos = el.object3D.getWorldPosition();
 
-      const dist = cameraPos.distanceTo /*Squared*/ (terrainPos);
-
+      const dist = cameraPos.distanceTo(terrainPos);
 
       let lod = 1;
       if (dist > 35) {
@@ -408,14 +378,10 @@ AFRAME.registerComponent('tiles', {
         lod = 1;
       }
 
-      el.setAttribute('tangram-terrain', 'lod', lod)
+      el.setAttribute('tangram-terrain', 'lod', lod);
 
-      //console.log(dist)
-
+      // console.log(dist)
     }
-
-
-
   },
   getCameraPosition: function () {
     var worldPos = new THREE.Vector3();
@@ -435,7 +401,7 @@ AFRAME.registerComponent('tiles', {
     const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
     const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
 
-    const depthBuffer = null //TODO get depthbuffer from array
+    const depthBuffer = null; // TODO get depthbuffer from array
 
     const data = this.data;
 

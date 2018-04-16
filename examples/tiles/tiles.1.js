@@ -66,7 +66,7 @@ AFRAME.registerComponent('tiles', {
     this.heightmap = this.system.createHeightmap(data, this.geomData);
     this.overlaymap = this.system.createMap(data, this.geomData);
 
-    this.depthBuffers = []  
+    this.depthBuffers = [];
 
     this.currentEl = null;
 
@@ -76,10 +76,9 @@ AFRAME.registerComponent('tiles', {
 
       self.currentEl.setAttribute('material', 'displacementMap', canvas);
 
-      
       self.system.renderDepthBuffer(depthBuffer);
 
-      // TODO save depthbuffer to each tile 
+      // TODO save depthbuffer to each tile
       // self.depthBuffer = depthBuffer;
 
       this._next();
@@ -230,7 +229,7 @@ AFRAME.registerComponent('tiles', {
     const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
     const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
 
-    const depthBuffer = null //TODO get depthbuffer from array
+    const depthBuffer = null; // TODO get depthbuffer from array
 
     const data = this.data;
 

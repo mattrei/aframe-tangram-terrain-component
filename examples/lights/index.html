@@ -17,8 +17,12 @@
 
       <a-sun-sky material="side: back" sun-position-setter>
         <a-entity id="orbit">
-          <a-entity light="type: directional; color: #fff; intensity: 1." 
-            position="0 0 -1"></a-entity>
+        <a-entity rotation="0 -70 0">
+          <a-entity 
+            light="type: directional; color: #fff; intensity: 1." 
+            position="0 0 -1"
+            ></a-entity>
+            </a-entity>
           <a-animation attribute="rotation" 
             from="0 0 0" to="0 360 0" 
             dur="15000"

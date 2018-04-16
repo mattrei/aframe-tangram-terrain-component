@@ -1,3 +1,3 @@
-require('./src/system')
-require('./src/component')
-require('./src/primitive')
+require('./src/system');
+require('./src/component');
+require('./src/primitive');

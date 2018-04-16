@@ -23,20 +23,19 @@ AFRAME.registerComponent('lod-controls', {
   tick: function (time, delta) {
     if (!this.loaded) return;
 
-    const cameraPos = this.el.sceneEl.camera.getWorldPosition()
+    const cameraPos = this.el.sceneEl.camera.getWorldPosition();
     const terrainPos = this.el.object3D.getWorldPosition();
 
     const dist = cameraPos.distanceTo(terrainPos);
-    
-    if (dist > 25) {
-      this.el.setAttribute('tangram-terrain', 'lod', 4)
-    } else if (dist > 22) {
-      this.el.setAttribute('tangram-terrain', 'lod', 3)
-    } else if (dist > 18) {
-      this.el.setAttribute('tangram-terrain', 'lod', 2)
-    } else {
-      this.el.setAttribute('tangram-terrain', 'lod', 1)
-    }
 
+    if (dist > 25) {
+      this.el.setAttribute('tangram-terrain', 'lod', 4);
+    } else if (dist > 22) {
+      this.el.setAttribute('tangram-terrain', 'lod', 3);
+    } else if (dist > 18) {
+      this.el.setAttribute('tangram-terrain', 'lod', 2);
+    } else {
+      this.el.setAttribute('tangram-terrain', 'lod', 1);
+    }
   }
 });

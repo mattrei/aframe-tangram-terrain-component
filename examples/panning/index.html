@@ -15,27 +15,42 @@
         </a-assets>
    
         <a-sky color="#6EBAA7"></a-sky>
+
+        <a-entity 
+            light="type: directional; color: #fff; 
+            intensity: 1." 
+            position="0 1 -1"
+            ></a-entity>
    
         <a-entity id="terrain" visible="true"
         
-        geometry="primitive: plane; width: 60; height: 60; segmentsWidth: 80; segmentsHeight: 80;"
-        material="wireframe: false; displacementScale: 25;"
+        geometry="primitive: plane; width: 60; height: 60; 
+        segmentsWidth: 80; segmentsHeight: 80;"
+        material="wireframe: false; displacementBias: 0; 
+        displacementScale: 50;"
+  
   
   
         tangram-terrain="
         style: #yaml-esri;
-        center: 86.92, 27.98;
+        
+        center: 15.8056, 47.7671;
         zoom: 15;
-        pxToWorldRatio: 20;
+        pxToWorldRatio: 40;
         dispose: false;
         useBuffer: false;
+        singleton: true;
+        vertexNormals: true;
+        
         " 
         map-controls
+        
         rotation="-90 0 0"
         position="0 -28 0"
         >
         </a-entity>
         
+        <!--center: 86.92, 27.98;-->
   
         <a-entity camera look-controls wasd-controls="fly: true;"></a-entity>
   

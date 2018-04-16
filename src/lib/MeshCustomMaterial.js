@@ -10,13 +10,13 @@ vertexShader = vertexShader.replace('#include <displacementmap_vertex>', `
 
   transformed += normalize( objectNormal ) * ( texture2D( displacementMap, uv ).a * displacementScale + displacementBias );
 
-#endif`)
+#endif`);
 
-//console.log(vertexShader)
+// console.log(vertexShader)
 
 module.exports = MeshCustomMaterial;
 function MeshCustomMaterial (parameters) {
-  THREE.MeshStandardMaterial.call( this );
+  THREE.MeshStandardMaterial.call(this);
   this.uniforms = THREE.UniformsUtils.merge([
     THREE.ShaderLib.standard.uniforms,
     {
@@ -27,12 +27,12 @@ function MeshCustomMaterial (parameters) {
   this.setValues(parameters);
 }
 
-MeshCustomMaterial.prototype = Object.create( THREE.MeshStandardMaterial.prototype );
+MeshCustomMaterial.prototype = Object.create(THREE.MeshStandardMaterial.prototype);
 MeshCustomMaterial.prototype.constructor = MeshCustomMaterial;
 MeshCustomMaterial.prototype.isMeshStandardMaterial = true;
 
-MeshCustomMaterial.prototype.copy = function ( source ) {
-  THREE.MeshStandardMaterial.prototype.copy.call( this, source );
+MeshCustomMaterial.prototype.copy = function (source) {
+  THREE.MeshStandardMaterial.prototype.copy.call(this, source);
   this.uniforms = THREE.UniformsUtils.clone(source.uniforms);
   setFlags(this);
   return this;

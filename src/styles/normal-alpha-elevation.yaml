@@ -17,6 +17,10 @@ styles:
             uniforms:
                 u_scale: 2
                 u_decoder: decoder
+                # set desired visible elevation range
+                u_max: 8900. # everest = 8848
+                u_min: 0. # sea level
+                # u_min: -11000. # challenger deep = -10916
             defines:
                 USE_NORMALS: true
             blocks:
@@ -38,12 +42,14 @@ styles:
                     height = (ring.r + ring.g);
                     // range is now 0 - 19900, squish into 0 - 1
                     height /= 19900.;
+                    //height = (height - u_min)/(u_max - u_min);
 
                     
                     #ifdef USE_NORMALS
                         // height from normal alpha
                         color.a = height * u_scale - (u_scale - 1.);
                     #else
+                        color.a = height * u_scale - (u_scale - 1.);
                         color.rgb = vec3(height);
                         // exaggerate
                         color.rgb = color.rgb * u_scale - (u_scale - 1.);
