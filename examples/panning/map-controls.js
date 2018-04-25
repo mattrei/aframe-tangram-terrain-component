@@ -18,10 +18,6 @@ AFRAME.registerComponent('map-controls', {
     this.el.addEventListener('tangram-terrain-loaded', e => {
       this.heightmapInstance = this.el.components['tangram-terrain'].getHeightmap();
       this.mapInstance = this.el.components['tangram-terrain'].getMap();
-
-      this.mapInstance.addEventListener('move', e => {
-        // console.log("Moved")
-      });
     });
   },
   getForward: function () {
@@ -36,19 +32,9 @@ AFRAME.registerComponent('map-controls', {
     if (!this.mapInstance || !this.heightmapInstance) return;
     const forward = this.getForward();
     forward.multiplyScalar(0.1 * this.data.speed * delta);
-
-    var azimuth = Math.atan2(forward.x, forward.z);
-    var azimuth2 = Math.atan2(-forward.z, forward.x);
-    // console.log(forward.x + ' ' + forward.y + ' ' + forward.z)
-    // console.log(azimuth + ' ' + azimuth2)
-
-    // const offset = {x: forward.x, y: -forward.y};
+;
     const offset = {x: forward.x, y: forward.z};
-
-    //this.heightmapInstance.panBy(offset, {animate: false});
-    // this.tangramTerrain.updateHitMesh();
     this.mapInstance.panBy(offset, {animate: false});
     this.heightmapInstance.fitBounds(this.mapInstance.getBounds(), {animate: false})
-    // console.log(this.heightmapInstance.getCenter())
   }
 });

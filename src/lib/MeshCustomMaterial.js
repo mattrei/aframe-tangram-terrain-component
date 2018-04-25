@@ -33,7 +33,7 @@ MeshCustomMaterial.prototype.isMeshStandardMaterial = true;
 
 MeshCustomMaterial.prototype.copy = function (source) {
   THREE.MeshStandardMaterial.prototype.copy.call(this, source);
-  this.uniforms = THREE.UniformsUtils.clone(source.uniforms);
+  //this.uniforms = THREE.UniformsUtils.clone(source.uniforms);
   setFlags(this);
   return this;
 };

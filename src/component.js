@@ -46,7 +46,7 @@ AFRAME.registerComponent('tangram-terrain', {
       type: 'boolean',
       default: true
     },
-        // TODO - delete?
+    // TODO - delete?
     dispose: {
       type: 'boolean',
       default: false
@@ -61,9 +61,6 @@ AFRAME.registerComponent('tangram-terrain', {
     singleton: {
       default: false
     },
-    useHeightmap: {
-      default: true
-    },
     vertexNormals: {
       default: false
     }
@@ -74,25 +71,14 @@ AFRAME.registerComponent('tangram-terrain', {
   init: function () {
     const data = this.data;
     const geomData = this.el.components.geometry.data;
-    const matData = this.el.components.material.data;
-
-    const mesh = this.el.getObject3D('mesh');
-    const material = new MeshCustomMaterial();
-    material.wireframe = matData.wireframe;
-    material.displacementScale = matData.displacementScale;
-    material.displacementBias = matData.displacementBias;
-    material.side = matData.side;
-    mesh.material = material;
 
     this.depthBuffer = null;
 
     this.handleHeightmapCanvas = this.handleHeightmapCanvas.bind(this);
     this.handleOverlayCanvas = this.handleOverlayCanvas.bind(this);
 
-    if (data.useHeightmap) {
-      this.heightmap = this.system.getOrCreateHeightmap(data, geomData, this.handleHeightmapCanvas);
-      this.heightmapDisposed = false;
-    }
+    this.heightmap = this.system.getOrCreateHeightmap(data, geomData, this.handleHeightmapCanvas);
+    this.heightmapDisposed = false;
     this.overlaymap = this.system.getOrCreateMap(data, geomData, this.handleOverlayCanvas);
     this.overlaymapDisposed = false;
 
@@ -102,13 +88,12 @@ AFRAME.registerComponent('tangram-terrain', {
     this.lods = [];
 
     this.createGeometryLODs();
-
-    this.allLoaded = false;
+    this.onKeyDown = this.onKeyDown.bind(this);
   },
   update: function (oldData) {
     const data = this.data;
 
-        // Nothing changed
+    // Nothing changed
     if (AFRAME.utils.deepEqual(oldData, data)) {
       return;
     }
@@ -123,7 +108,7 @@ AFRAME.registerComponent('tangram-terrain', {
       const ne = this.overlaymap.unproject(pixelBounds.getTopRight(), data.zoom);
       this.bounds = new L.LatLngBounds(sw, ne);
     }
-    if (setView /* || data.lod !== oldData.lod*/) {
+    if (setView /* || data.lod !== oldData.lod*/ ) {
       this.setMap = true;
       this.overlaymap.fitBounds(this.bounds);
       this.overlaymap.invalidateSize({
@@ -143,11 +128,12 @@ AFRAME.registerComponent('tangram-terrain', {
 
     if (data.lod !== oldData.lod) {
       if (data.lod >= 1 && data.lod <= data.lodCount) {
-        this.loadOrApplyLOD(data.lod);
+        this.applyLOD(data.lod);
       }
     }
   },
   handleOverlayCanvas: function (event) {
+    console.log("handle overlay")
 
     if (!this.setMap) {
       return;
@@ -167,11 +153,11 @@ AFRAME.registerComponent('tangram-terrain', {
     }
     this.map = canvas;
 
-    this.loadOrApplyLOD(data.lod);
+    this.applyLOD(data.lod);
 
     this._fire();
   },
-  loadOrApplyLOD: function (lod) {
+  applyLOD: function (lod) {
     const el = this.el;
     const data = this.data;
     const matData = this.el.components.material.data;
@@ -185,74 +171,18 @@ AFRAME.registerComponent('tangram-terrain', {
 
     const mesh = el.getObject3D('mesh');
     mesh.geometry.setDrawRange(foundLOD.geometry.start, foundLOD.geometry.count);
-
-        /*
-        if (!foundLOD.material) {
-
-                    const geomData = el.components.geometry.data;
-
-        const factor = 1 / lod;
-
-            const width = geomData.width * data.pxToWorldRatio * factor;
-            const height = geomData.height * data.pxToWorldRatio * factor;
-
-            this.system.resize(this.overlaymap, width, height)
-
-        } else {
-            mesh.material = foundLOD.material
-        }
-        */
   },
   createGeometryLODs: function () {
-    const el = this.el;
-    const data = this.data;
-    const geomData = el.components.geometry.data;
+    const lods = Utils.createGeometryLODs(this.el, this.data);
 
-    const mesh = el.getObject3D('mesh');
-    const lodGeometries = [mesh.geometry];
-
-    for (let i = 1; i < data.lodCount; i++) {
-      const factor = i * GEOMETRY_LOD_FACTOR;
-
-      let lodGeometry = new THREE.PlaneGeometry(
-                geomData.width, geomData.height,
-                Math.floor(geomData.segmentsWidth / factor), Math.floor(geomData.segmentsHeight / factor)
-            );
-
-      lodGeometry = new THREE.BufferGeometry().fromGeometry(lodGeometry);
-            /*
-                        const lodGeometry = new THREE.PlaneBufferGeometry(
-                            geomData.width, geomData.height,
-                            Math.floor(geomData.segmentsWidth / factor), Math.floor(geomData.segmentsHeight / factor)
-                        )
-                        */
-            // console.log(lodGeometry)
-            // console.log(lodGeometry.index.count)
-      lodGeometries.push(lodGeometry);
-    }
-    let start = 0;
-    for (let i = 0; i < lodGeometries.length; i++) {
-      const count = lodGeometries[i].attributes.position.count;
-
-      this.lods.push({
-        lod: i + 1,
-        geometry: {
-          start: start,
-          count: count
-        }
-      });
-
-      start += count;
-    }
-
-    const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(lodGeometries);
-    mesh.geometry = mergedGeometry;
+    const mesh = this.el.getObject3D('mesh');
+    mesh.geometry = lods.geometry;
+    this.lods = lods.lods;
   },
   handleHeightmapCanvas: function (event) {
 
     if (!this.setHeightmap) return;
     this.setHeightmap = false;
-    console.log("handle hm")
 
     const data = this.data;
     const renderer = this.el.sceneEl.renderer;
@@ -261,23 +191,6 @@ AFRAME.registerComponent('tangram-terrain', {
     const depthBuffer = event.depthBuffer;
 
     canvas = data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
-        /*
-                const texture = new THREE.CanvasTexture(canvas);
-                renderer.setTexture2D(texture, 0);
-                this.displacementMap = texture;
-
-                for (let lod of this.lods) {
-                    if (lod.material) {
-                        lod.material.displacementMap = texture;
-                        lod.material.needsUpdate = true;
-                    }
-                }
-                */
-
-        // this.el.setAttribute('material', 'displacementMap', canvas);
-        // this.el.setAttribute('material', 'normalMap', canvas);
-        // this.el.setAttribute('material', 'src', canvas);
-
     this.normalmap = canvas;
 
     if (data.depthBuffer) {
@@ -285,41 +198,6 @@ AFRAME.registerComponent('tangram-terrain', {
       this.depthBuffer = depthBuffer;
     }
     this._fire();
-  },
-  applyMaterial: function () {
-    
-    console.log("apply mat")
-    
-      const mesh = this.el.getObject3D('mesh');
-      const matData = this.el.components.material.data;
-
-
-      
-      
-      // Hack readyState and HAVE_CURRENT_DATA on canvas to work with THREE.VideoTexture
-      this.el.sceneEl.systems.material.loadTexture(this.map, {}, mapTexture => {
-        this.el.sceneEl.systems.material.loadTexture(this.normalmap, {}, normalmapTexture => {
-        
-        const material = mesh.material;
-        //material.copy(mesh.material)
-        material.wireframe = matData.wireframe;
-        material.displacementScale = matData.displacementScale;
-        material.displacementBias = matData.displacementBias;
-        material.side = matData.side;
-  
-        material.displacementMap = normalmapTexture;
-        if (this.data.vertexNormals) {
-          material.normalMap = normalmapTexture;
-        }
-        material.map = mapTexture;
-        material.needsUpdate = true;
-        
-        mesh.material = material; 
-
-        console.log("LOADED TExture", mapTexture)
-        console.log("LOADED TExture", normalmapTexture)
-        })
-      })
   },
   remove: function () {
     this.system.dispose(this.heightmap);
@@ -330,10 +208,11 @@ AFRAME.registerComponent('tangram-terrain', {
   _fire: function () {
     this._count = this._count || 0;
     this._count += 1;
-    this._count %= this.data.useHeightmap ? 2 : 1;
+    this._count %= 2;
+    console.log(this._count)
     if (this._count === 0) {
-      this.allLoaded = true;
-      this.applyMaterial();
+      console.log("apply mat")
+      Utils.applyMaterial(this.el, this.data, this.map, this.normalmap);
       this.el.emit(TERRAIN_LOADED_EVENT);
     }
   },
@@ -342,9 +221,9 @@ AFRAME.registerComponent('tangram-terrain', {
     const matData = this.el.components.material.data;
 
     return this.system.project(this.data, geomData, matData,
-            this.overlaymap,
-            this.depthBuffer,
-            lon, lat);
+      this.overlaymap,
+      this.depthBuffer,
+      lon, lat);
   },
   unproject: function (x, y) {
     const geomData = this.el.components.geometry.data;
@@ -379,5 +258,54 @@ AFRAME.registerComponent('tangram-terrain', {
       throw new Error('Heightmap disposed.');
     }
     return this.heightmap;
+  },
+
+
+  play: function () {
+    window.addEventListener('keydown', this.onKeyDown);
+},
+
+  /**
+   * <ctrl> + <alt> + t = Regular screenshot.
+   * <ctrl> + <alt> + <shift> + t = Equirectangular screenshot.
+  */
+  onKeyDown: function (evt) {
+    var shortcutPressed = evt.keyCode === 84 && evt.ctrlKey && evt.altKey;
+    if (!this.data || !shortcutPressed) { return; }
+    var type = evt.shiftKey ? 'map' : 'normalmap';
+    this.capture(type);
+  },
+
+
+  /**
+   * Maintained for backwards compatibility.
+   */
+  capture: function (type) {
+    const imgType = type === 'map' ? 'jpeg' : 'png';
+    const canvas = type === 'map' ? this.map : this.normalmap;
+
+    // Trigger file download.
+    this.saveCapture(canvas, type, imgType);
+  },
+    /**
+   * Download capture to file.
+   */
+  saveCapture: function (canvas, type, imgType) {
+    console.log("BoundingBox: ", this.bounds.toBBoxString())
+    canvas.toBlob(function (blob) {
+      var fileName = type + '-' + Date.now() + '.' + imgType;
+      var linkEl = document.createElement('a');
+      var url = URL.createObjectURL(blob);
+      linkEl.href = url;
+      linkEl.setAttribute('download', fileName);
+      linkEl.innerHTML = 'downloading...';
+      linkEl.style.display = 'none';
+      document.body.appendChild(linkEl);
+      setTimeout(function () {
+        linkEl.click();
+        document.body.removeChild(linkEl);
+      }, 1);
+    }, 'image/' + imgType);
   }
+
 });

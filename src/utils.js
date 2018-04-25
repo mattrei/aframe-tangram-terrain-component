@@ -1,3 +1,4 @@
+const BufferGeometryUtils = require('./lib/BufferGeometryUtils');
 const cuid = require('cuid');
 
 module.exports.leafletOptions = {
@@ -59,3 +60,83 @@ module.exports.delay = function (duration, func) {
     }, duration);
   });
 };
+
+const GEOMETRY_LOD_FACTOR = 2;
+
+module.exports.createGeometryLODs = function (el, data) {
+
+  
+  const mesh = el.getObject3D('mesh');
+  const geomData = el.components.geometry.data;
+
+
+  const lodGeometries = [mesh.geometry];
+  console.log(lodGeometries)
+
+  for (let i = 1; i < data.lodCount; i++) {
+    const factor = i * GEOMETRY_LOD_FACTOR;
+
+    
+    let lodGeometry = new THREE.PlaneGeometry(
+      geomData.width, geomData.height,
+      Math.floor(geomData.segmentsWidth / factor), Math.floor(geomData.segmentsHeight / factor)
+    );
+
+    lodGeometry = new THREE.BufferGeometry().fromGeometry(lodGeometry);
+    
+
+
+    lodGeometries.push(lodGeometry);
+  }
+
+  const lods = []
+
+  let start = 0;
+  for (let i = 0; i < lodGeometries.length; i++) {
+    const count = lodGeometries[i].attributes.position.count;
+
+    lods.push({
+      lod: i + 1,
+      geometry: {
+        start: start,
+        count: count
+      }
+    });
+
+    start += count;
+  }
+
+  const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(lodGeometries);
+
+  return {
+    geometry: mergedGeometry,
+    lods: lods
+  };
+}
+
+const MeshCustomMaterial = require('./lib/MeshCustomMaterial');
+
+module.exports.applyMaterial = function (el, data, map, normalmap) {
+  
+  const mesh = el.getObject3D('mesh');
+  const matData = el.components.material.data;
+  const material = new MeshCustomMaterial();
+  material.copy(mesh.material);
+  
+  material.displacementScale = matData.displacementScale;
+  material.displacementBias = matData.displacementBias;
+
+  el.sceneEl.systems.material.loadTexture(map, {src: map}, mapTexture => {
+    el.sceneEl.systems.material.loadTexture(normalmap, {src: normalmap}, normalmapTexture => {
+
+      material.displacementMap = normalmapTexture;
+      if (data.vertexNormals) {
+        material.normalMap = normalmapTexture;
+      }
+      material.map = mapTexture;
+      material.needsUpdate = true;
+
+      mesh.material = material;
+    })
+  })
+}

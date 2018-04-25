@@ -1,0 +1,52 @@
+<html>
+  <head>
+    <title>A-Frame Tangram Terrain Component - LOD</title>
+    <meta name="description" content="Static example for Tangram component."></meta>
+
+    <script src="../build.js"></script>
+
+  </head>
+  <body>
+    <a-scene statss>
+      <a-assets>
+        <img id="map" src="assets/map.jpeg" />
+        <img id="normalmap" src="assets/normalmap.png" />
+      </a-assets>
+ 
+      <a-sky color="#6EBAA7"></a-sky>
+
+      <a-entity 
+            light="type: directional; color: #fff; intensity: 1.0" 
+            position="0 1 -1"
+            ></a-entity>
+      
+      <a-entity id="terrain" visible="true"
+      
+      geometry="primitive: plane; buffer: true;
+      width: 20; height: 20; 
+      segmentsWidth: 50; segmentsHeight: 50;"
+      material="wireframe: false; displacementScale: 20;"
+
+
+      tangram-static-terrain="
+        map: #map;
+        normalmap: #normalmap;
+        bounds: 12.61882781982422,47.14139472293294,12.756156921386719,47.23472275076704;
+        lodCount: 4;
+        lod: 1;
+        vertexNormals: true;
+      " 
+
+      rotation="-90 0 0"
+      position="0 -15 -10"
+      >
+
+
+      </a-entity>
+
+      <a-entity camera look-controls wasd-controls="fly: true;"></a-entity>
+
+    </a-scene>
+      
+  </body>
+</html>

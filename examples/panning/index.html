@@ -5,9 +5,10 @@
   
       <script src="../build.js"></script>
       <script src="./map-controls.js"></script>
+      <script src="./parametric-geometry.js"></script>
     </head>
     <body>
-      <a-scene>
+      <a-scene stats>
         <a-assets>
             <a-asset-item id="yaml-grayscale" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/grayscale.yaml"
             />
@@ -15,17 +16,12 @@
         </a-assets>
    
         <a-sky color="#6EBAA7"></a-sky>
-
-        <a-entity 
-            light="type: directional; color: #fff; 
-            intensity: 1." 
-            position="0 1 -1"
-            ></a-entity>
+       
    
         <a-entity id="terrain" visible="true"
         
         geometry="primitive: plane; width: 60; height: 60; 
-        segmentsWidth: 80; segmentsHeight: 80;"
+        segmentsWidth: 50; segmentsHeight: 50;"
         material="wireframe: false; displacementBias: 0; 
         displacementScale: 50;"
   
@@ -40,13 +36,13 @@
         dispose: false;
         useBuffer: false;
         singleton: true;
-        vertexNormals: true;
+        vertexNormals: false;
         
         " 
         map-controls
         
         rotation="-90 0 0"
-        position="0 -28 0"
+        position="0 -40 0"
         >
         </a-entity>
         

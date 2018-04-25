@@ -33,6 +33,26 @@ AFRAME.registerSystem('tangram-terrain', {
     this.mapPool = [];
     this.poolSize = 1;
   },
+  createStaticMap: function(data) {
+
+    const bounds = L.LatLngBounds(
+      L.latLng(data.bounds[0], data.bounds[1]),
+      L.latLng(data.bounds[2], data.bounds[3])
+    )
+
+
+  const canvasContainer = Utils.getCanvasContainerAssetElement(
+    cuid(),
+    data.map.width, data.map.height, 999999);
+
+    var map = L.map(canvasContainer, {
+      crs: L.CRS.Simple,
+      maxBounds: bounds
+    });
+
+    return map;
+
+  },
   getOrCreateHeightmap: function (data, geomData, onComplete) {
     const self = this;
 
@@ -73,7 +93,9 @@ AFRAME.registerSystem('tangram-terrain', {
         import: elevationStyle
       },
       webGLContextOptions: {
-        preserveDrawingBuffer: PRESERVE_DRAWING_BUFFER
+        preserveDrawingBuffer: PRESERVE_DRAWING_BUFFER,
+        alpha: true,
+        premultipliedAlpha: false // very important for transparent tiles
       },
       highDensityDisplay: false,
       attribution: ''
@@ -232,7 +254,7 @@ AFRAME.registerSystem('tangram-terrain', {
 
     copy.setAttribute('width', w);
     copy.setAttribute('height', h);
-    const ctx = copy.getContext('2d');
+    const ctx = copy.getContext('2d', {alpha:true});
 
     ctx.drawImage(canvas, x || 0, y || 0, w, h);
     return copy;
@@ -246,7 +268,7 @@ AFRAME.registerSystem('tangram-terrain', {
 
     copy.setAttribute('width', w);
     copy.setAttribute('height', h);
-    const ctx = copy.getContext('2d');
+    const ctx = copy.getContext('2d', {alpha:true});
 
     ctx.drawImage(canvas, x || 0, y || 0, w, h);
 
