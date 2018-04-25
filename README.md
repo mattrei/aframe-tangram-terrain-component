@@ -1,6 +1,6 @@
 ## aframe-tangram-terrain-component
 
-A [Tangram](https://github.com/tangrams/tangram) terrain component for [A-Frame](https://aframe.io). 
+A [Tangram](https://github.com/tangrams/tangram) terrain component for [A-Frame](https://aframe.io) with batteries included. 
 
 > Supports A-Frame 0.8.0.
 
@@ -10,9 +10,7 @@ A [Tangram](https://github.com/tangrams/tangram) terrain component for [A-Frame]
 
 #### `tangram-terrain` component
 
-This component obtains a heightmap from the [Amazon public dataset S3](https://aws.amazon.com/public-datasets/terrain/) servers and applies a overlay texture according the `style` specification. The heightmap is used as a `displacement` map and so is used in conjunction with GPU picking technique to obtain fast height results. Has Level-of-Detail (LOD) feature both on texture and geometry.
-
-_Note that unfortunately no bathymetry data is included in the public terrain data!_
+This component obtains a normalmap from the [Amazon public dataset S3](https://aws.amazon.com/public-datasets/terrain/) servers and applies a overlay texture according the `style` specification. The normlmap is used both as a `displacement` map and if wanted also a a `normalmap`. By using the _GPU picking technique_ everything is done on the shader for height calculation. Offers Level-of-Detail (LOD) using buffer geometry draw ranges.
 
 ##### Schema
 | Property | Description | Default Value |
@@ -26,6 +24,7 @@ _Note that unfortunately no bathymetry data is included in the public terrain da
 | depthBuffer | Renders a depth buffer to an external scene, so that you can get the height from the terrain by GPU picking. Set to _false_ for performance reasons if you do not need it. | false |
 | dispose | Disposes the _Tangram_ instance after creating the terrain to free up memory. Set to _false_ if you need to modify the terrain via the _Leaflet_ API. | true |
 | lod | Level-Of-Detail. Between 1 and 0.1. Multiplicaiton Factor of Overlay and Heightmap pixels. If you modify during runtime to not dispose the instance. | 1 |
+| vertexNormals | Decides if a normalmap shall be applied to the material. Needed for lighting. Due to smart terrain tiles no additional data needs to transfered, just you are GPU needs to work harder. | false |
 
 ##### Events
 | Name | Data | Description |
@@ -42,6 +41,18 @@ _Note that unfortunately no bathymetry data is included in the public terrain da
 | unprojectHeight | _x_, _y_| Gives the depth value (GPU picked from the heightmap) from the pixel coordinates, only if the `depthBuffer` value is set to _true_. Value is scaled according to the `displacementScale` scale and added the `displacementBias` value. To obtain real height values |
 | unprojectHeightInMeters | _x_, _y_| Gives the height value in meters. No exact values are possible though. Range between 0 and 8900 (Mount Everest) |
 | renderDepthBuffer | | Renders the heightmap depth buffer. Needs to be only called manually if the heigtmap is changed programmtically |
+
+
+#### `tangram-static-terrain` component
+
+This component works offline by specifying the map and normalmap by the user. To take the normalmap, press `<ctrl> + <alt> + t` on the keyboard. To take the styled map, press `<ctrl> + <alt> + <shift> + t` on the keyboard.
+
+##### Schema
+| Property | Description | Default Value |
+| -------- | ----------- | ------------- |
+| map | Reference to the visible texture. | "" |
+| normalmap | Reference to the normalmap texture. | "" |
+| bounds | String if four elements. | "0, 0, 0, 0" |
 
 ### Styling
 The Tangram map is styled within a (set) of YAML files. See the [Tangram documentation](https://mapzen.com/documentation/tangram/) for details. 
