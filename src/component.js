@@ -209,9 +209,7 @@ AFRAME.registerComponent('tangram-terrain', {
     this._count = this._count || 0;
     this._count += 1;
     this._count %= 2;
-    console.log(this._count)
     if (this._count === 0) {
-      console.log("apply mat")
       Utils.applyMaterial(this.el, this.data, this.map, this.normalmap);
       this.el.emit(TERRAIN_LOADED_EVENT);
     }

@@ -285,11 +285,13 @@ AFRAME.registerSystem('tangram-terrain', {
     const worldX = (px.x / data.pxToWorldRatio) - (geomData.width / 2);
     // y-coord is inverted (positive up in world space, positive down in pixel space)
     const worldY = -(px.y / data.pxToWorldRatio) + (geomData.height / 2);
+    console.log("project")
 
     var z = this.hitTest(data, geomData, depthBuffer, px.x, px.y);
 
     z *= matData.displacementScale;
     z += matData.displacementBias;
+    console.log(z)
 
     return {
       x: worldX,
@@ -324,7 +326,8 @@ AFRAME.registerSystem('tangram-terrain', {
 
     this.el.renderer.readRenderTargetPixels(depthBuffer.texture, hitX, hitY, 1, 1, pixelBuffer);
 
-    return pixelBuffer[0] / 255;
+    /// read alpha value
+    return pixelBuffer[3] / 255;
   },
   renderDepthBuffer: function (depthBuffer) {
     // depthBuffer.canvasTexture.needsUpdate = true;

@@ -1,6 +1,7 @@
 AFRAME.registerComponent('sun-position-setter', {
   init: function () {
     var skyEl = this.el;
+    var sunlightEl = this.el.sceneEl.querySelector('#sunlight');
     var orbitEl = this.el.sceneEl.querySelector('#orbit');
     orbitEl.addEventListener('componentchanged', function changeSun (evt) {
       var sunPosition;
@@ -12,6 +13,11 @@ AFRAME.registerComponent('sun-position-setter', {
       theta = Math.PI * (-0.5);
       phi = 2 * Math.PI * (sunPosition.y / 360 - 0.5);
       skyEl.setAttribute('material', 'sunPosition', {
+        x: Math.cos(phi),
+        y: Math.sin(phi) * Math.sin(theta),
+        z: -1
+      });
+      sunlightEl.setAttribute('position', {
         x: Math.cos(phi),
         y: Math.sin(phi) * Math.sin(theta),
         z: -1

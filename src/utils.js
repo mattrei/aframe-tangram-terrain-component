@@ -71,7 +71,6 @@ module.exports.createGeometryLODs = function (el, data) {
 
 
   const lodGeometries = [mesh.geometry];
-  console.log(lodGeometries)
 
   for (let i = 1; i < data.lodCount; i++) {
     const factor = i * GEOMETRY_LOD_FACTOR;
@@ -83,9 +82,6 @@ module.exports.createGeometryLODs = function (el, data) {
     );
 
     lodGeometry = new THREE.BufferGeometry().fromGeometry(lodGeometry);
-    
-
-
     lodGeometries.push(lodGeometry);
   }
 

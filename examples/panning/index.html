@@ -8,15 +8,17 @@
       <script src="./parametric-geometry.js"></script>
     </head>
     <body>
-      <a-scene stats>
+      <a-scene nostats>
         <a-assets>
             <a-asset-item id="yaml-grayscale" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/grayscale.yaml"
             />
           <a-asset-item id="yaml-esri" src="assets/esri-satellite.yaml" />
         </a-assets>
    
-        <a-sky color="#6EBAA7"></a-sky>
-       
+       <a-entity id="sunlight" 
+            light="type: directional; color: #fff; intensity: 1." 
+            position="0.5 1 -0.5"
+        ></a-entity>
    
         <a-entity id="terrain" visible="true"
         
@@ -31,12 +33,12 @@
         style: #yaml-esri;
         
         center: 15.8056, 47.7671;
-        zoom: 15;
+        zoom: 14;
         pxToWorldRatio: 40;
         dispose: false;
         useBuffer: false;
         singleton: true;
-        vertexNormals: false;
+        vertexNormals: true;
         
         " 
         map-controls

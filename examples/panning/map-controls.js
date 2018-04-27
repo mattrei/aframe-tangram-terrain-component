@@ -6,7 +6,7 @@ AFRAME.registerComponent('map-controls', {
 
   schema: {
     speed: {
-      default: 1
+      default: 1.5
     }
   },
 
