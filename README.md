@@ -10,20 +10,19 @@ A [Tangram](https://github.com/tangrams/tangram) terrain component for [A-Frame]
 
 #### `tangram-terrain` component
 
-This component obtains a normalmap from the [Amazon public dataset S3](https://aws.amazon.com/public-datasets/terrain/) servers and applies a overlay texture according the `style` specification. The normlmap is used both as a `displacement` map and if wanted also a a `normalmap`. By using the _GPU picking technique_ everything is done on the shader for height calculation. Offers Level-of-Detail (LOD) using buffer geometry draw ranges.
+This component obtains a normalmap from the [Amazon public dataset S3](https://aws.amazon.com/public-datasets/terrain/) servers and applies a overlay texture according the `style` specification. The normlmap is used both as a `displacement` map and if wanted also a a `normalmap`. By using the _GPU picking technique_ everything is done on the shader for height calculation. Renders a depth buffer to an external _scene_, so that the height from the normal map alpha channel is read by the GPU. Offers Level-of-Detail (LOD) using buffer geometry draw ranges.
 
 ##### Schema
 | Property | Description | Default Value |
 | -------- | ----------- | ------------- |
 | apiKey | Sets the global API key of the overlay map. May be empty if the style needs no API. | "" |
 | style | The style definition document for the ovleray style. Must point to a custom style or to a [basemap style](https://www.nextzen.org/). May need an API key set. | "" |
-| includeOceans | Include Ocean heightmap data between |
+| includeOceans | Include Ocean heightmap data between. To be implemented. | false |
 | center | Center of the map, in the form of [longitude, latitude] | [0, 0] |
 | zoom | The zoom level of the map. | 13 |
 | pxToWorldRatio | The multiplication factor between meters in A-Frame and the pixels of the map. ie; when set to 100, will display 100 pixels per 1 meter in world space. (see [a note on fidelity](#a-note-on-fidelity)) | 100 |
-| depthBuffer | Renders a depth buffer to an external scene, so that you can get the height from the terrain by GPU picking. Set to _false_ for performance reasons if you do not need it. | false |
-| dispose | Disposes the _Tangram_ instance after creating the terrain to free up memory. Set to _false_ if you need to modify the terrain via the _Leaflet_ API. | true |
-| lod | Level-Of-Detail. Between 1 and 0.1. Multiplicaiton Factor of Overlay and Heightmap pixels. If you modify during runtime to not dispose the instance. | 1 |
+| lodCount | Number of level of details for _geometry_. Set to 1 of no LOD is needed. | 1 |
+| lod | Level-Of-Detail in the range between 1 and _lodCount_. May be set during runtime. | 1 |
 | vertexNormals | Decides if a normalmap shall be applied to the material. Needed for lighting. Due to smart terrain tiles no additional data needs to transfered, just you are GPU needs to work harder. | false |
 
 ##### Events
@@ -52,7 +51,10 @@ This component works offline by specifying the map and normalmap by the user. To
 | -------- | ----------- | ------------- |
 | map | Reference to the visible texture. | "" |
 | normalmap | Reference to the normalmap texture. | "" |
-| bounds | String if four elements. | "0, 0, 0, 0" |
+| bounds | String of four elements obtained from the console log. | "0, 0, 0, 0" |
+| lodCount | See `tangram-terrain` component | 1 |
+| lod | See `tangram-terrain` component | 1 |
+| vertextNormals | See `tangram-terrain` component | false |
 
 ### Styling
 The Tangram map is styled within a (set) of YAML files. See the [Tangram documentation](https://mapzen.com/documentation/tangram/) for details. 
@@ -94,12 +96,17 @@ Install and use by directly including the [browser files](dist):
 <body>
   <a-scene>
 
+    <a-assets>
+      <a-asset-item id="yamlElevation" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/terrarium-elevation.yaml" />
+    </a-assets>
+
     <a-tangram-terrain
+      map-style="#yamlElevation" 
       zoom="10" 
       center="15.8056, 7.7671" 
-      map-style="#yamlElevation" 
       px-world-ratio="12"
-      visible="true" wireframe="false" height-scale="40"
+      wireframe="false" 
+      height-scale="40"
       width="25" depth="25">
     </a-tangram-terrain>
   </a-scene>

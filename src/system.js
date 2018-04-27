@@ -59,11 +59,7 @@ AFRAME.registerSystem('tangram-terrain', {
     const viewComplete = function () {
       const canvas = self.heightmapLayer.scene.canvas;
       console.log('HEIGHTMAP VIEW_COMPLETE', canvas.width);
-      const depthBuffer = data.depthBuffer ? self._createDepthBuffer(canvas) : undefined;
-      onComplete({
-        canvas: canvas,
-        depthBuffer: depthBuffer
-      });
+      onComplete(canvas);
     };
 
     if (data.singleton && this.heightmap) {
@@ -117,9 +113,7 @@ AFRAME.registerSystem('tangram-terrain', {
   getOrCreateMap: function (data, geomData, onComplete) {
     function viewComplete (tangram) {
       const canvas = tangram.layer.scene.canvas;
-      onComplete({
-        canvas: canvas
-      });
+      onComplete(canvas);
       tangram.used = false;
     }
 
@@ -204,7 +198,7 @@ AFRAME.registerSystem('tangram-terrain', {
     // tangram reload?
     // this.overlaymap.layer.scene.immediateRedraw();
   },
-  _createDepthBuffer: function (canvas) {
+  createDepthBuffer: function (canvas) {
     // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
     const imageWidth = canvas.width;
     const imageHeight = canvas.height;

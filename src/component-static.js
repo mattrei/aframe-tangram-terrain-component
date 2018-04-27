@@ -25,9 +25,6 @@ AFRAME.registerComponent('tangram-static-terrain', {
         default: [0, 0, 0, 0],
         type: 'array'
       },
-      depthBuffer: {
-        default: false
-      },
       lod: {
         default: 1
       },
@@ -87,5 +84,36 @@ AFRAME.registerComponent('tangram-static-terrain', {
   
       const mesh = el.getObject3D('mesh');
       mesh.geometry.setDrawRange(foundLOD.geometry.start, foundLOD.geometry.count);
+    },
+    project: function (lon, lat) {
+      const geomData = this.el.components.geometry.data;
+      const matData = this.el.components.material.data;
+  
+      return this.system.project(this.data, geomData, matData,
+        this.overlaymap,
+        this.depthBuffer,
+        lon, lat);
+    },
+    unproject: function (x, y) {
+      const geomData = this.el.components.geometry.data;
+  
+      return this.system.unproject(this.data, geomData, this.overlaymap, x, y);
+    },
+    _getHeight: function (x, y) {
+      const geomData = this.el.components.geometry.data;
+  
+      const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
+      const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
+  
+      const data = this.data;
+  
+      return this.system.hitTest(data, geomData, this.depthBuffer, pxX, pxY);
+    },
+    unprojectHeight: function (x, y) {
+      const matData = this.el.components.material.data;
+      return this._getHeight(x, y) * matData.displacementScale + matData.displacementBias;
+    },
+    unprojectHeightInMeters: function (x, y) {
+      return this._getHeight(x, y) * 8900;
     }
 })

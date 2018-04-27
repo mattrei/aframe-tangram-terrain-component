@@ -39,9 +39,6 @@ AFRAME.registerComponent('tangram-terrain', {
     pxToWorldRatio: {
       default: 10
     },
-    depthBuffer: {
-      default: false
-    },
     useBuffer: {
       type: 'boolean',
       default: true
@@ -51,12 +48,12 @@ AFRAME.registerComponent('tangram-terrain', {
       type: 'boolean',
       default: false
     },
-    lod: {
-      default: 1
-    },
     lodCount: {
       default: 1,
       oneOf: [1, 2, 3, 4]
+    },
+    lod: {
+      default: 1
     },
     singleton: {
       default: false
@@ -72,7 +69,7 @@ AFRAME.registerComponent('tangram-terrain', {
     const data = this.data;
     const geomData = this.el.components.geometry.data;
 
-    this.depthBuffer = null;
+
 
     this.handleHeightmapCanvas = this.handleHeightmapCanvas.bind(this);
     this.handleOverlayCanvas = this.handleOverlayCanvas.bind(this);
@@ -82,6 +79,7 @@ AFRAME.registerComponent('tangram-terrain', {
     this.overlaymap = this.system.getOrCreateMap(data, geomData, this.handleOverlayCanvas);
     this.overlaymapDisposed = false;
 
+    this.depthBuffer = null;
     this.map = null;
     this.normalmap = null;
 
@@ -132,7 +130,7 @@ AFRAME.registerComponent('tangram-terrain', {
       }
     }
   },
-  handleOverlayCanvas: function (event) {
+  handleOverlayCanvas: function (canvas) {
     console.log("handle overlay")
 
     if (!this.setMap) {
@@ -140,20 +138,9 @@ AFRAME.registerComponent('tangram-terrain', {
     }
     this.setMap = false;
 
-    const data = this.data;
-    const el = this.el;
-    const renderer = this.el.sceneEl.renderer;
-    const geomData = this.el.components.geometry.data;
-    const matData = this.el.components.material.data;
+    this.map = this.data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
 
-    let canvas = event.canvas;
-
-    if (data.useBuffer) {
-      canvas = this.system.copyCanvas(canvas);
-    }
-    this.map = canvas;
-
-    this.applyLOD(data.lod);
+    this.applyLOD(this.data.lod);
 
     this._fire();
   },
@@ -179,24 +166,15 @@ AFRAME.registerComponent('tangram-terrain', {
     mesh.geometry = lods.geometry;
     this.lods = lods.lods;
   },
-  handleHeightmapCanvas: function (event) {
+  handleHeightmapCanvas: function (canvas) {
 
     if (!this.setHeightmap) return;
     this.setHeightmap = false;
 
-    const data = this.data;
-    const renderer = this.el.sceneEl.renderer;
+    this.depthBuffer = this.system.createDepthBuffer(canvas);
+    this.system.renderDepthBuffer(this.depthBuffer);
 
-    let canvas = event.canvas;
-    const depthBuffer = event.depthBuffer;
-
-    canvas = data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
-    this.normalmap = canvas;
-
-    if (data.depthBuffer) {
-      this.system.renderDepthBuffer(depthBuffer);
-      this.depthBuffer = depthBuffer;
-    }
+    this.normalmap = this.data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
     this._fire();
   },
   remove: function () {
