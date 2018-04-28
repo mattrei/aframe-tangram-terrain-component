@@ -23,7 +23,7 @@ This component obtains a normalmap from the [Amazon public dataset S3](https://a
 | pxToWorldRatio | The multiplication factor between meters in A-Frame and the pixels of the map. ie; when set to 100, will display 100 pixels per 1 meter in world space. (see [a note on fidelity](#a-note-on-fidelity)) | 100 |
 | lodCount | Number of level of details for _geometry_. Set to 1 of no LOD is needed. | 1 |
 | lod | Level-Of-Detail in the range between 1 and _lodCount_. May be set during runtime. | 1 |
-| vertexNormals | Decides if a normalmap shall be applied to the material. Needed for lighting. Due to smart terrain tiles no additional data needs to transfered, just you are GPU needs to work harder. | false |
+| vertexNormals | Decides if a normalmap shall be applied to the material. Needed for lighting. Due to smart terrain tiles no additional data needs to transfered, just you are GPU needs to work harder. | true |
 
 ##### Events
 | Name | Data | Description |

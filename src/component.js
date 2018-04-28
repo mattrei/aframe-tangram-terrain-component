@@ -59,7 +59,7 @@ AFRAME.registerComponent('tangram-terrain', {
       default: false
     },
     vertexNormals: {
-      default: false
+      default: true
     }
   },
 
@@ -202,7 +202,6 @@ AFRAME.registerComponent('tangram-terrain', {
 
     // pixel space from leaflet
     var px = this.overlaymap.latLngToLayerPoint([lat, lon]);
-    console.log(px)
 
     // convert to world space
     const worldX = (px.x / data.pxToWorldRatio) - (geomData.width / 2);
@@ -236,7 +235,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
     this.el.sceneEl.renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
 
-    /// read alpha value
+    // read alpha value
     return pixelBuffer[3] / 255;
   },
   unproject: function (x, y) {

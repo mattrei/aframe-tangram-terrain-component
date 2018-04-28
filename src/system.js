@@ -229,9 +229,6 @@ AFRAME.registerSystem('tangram-terrain', {
     const imageWidth = canvas.width;
     const imageHeight = canvas.height;
 
-    console.log(canvas)
-    console.log(imageHeight)
-
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(
       imageWidth / -2,

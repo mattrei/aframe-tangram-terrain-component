@@ -33,7 +33,7 @@ AFRAME.registerComponent('tangram-static-terrain', {
       oneOf: [1, 2, 3, 4]
     },
     vertexNormals: {
-      default: false
+      default: true
     }
   },
 
@@ -108,11 +108,8 @@ AFRAME.registerComponent('tangram-static-terrain', {
     // y-coord is inverted (positive up in world space, positive down in pixel space)
     const worldY = -(geomData.height / deltaLat * (data.bounds[1] - lat)) + (geomData.height / 2);
 
-    const pixelBuffer = new Uint8Array(4);
-    this.el.sceneEl.renderer.readRenderTargetPixels(this.depthBuffer.texture, px.x, px.y, 1, 1, pixelBuffer);
-
     // read alpha value
-    let z = pixelBuffer[3] / 255;
+    let z = this._hitTest(px.x, px.y);
     z *= matData.displacementScale;
     z += matData.displacementBias;
 
@@ -122,10 +119,38 @@ AFRAME.registerComponent('tangram-static-terrain', {
       z: z
     };
   },
+  _hitTest: function (x, y) {
+    const data = this.data;
+    const geomData = this.el.components.geometry.data;
+    const pixelBuffer = new Uint8Array(4);
+
+    this.el.sceneEl.renderer.readRenderTargetPixels(this.depthBuffer.texture, x, y, 1, 1, pixelBuffer);
+
+    // read alpha value
+    return pixelBuffer[3] / 255;
+  },
   unproject: function (x, y) {
+    const data = this.data;
     const geomData = this.el.components.geometry.data;
 
-    return this.system.unproject(this.data, geomData, this.overlaymap, x, y);
+    // Converting world space to pixel space
+    const pxX = (x + (geomData.width / 2)) * data.pxToWorldRatio;
+    const pxY = ((geomData.height / 2) - y) * data.pxToWorldRatio;
+
+    /*
+    // Return the lat / long of that pixel on the map
+    var latLng = this.overlaymap.layerPointToLatLng([pxX, pxY]);
+
+    const deltaLng = data.bounds[0] - data.bounds[2]
+    const deltaLat = data.bounds[1] - data.bounds[3]
+
+
+    return {
+      lon: latLng.lng,
+      lat: latLng.lat
+    };
+    */
+   // TODO
   },
   _getHeight: function (x, y) {
     const geomData = this.el.components.geometry.data;
@@ -133,9 +158,7 @@ AFRAME.registerComponent('tangram-static-terrain', {
     const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
     const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
 
-    const data = this.data;
-
-    return this.system.hitTest(data, geomData, this.depthBuffer, pxX, pxY);
+    return this._hitTest(pxX, pxY);
   },
   unprojectHeight: function (x, y) {
     const matData = this.el.components.material.data;
