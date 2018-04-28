@@ -171,10 +171,13 @@ AFRAME.registerComponent('tangram-terrain', {
     if (!this.setHeightmap) return;
     this.setHeightmap = false;
 
-    this.depthBuffer = this.system.createDepthBuffer(canvas);
-    this.system.renderDepthBuffer(this.depthBuffer);
-
     this.normalmap = this.data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
+
+    this.system.createDepthBuffer(this.normalmap).then(buffer => {
+      this.depthBuffer = buffer
+    });
+
+
     this._fire();
   },
   remove: function () {
@@ -193,18 +196,63 @@ AFRAME.registerComponent('tangram-terrain', {
     }
   },
   project: function (lon, lat) {
+    const data = this.data;
     const geomData = this.el.components.geometry.data;
     const matData = this.el.components.material.data;
 
-    return this.system.project(this.data, geomData, matData,
-      this.overlaymap,
-      this.depthBuffer,
-      lon, lat);
+    // pixel space from leaflet
+    var px = this.overlaymap.latLngToLayerPoint([lat, lon]);
+    console.log(px)
+
+    // convert to world space
+    const worldX = (px.x / data.pxToWorldRatio) - (geomData.width / 2);
+    // y-coord is inverted (positive up in world space, positive down in pixel space)
+    const worldY = -(px.y / data.pxToWorldRatio) + (geomData.height / 2);
+    
+    var z = this._hitTest(px.x, px.y);
+
+    z *= matData.displacementScale;
+    z += matData.displacementBias;
+
+    return {
+      x: worldX,
+      y: worldY,
+      z: z
+    };
+  },
+  _hitTest: function (x, y) {
+    const data = this.data;
+    const geomData = this.el.components.geometry.data;
+    const pixelBuffer = new Uint8Array(4);
+
+    const depthTexture = this.depthBuffer.texture;
+
+    const width = geomData.width * data.pxToWorldRatio;
+    const height = geomData.height * data.pxToWorldRatio;
+
+    // converting pixel space to texture space
+    const hitX = Math.round((x) / width * depthTexture.width);
+    const hitY = Math.round((height - y) / height * depthTexture.height);
+
+    this.el.sceneEl.renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
+
+    /// read alpha value
+    return pixelBuffer[3] / 255;
   },
   unproject: function (x, y) {
+    const data = this.data;
     const geomData = this.el.components.geometry.data;
 
-    return this.system.unproject(this.data, geomData, this.overlaymap, x, y);
+    // Converting world space to pixel space
+    const pxX = (x + (geomData.width / 2)) * data.pxToWorldRatio;
+    const pxY = ((geomData.height / 2) - y) * data.pxToWorldRatio;
+
+    // Return the lat / long of that pixel on the map
+    var latLng = this.overlaymap.layerPointToLatLng([pxX, pxY]);
+    return {
+      lon: latLng.lng,
+      lat: latLng.lat
+    };
   },
   _getHeight: function (x, y) {
     const geomData = this.el.components.geometry.data;
@@ -214,7 +262,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
     const data = this.data;
 
-    return this.system.hitTest(data, geomData, this.depthBuffer, pxX, pxY);
+    return this._hitTest(pxX, pxY);
   },
   unprojectHeight: function (x, y) {
     const matData = this.el.components.material.data;
@@ -239,15 +287,17 @@ AFRAME.registerComponent('tangram-terrain', {
 
   play: function () {
     window.addEventListener('keydown', this.onKeyDown);
-},
+  },
 
   /**
    * <ctrl> + <alt> + t = Regular screenshot.
    * <ctrl> + <alt> + <shift> + t = Equirectangular screenshot.
-  */
+   */
   onKeyDown: function (evt) {
     var shortcutPressed = evt.keyCode === 84 && evt.ctrlKey && evt.altKey;
-    if (!this.data || !shortcutPressed) { return; }
+    if (!this.data || !shortcutPressed) {
+      return;
+    }
     var type = evt.shiftKey ? 'map' : 'normalmap';
     this.capture(type);
   },
@@ -263,7 +313,7 @@ AFRAME.registerComponent('tangram-terrain', {
     // Trigger file download.
     this.saveCapture(canvas, type, imgType);
   },
-    /**
+  /**
    * Download capture to file.
    */
   saveCapture: function (canvas, type, imgType) {

@@ -9,111 +9,139 @@ const TERRAIN_LOADED_EVENT = 'tangram-terrain-loaded';
 
 
 AFRAME.registerComponent('tangram-static-terrain', {
-    dependencies: [
-      'geometry',
-      'material'
-    ],
-  
-    schema: {
-        map: {
-            type: 'map'
-        },
-        normalmap: {
-            type: 'map'
-        },
-      bounds: {
-        default: [0, 0, 0, 0],
-        type: 'array'
-      },
-      lod: {
-        default: 1
-      },
-      lodCount: {
-        default: 1,
-        oneOf: [1, 2, 3, 4]
-      },
-      vertexNormals: {
-        default: false
-      }
-    },
-  
-    multiple: false,
-  
-    init: function () {
-      const data = this.data;
-      this.depthBuffer = null;
-  
-      this.map = null;
-      this.normalmap = null;
-  
-      this.lods = [];
-  
-      const lods = Utils.createGeometryLODs(this.el, this.data);
-      const mesh = this.el.getObject3D('mesh');
-      mesh.geometry = lods.geometry;
-      this.lods = lods.lods;
+  dependencies: [
+    'geometry',
+    'material'
+  ],
 
-      this.map = this.el.sceneEl.systems['tangram-terrain'].createStaticMap(this.data);
-      Utils.applyMaterial(this.el, data, data.map, data.normalmap);
+  schema: {
+    map: {
+      type: 'map'
     },
-    update: function (oldData) {
-      const data = this.data;
-  
-      // Nothing changed
-      if (AFRAME.utils.deepEqual(oldData, data)) {
-        return;
-      }
-  
-      if (data.lod !== oldData.lod) {
-        if (data.lod >= 1 && data.lod <= data.lodCount) {
-          this.applyLOD(data.lod);
-        }
-      }
-    }, 
-    applyLOD: function (lod) {
-      const el = this.el;
-      const data = this.data;
-      const matData = this.el.components.material.data;
-  
-      let foundLOD = null;
-      for (let lodObj of this.lods) {
-        if (lodObj.lod === lod) {
-          foundLOD = lodObj;
-        }
-      }
-  
-      const mesh = el.getObject3D('mesh');
-      mesh.geometry.setDrawRange(foundLOD.geometry.start, foundLOD.geometry.count);
+    normalmap: {
+      type: 'map'
     },
-    project: function (lon, lat) {
-      const geomData = this.el.components.geometry.data;
-      const matData = this.el.components.material.data;
-  
-      return this.system.project(this.data, geomData, matData,
-        this.overlaymap,
-        this.depthBuffer,
-        lon, lat);
+    bounds: {
+      default: [0, 0, 0, 0],
+      type: 'array'
     },
-    unproject: function (x, y) {
-      const geomData = this.el.components.geometry.data;
-  
-      return this.system.unproject(this.data, geomData, this.overlaymap, x, y);
+    lod: {
+      default: 1
     },
-    _getHeight: function (x, y) {
-      const geomData = this.el.components.geometry.data;
-  
-      const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
-      const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
-  
-      const data = this.data;
-  
-      return this.system.hitTest(data, geomData, this.depthBuffer, pxX, pxY);
+    lodCount: {
+      default: 1,
+      oneOf: [1, 2, 3, 4]
     },
-    unprojectHeight: function (x, y) {
-      const matData = this.el.components.material.data;
-      return this._getHeight(x, y) * matData.displacementScale + matData.displacementBias;
-    },
-    unprojectHeightInMeters: function (x, y) {
-      return this._getHeight(x, y) * 8900;
+    vertexNormals: {
+      default: false
     }
+  },
+
+  multiple: false,
+
+  init: function () {
+    const data = this.data;
+    const el = this.el;
+    this.system = el.sceneEl.systems['tangram-terrain'];
+
+    this.depthBuffer = null;
+
+    this.lods = [];
+
+    const lods = Utils.createGeometryLODs(el, data);
+    const mesh = el.getObject3D('mesh');
+    mesh.geometry = lods.geometry;
+    this.lods = lods.lods;
+
+    Utils.applyMaterial(el, data, data.map, data.normalmap);
+
+    this.system.createDepthBuffer(data.normalmap).then(buffer => {
+      this.depthBuffer = buffer;
+      this.el.emit(TERRAIN_LOADED_EVENT);
+    })
+
+  },
+  update: function (oldData) {
+    const data = this.data;
+
+    // Nothing changed
+    if (AFRAME.utils.deepEqual(oldData, data)) {
+      return;
+    }
+
+    if (data.lod !== oldData.lod) {
+      if (data.lod >= 1 && data.lod <= data.lodCount) {
+        this.applyLOD(data.lod);
+      }
+    }
+  },
+  applyLOD: function (lod) {
+    const el = this.el;
+    const data = this.data;
+    const matData = this.el.components.material.data;
+
+    let foundLOD = null;
+    for (let lodObj of this.lods) {
+      if (lodObj.lod === lod) {
+        foundLOD = lodObj;
+      }
+    }
+
+    const mesh = el.getObject3D('mesh');
+    mesh.geometry.setDrawRange(foundLOD.geometry.start, foundLOD.geometry.count);
+  },
+  project: function (lon, lat) {
+
+    const data = this.data;
+    const geomData = this.el.components.geometry.data;
+    const matData = this.el.components.material.data;
+
+    const deltaLng = data.bounds[0] - data.bounds[2]
+    const deltaLat = data.bounds[1] - data.bounds[3]
+
+    const px = {
+      x: data.normalmap.width / deltaLng * (data.bounds[0] - lon),
+      y: data.normalmap.height / deltaLat * (data.bounds[1] - lat)
+    }
+    // convert to world space
+    const worldX = (geomData.width / deltaLng * (data.bounds[0] - lon)) - (geomData.width / 2);
+    // y-coord is inverted (positive up in world space, positive down in pixel space)
+    const worldY = -(geomData.height / deltaLat * (data.bounds[1] - lat)) + (geomData.height / 2);
+
+    const pixelBuffer = new Uint8Array(4);
+    this.el.sceneEl.renderer.readRenderTargetPixels(this.depthBuffer.texture, px.x, px.y, 1, 1, pixelBuffer);
+
+    // read alpha value
+    let z = pixelBuffer[3] / 255;
+    z *= matData.displacementScale;
+    z += matData.displacementBias;
+
+    return {
+      x: worldX,
+      y: worldY,
+      z: z
+    };
+  },
+  unproject: function (x, y) {
+    const geomData = this.el.components.geometry.data;
+
+    return this.system.unproject(this.data, geomData, this.overlaymap, x, y);
+  },
+  _getHeight: function (x, y) {
+    const geomData = this.el.components.geometry.data;
+
+    const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
+    const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
+
+    const data = this.data;
+
+    return this.system.hitTest(data, geomData, this.depthBuffer, pxX, pxY);
+  },
+  unprojectHeight: function (x, y) {
+    const matData = this.el.components.material.data;
+    return this._getHeight(x, y) * matData.displacementScale + matData.displacementBias;
+  },
+  unprojectHeightInMeters: function (x, y) {
+    return this._getHeight(x, y) * 8900;
+  }
 })

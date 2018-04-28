@@ -1,4 +1,3 @@
-/* global AFRAME THREE */
 
 const L = require('leaflet');
 const Tangram = require('tangram');
@@ -9,7 +8,7 @@ if (typeof AFRAME === 'undefined') {
   throw new Error('Component attempted to register before AFRAME was available.');
 }
 
-const PRESERVE_DRAWING_BUFFER = true;// AFRAME.utils.device.isMobile();
+const PRESERVE_DRAWING_BUFFER = true; // AFRAME.utils.device.isMobile();
 
 const cuid = require('cuid');
 
@@ -32,26 +31,6 @@ AFRAME.registerSystem('tangram-terrain', {
 
     this.mapPool = [];
     this.poolSize = 1;
-  },
-  createStaticMap: function(data) {
-
-    const bounds = L.LatLngBounds(
-      L.latLng(data.bounds[0], data.bounds[1]),
-      L.latLng(data.bounds[2], data.bounds[3])
-    )
-
-
-  const canvasContainer = Utils.getCanvasContainerAssetElement(
-    cuid(),
-    data.map.width, data.map.height, 999999);
-
-    var map = L.map(canvasContainer, {
-      crs: L.CRS.Simple,
-      maxBounds: bounds
-    });
-
-    return map;
-
   },
   getOrCreateHeightmap: function (data, geomData, onComplete) {
     const self = this;
@@ -111,7 +90,7 @@ AFRAME.registerSystem('tangram-terrain', {
     return map;
   },
   getOrCreateMap: function (data, geomData, onComplete) {
-    function viewComplete (tangram) {
+    function viewComplete(tangram) {
       const canvas = tangram.layer.scene.canvas;
       onComplete(canvas);
       tangram.used = false;
@@ -198,8 +177,9 @@ AFRAME.registerSystem('tangram-terrain', {
     // tangram reload?
     // this.overlaymap.layer.scene.immediateRedraw();
   },
-  createDepthBuffer: function (canvas) {
+  createDepthBufferOLD: function (canvas) {
     // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
+
     const imageWidth = canvas.width;
     const imageHeight = canvas.height;
 
@@ -215,6 +195,9 @@ AFRAME.registerSystem('tangram-terrain', {
       magFilter: THREE.NearestFilter,
       type: THREE.UnsignedByteType
     });
+
+    // TODO?
+    //this.el.systems.material.loadTexture(normalmap, {src: normalmap}, normalmapTexture => {
 
     const canvasTexture = new THREE.CanvasTexture(canvas);
     // canvasTexture.generateMipmaps = false;
@@ -239,6 +222,59 @@ AFRAME.registerSystem('tangram-terrain', {
       canvasTexture: canvasTexture
     };
   },
+  createDepthBuffer: function (canvas) {
+
+    // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
+
+    const imageWidth = canvas.width;
+    const imageHeight = canvas.height;
+
+    console.log(canvas)
+    console.log(imageHeight)
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(
+      imageWidth / -2,
+      imageWidth / 2,
+      imageHeight / 2,
+      imageHeight / -2, -1, 1);
+
+    const texture = new THREE.WebGLRenderTarget(imageWidth, imageHeight, {
+      minFilter: THREE.NearestFilter,
+      magFilter: THREE.NearestFilter,
+      type: THREE.UnsignedByteType
+    });
+
+    return new Promise((resolve, reject) => {
+      this.el.systems.material.loadTexture(canvas, {
+        src: canvas
+      }, mapTexture => {
+
+        const mesh = new THREE.Mesh(
+          new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
+          new THREE.MeshBasicMaterial({
+            map: mapTexture,
+            transparent: true
+          })
+        );
+        scene.add(mesh);
+
+        const depthBuffer = {
+          scene: scene,
+          camera: camera,
+          mesh: mesh,
+          texture: texture,
+          canvasTexture: mapTexture
+        }
+
+        this.renderDepthBuffer(depthBuffer);
+
+        resolve(depthBuffer);
+      })
+    })
+
+
+  },
   copyCanvas: function (canvas, x, y, width, height) {
     const copy = document.createElement('canvas');
     copy.setAttribute('id', cuid());
@@ -248,7 +284,9 @@ AFRAME.registerSystem('tangram-terrain', {
 
     copy.setAttribute('width', w);
     copy.setAttribute('height', h);
-    const ctx = copy.getContext('2d', {alpha:true});
+    const ctx = copy.getContext('2d', {
+      alpha: true
+    });
 
     ctx.drawImage(canvas, x || 0, y || 0, w, h);
     return copy;
@@ -262,7 +300,9 @@ AFRAME.registerSystem('tangram-terrain', {
 
     copy.setAttribute('width', w);
     copy.setAttribute('height', h);
-    const ctx = copy.getContext('2d', {alpha:true});
+    const ctx = copy.getContext('2d', {
+      alpha: true
+    });
 
     ctx.drawImage(canvas, x || 0, y || 0, w, h);
 
@@ -270,58 +310,6 @@ AFRAME.registerSystem('tangram-terrain', {
     ctx.putImageData(imgData, 0, 0);
 
     return copy;
-  },
-  project: function (data, geomData, matData, map, depthBuffer, lon, lat) {
-    // pixel space from leaflet
-    var px = map.latLngToLayerPoint([lat, lon]);
-
-    // convert to world space
-    const worldX = (px.x / data.pxToWorldRatio) - (geomData.width / 2);
-    // y-coord is inverted (positive up in world space, positive down in pixel space)
-    const worldY = -(px.y / data.pxToWorldRatio) + (geomData.height / 2);
-    console.log("project")
-
-    var z = this.hitTest(data, geomData, depthBuffer, px.x, px.y);
-
-    z *= matData.displacementScale;
-    z += matData.displacementBias;
-    console.log(z)
-
-    return {
-      x: worldX,
-      y: worldY,
-      z: z
-    };
-  },
-  unproject: function (data, geomData, map, x, y) {
-    // Converting world space to pixel space
-    const pxX = (x + (geomData.width / 2)) * data.pxToWorldRatio;
-    const pxY = ((geomData.height / 2) - y) * data.pxToWorldRatio;
-
-    // Return the lat / long of that pixel on the map
-    var latLng = map.layerPointToLatLng([pxX, pxY]);
-    return {
-      lon: latLng.lng,
-      lat: latLng.lat
-    };
-  },
-  // needs pixel space
-  hitTest: function (data, geomData, depthBuffer, x, y) {
-    if (!depthBuffer) return 0;
-
-    const pixelBuffer = new Uint8Array(4);
-
-    const width = geomData.width * data.pxToWorldRatio;
-    const height = geomData.height * data.pxToWorldRatio;
-
-    // converting pixel space to texture space
-    const hitX = Math.round((x) / width * depthBuffer.texture.width);
-    const hitY = Math.round((height - y) / height * depthBuffer.texture.height);
-
-    this.el.renderer.readRenderTargetPixels(depthBuffer.texture, hitX, hitY, 1, 1, pixelBuffer);
-
-    /// read alpha value
-    return pixelBuffer[3] / 255;
   },
   renderDepthBuffer: function (depthBuffer) {
     // depthBuffer.canvasTexture.needsUpdate = true;
