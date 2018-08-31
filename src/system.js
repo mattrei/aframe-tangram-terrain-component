@@ -22,6 +22,8 @@ const DEBUG_CANVAS_OFFSET = 99999;
 
 const HM_RESOLUTION_FACTOR = 2;
 
+const POOL_SIZE = 2;
+
 AFRAME.registerSystem('tangram-terrain', {
   init: function () {
     this.heightmap = null;
@@ -30,7 +32,7 @@ AFRAME.registerSystem('tangram-terrain', {
     this.overlaymapLayer = null;
 
     this.mapPool = [];
-    this.poolSize = 1;
+    this.poolSize = POOL_SIZE;
   },
   getOrCreateHeightmap: function (data, geomData, onComplete) {
     const self = this;
@@ -63,9 +65,14 @@ AFRAME.registerSystem('tangram-terrain', {
     const map = L.map(canvasContainer, Utils.leafletOptions);
     this.heightmap = map;
 
+    console.log(data.apiKey)
     const layer = Tangram.leafletLayer({
       scene: {
-        import: elevationStyle
+        import: elevationStyle,
+        global: {
+          sdk_api_key: data.apiKey
+          // language
+        }
       },
       webGLContextOptions: {
         preserveDrawingBuffer: PRESERVE_DRAWING_BUFFER,
@@ -73,6 +80,8 @@ AFRAME.registerSystem('tangram-terrain', {
         premultipliedAlpha: false // very important for transparent tiles
       },
       highDensityDisplay: false,
+      continuousZoom: false,
+      noWrap: true,
       attribution: ''
     });
 
@@ -134,14 +143,17 @@ AFRAME.registerSystem('tangram-terrain', {
       scene: {
         import: data.style,
         global: {
-          sdk_mapzen_api_key: data.apiKey
+          sdk_api_key: data.apiKey
           // language
         }
       },
+      numWorkers: 4,
       highDensityDisplay: false,
       webGLContextOptions: {
         preserveDrawingBuffer: PRESERVE_DRAWING_BUFFER
       },
+      continuousZoom: false,
+      noWrap: true,
       attribution: ''
     });
     layer.addTo(map);

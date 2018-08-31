@@ -51,10 +51,10 @@ This component works offline by specifying the map and normalmap by the user. To
 | -------- | ----------- | ------------- |
 | map | Reference to the visible texture. | "" |
 | normalmap | Reference to the normalmap texture. | "" |
-| bounds | String of four elements obtained from the console log. | "0, 0, 0, 0" |
+| bounds | String of four elements obtained from the console log after taking the normalmap screenshot. | "0, 0, 0, 0" |
 | lodCount | See `tangram-terrain` component | 1 |
 | lod | See `tangram-terrain` component | 1 |
-| vertextNormals | See `tangram-terrain` component | false |
+| vertexNormals | See `tangram-terrain` component | true |
 
 ### Styling
 The Tangram map is styled within a (set) of YAML files. See the [Tangram documentation](https://mapzen.com/documentation/tangram/) for details. 

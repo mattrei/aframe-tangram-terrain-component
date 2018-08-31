@@ -3,8 +3,6 @@
 const BufferGeometryUtils = require('./lib/BufferGeometryUtils');
 const Utils = require('./utils');
 
-const MeshCustomMaterial = require('./lib/MeshCustomMaterial');
-
 const TERRAIN_LOADED_EVENT = 'tangram-terrain-loaded';
 
 

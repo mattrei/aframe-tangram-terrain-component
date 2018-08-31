@@ -3,7 +3,9 @@
     <title>A-Frame Tangram Terrain Component - Lightning</title>
     <meta name="description" content="Airborne example for Tangram component."></meta>
 
-    <script src="../build.js"></script>
+    <script src="https://aframe.io/releases/0.8.2/aframe.min.js"></script>
+    <script src="../../dist/aframe-tangram-terrain-component.min.js"></script>
+
     <script src="https://unpkg.com/aframe-sun-sky@3.0.3/dist/aframe-sun-sky.min.js"></script>
     <script src="./sun-position-setter.js"></script>
   </head>
@@ -32,8 +34,8 @@
       <a-entity id="terrain" visible="true"
       
       geometry="primitive: plane; buffer: true; 
-      width: 20; height: 20; 
-      segmentsWidth: 100; segmentsHeight: 100;"
+        width: 20; height: 20; 
+        segmentsWidth: 100; segmentsHeight: 100;"
       material="wireframe: false; displacementScale: 20;"
 
 

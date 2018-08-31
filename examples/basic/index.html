@@ -4,18 +4,15 @@
   <title>A-Frame Tangram Terrain Component - Heightmap</title>
   <meta name="description" content="Heightmap example for Tangram component."></meta>
 
-  <script src="../build.js"></script>
+  <script src="https://aframe.io/releases/0.8.2/aframe.min.js"></script>
+  <script src="../../dist/aframe-tangram-terrain-component.min.js"></script>
   <script src="./sphere-matrix.js"></script>
 </head>
 
 <body>
   <a-scene statss>
     <a-assets>
-      <a-asset-item id="yamlElevation" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/terrarium-elevation.yaml"
-      />
-      <a-asset-item id="yamlHypsometric" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/hypsometric-adjusted.yaml"
-      />
-      <a-asset-item id="yamlGrayscale" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/grayscale.yaml"
+      <a-asset-item id="yamlElevation" src="assets/terrarium-elevation.yaml"
       />
     </a-assets>
 
@@ -24,20 +21,21 @@
 
 
     <a-entity id="terrain" visible="true" 
-    geometry="width: 40; height: 40; 
-    segmentsWidth: 80; segmentsHeight: 80; 
-    primitive: plane;" 
-    material="side: double; wireframe: true;
-    displacementScale: 30; displacementBias: 0;"
+      geometry="width: 40; height: 40; 
+      segmentsWidth: 80; segmentsHeight: 80; 
+      primitive: plane;" 
+      material="side: double; wireframe: true;
+      displacementScale: 30; displacementBias: 0;"
       tangram-terrain="
-      apiKey: UJcQwnnfQnWcPtKe2aYaEw;
-  style: #yamlElevation;
-  center: 15.8056, 47.7671;
-  zoom: 10;
-  pxToWorldRatio: 15;
-  vertexNormals: false;
-  " rotation="-90 0 0" position="0 -10 0"
-  sphere-matrix>
+        style: #yamlElevation;
+        center: 15.8056, 47.7671;
+        zoom: 10;
+        pxToWorldRatio: 15;
+        vertexNormals: false;
+        " 
+      rotation="-90 0 0" position="0 -10 0"
+      sphere-matrix
+    >
 
       <a-sphere id="marker"  color="red" radius="0.1"></a-sphere>
       <a-sphere id="marker2" color="red" radius="0.1"></a-sphere>

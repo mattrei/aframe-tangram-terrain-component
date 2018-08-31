@@ -3,8 +3,9 @@
     <title>A-Frame Tangram Terrain Component - LOD</title>
     <meta name="description" content="Airborne example for Tangram component."></meta>
 
-    <script src="../build.js"></script>
-  <script src="./lod-controls.js"></script>
+    <script src="https://aframe.io/releases/0.8.2/aframe.min.js"></script>
+    <script src="../../dist/aframe-tangram-terrain-component.min.js"></script>
+    <script src="./lod-controls.js"></script>
 
   </head>
   <body>
@@ -18,15 +19,15 @@
       <a-entity id="terrain" visible="true"
       
       geometry="primitive: plane; buffer: true; 
-      width: 20; height: 20; 
-      segmentsWidth: 50; segmentsHeight: 50;"
+        width: 20; height: 20; 
+        segmentsWidth: 80; segmentsHeight: 80;"
       material="wireframe: false; displacementScale: 20;"
 
 
       tangram-terrain="
         style: #yaml-austria;
         center: 12.6875, 47.188056;
-        zoom: 14;
+        zoom: 13;
         pxToWorldRatio: 80;
         lodCount: 4;
         lod: 1;

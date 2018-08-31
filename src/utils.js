@@ -110,17 +110,25 @@ module.exports.createGeometryLODs = function (el, data) {
   };
 }
 
-const MeshCustomMaterial = require('./lib/MeshCustomMaterial');
-
 module.exports.applyMaterial = function (el, data, map, normalmap) {
-  
+
   const mesh = el.getObject3D('mesh');
   const matData = el.components.material.data;
-  const material = new MeshCustomMaterial();
+  const material = new THREE.MeshStandardMaterial();
   material.copy(mesh.material);
   
   material.displacementScale = matData.displacementScale;
   material.displacementBias = matData.displacementBias;
+
+  // https://medium.com/@pailhead011/extending-three-js-materials-with-glsl-78ea7bbb9270
+  material.onBeforeCompile = shader => {
+    shader.vertexShader = shader.vertexShader.replace('#include <displacementmap_vertex>', `
+    #ifdef USE_DISPLACEMENTMAP
+
+      transformed += normalize( objectNormal ) * ( texture2D( displacementMap, uv ).a * displacementScale + displacementBias );
+
+    #endif`);
+  }
 
   el.sceneEl.systems.material.loadTexture(map, {src: map}, mapTexture => {
     el.sceneEl.systems.material.loadTexture(normalmap, {src: normalmap}, normalmapTexture => {
@@ -136,3 +144,4 @@ module.exports.applyMaterial = function (el, data, map, normalmap) {
     })
   })
 }
+
