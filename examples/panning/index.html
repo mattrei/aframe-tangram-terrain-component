@@ -3,15 +3,14 @@
       <title>A-Frame Tangram Terrain Component - Airborne</title>
       <meta name="description" content="Airborne example for Tangram component."></meta>
   
-      <script src="../build.js"></script>
+      <script src="https://aframe.io/releases/0.8.2/aframe.min.js"></script>
+      <script src="../../dist/aframe-tangram-terrain-component.min.js"></script>
       <script src="./map-controls.js"></script>
       <script src="./parametric-geometry.js"></script>
     </head>
     <body>
-      <a-scene nostats>
+      <a-scene stats>
         <a-assets>
-            <a-asset-item id="yaml-grayscale" src="https://raw.githubusercontent.com/tangrams/terrain-demos/master/styles/grayscale.yaml"
-            />
           <a-asset-item id="yaml-esri" src="assets/esri-satellite.yaml" />
         </a-assets>
    
