@@ -21,7 +21,10 @@ AFRAME.registerComponent('tangram-static-terrain', {
     },
     bounds: {
       default: [0, 0, 0, 0],
-      type: 'array'
+      type: 'array',
+      parse: function (value) {
+        return value.split(',').map(f => parseFloat(f));
+      }
     },
     lod: {
       default: 1
@@ -130,31 +133,28 @@ AFRAME.registerComponent('tangram-static-terrain', {
   unproject: function (x, y) {
     const data = this.data;
     const geomData = this.el.components.geometry.data;
+    const matData = this.el.components.material.data;
 
-    // Converting world space to pixel space
-    const pxX = (x + (geomData.width / 2)) * data.pxToWorldRatio;
-    const pxY = ((geomData.height / 2) - y) * data.pxToWorldRatio;
+    const deltaLng = data.bounds[2] - data.bounds[0]
+    const deltaLat = data.bounds[3] - data.bounds[1]
 
-    /*
-    // Return the lat / long of that pixel on the map
-    var latLng = this.overlaymap.layerPointToLatLng([pxX, pxY]);
-
-    const deltaLng = data.bounds[0] - data.bounds[2]
-    const deltaLat = data.bounds[1] - data.bounds[3]
-
-
+    const lngRatio = deltaLng / geomData.width;
+    const latRatio = deltaLat / geomData.height;
+    const px = {
+      x: x * lngRatio,
+      y: y * latRatio
+    }
+    console.log(px)
     return {
-      lon: latLng.lng,
-      lat: latLng.lat
+      lon: px.x + (deltaLng/2) + parseFloat(data.bounds[0]),
+      lat: px.y + (deltaLat/2) + parseFloat(data.bounds[1])
     };
-    */
-   // TODO
   },
   _getHeight: function (x, y) {
     const geomData = this.el.components.geometry.data;
 
-    const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
-    const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
+    const pxX = (x + (geomData.width / 2)) 
+    const pxY = ((geomData.height / 2) - y);
 
     return this._hitTest(pxX, pxY);
   },

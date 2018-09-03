@@ -39,11 +39,10 @@ AFRAME.registerSystem('tangram-terrain', {
 
     const viewComplete = function () {
       const canvas = self.heightmapLayer.scene.canvas;
-      console.log('HEIGHTMAP VIEW_COMPLETE', canvas.width);
       onComplete(canvas);
     };
 
-    if (data.singleton && this.heightmap) {
+    if (/*data.singleton &&*/ this.heightmap) {
       this.heightmap._loaded = false;
       this.heightmapLayer.scene.unsubscribeAll();
       this.heightmapLayer.scene.subscribe({
@@ -65,7 +64,6 @@ AFRAME.registerSystem('tangram-terrain', {
     const map = L.map(canvasContainer, Utils.leafletOptions);
     this.heightmap = map;
 
-    console.log(data.apiKey)
     const layer = Tangram.leafletLayer({
       scene: {
         import: elevationStyle,
@@ -106,7 +104,6 @@ AFRAME.registerSystem('tangram-terrain', {
     }
 
     if (this.mapPool.length < this.poolSize) {
-      console.log('SYS creating map');
       const tangram = this._createTangram(data, geomData, viewComplete);
       tangram.used = true;
       tangram.id = this.mapPool.length;
@@ -115,7 +112,6 @@ AFRAME.registerSystem('tangram-terrain', {
     } else {
       for (let tangram of this.mapPool) {
         if (!tangram.used) {
-          console.log('SYS using map', tangram.id);
           tangram.map._loaded = false;
           tangram.layer.scene.unsubscribeAll();
           tangram.layer.scene.subscribe({

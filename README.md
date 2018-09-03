@@ -36,15 +36,19 @@ This component obtains a normalmap from the [Amazon public dataset S3](https://a
 | Name | Data | Description |
 | -------- | ----------- | ------------- |
 | project | _lon_, _lat_| Returns the pixel x and y and z (depth) coordinates of the given longitude and latitude. |
-| unproject | _x_, _y_| Gives the longitude and latitude of the world coordinates. |
-| unprojectHeight | _x_, _y_| Gives the depth value (GPU picked from the heightmap) from the pixel coordinates, only if the `depthBuffer` value is set to _true_. Value is scaled according to the `displacementScale` scale and added the `displacementBias` value. To obtain real height values |
-| unprojectHeightInMeters | _x_, _y_| Gives the height value in meters. No exact values are possible though. Range between 0 and 8900 (Mount Everest) |
-| renderDepthBuffer | | Renders the heightmap depth buffer. Needs to be only called manually if the heigtmap is changed programmtically |
+| unproject | _x_, _y_| Gives the longitude and latitude of the world coordinates at the given pixel points. |
+| unprojectHeight | _x_, _y_| Gives the depth value (GPU picked from the heightmap) from the pixel coordinates. Value is scaled according to the `displacementScale` scale and added the `displacementBias` value. |
+| unprojectHeightInMeters | _x_, _y_| Gives the height value in meters. No physical exact values are possible though. Range between 0 and 8900 (Mount Everest) or -7000 and 8900 meters when `includeOceans` is set to true |
+| renderDepthBuffer | | Renders the heightmap depth buffer. Needs to be only called manually if the heigtmap is panned programmtically |
 
+##### Notes
+
+To download the maps from the terrain press `<ctrl> + <alt> + t` on the keyboard to download the normalmap. To take the styled map, press `<ctrl> + <alt> + <shift> + t` on the keyboard. The bounds of the terrain area will be printed to the console. This comes in handy if you want to provide the assets rathern than pulling it from a tile server directly. See the following component for using those assets.
 
 #### `tangram-static-terrain` component
 
-This component works offline by specifying the map and normalmap by the user. To take the normalmap, press `<ctrl> + <alt> + t` on the keyboard. To take the styled map, press `<ctrl> + <alt> + <shift> + t` on the keyboard.
+This component does not pull data from a tile server but uses image assets, that may be produced manually by downloading them from the component before. 
+Those two maps must be provided as assets to the _map_ and _normalmap_ attributes. Also pass in the _bounds_ string.
 
 ##### Schema
 | Property | Description | Default Value |
@@ -156,4 +160,6 @@ See also [here](https://github.com/tangrams/tangram-play/wiki/Advanced-Tangram-f
 * The _Tangram_ library only allows [one instance on a page] (https://github.com/tangrams/tangram/issues/350) that means a tiling algorithm cannot instance terrain entities in parallel! Hopefully this restriction of the _Tangram_ library may fall in the future.
 
 ### Implementation details
-To save bandwith and increase speed the elevation data is backed into the [normal map of the tiling webservice](https://s3.amazonaws.com/elevation-tiles-prod/normal/{z}/{x}/{y}.png), which is all done in a shader by the _Tangram_ library. _Three.JS_ does not support normals with displacement alpha channels so I created a custom _MeshStandardImplementation_ that respects this format. 
+* To save bandwith and increase speed the elevation data is backed into the [normal map of the tiling webservice](https://s3.amazonaws.com/elevation-tiles-prod/normal/{z}/{x}/{y}.png), which is all done in a shader by the _Tangram_ library. _Three.JS_ does not support normals with displacement alpha channels so I use the `onBeforeCompile` hook on the `MeshStandardMaterial` to handle this texture format. 
+
+* The commond functions are all within the `tangram-terrain` system.

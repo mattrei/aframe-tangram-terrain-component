@@ -37,12 +37,8 @@ AFRAME.registerComponent('tangram-terrain', {
     pxToWorldRatio: {
       default: 10
     },
+    // TODO delete? is really needed?
     useBuffer: {
-      type: 'boolean',
-      default: true
-    },
-    // TODO - delete?
-    dispose: {
       type: 'boolean',
       default: false
     },
@@ -52,9 +48,6 @@ AFRAME.registerComponent('tangram-terrain', {
     },
     lod: {
       default: 1
-    },
-    singleton: {
-      default: false
     },
     vertexNormals: {
       default: true
@@ -129,8 +122,6 @@ AFRAME.registerComponent('tangram-terrain', {
     }
   },
   handleOverlayCanvas: function (canvas) {
-    console.log("handle overlay")
-
     if (!this.setMap) {
       return;
     }

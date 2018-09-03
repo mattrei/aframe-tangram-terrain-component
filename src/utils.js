@@ -122,12 +122,14 @@ module.exports.applyMaterial = function (el, data, map, normalmap) {
 
   // https://medium.com/@pailhead011/extending-three-js-materials-with-glsl-78ea7bbb9270
   material.onBeforeCompile = shader => {
-    shader.vertexShader = shader.vertexShader.replace('#include <displacementmap_vertex>', `
-    #ifdef USE_DISPLACEMENTMAP
+    shader.vertexShader = shader.vertexShader.replace(
+      `#include <displacementmap_vertex>`, 
+      `#ifdef USE_DISPLACEMENTMAP
 
-      transformed += normalize( objectNormal ) * ( texture2D( displacementMap, uv ).a * displacementScale + displacementBias );
+        transformed += normalize( objectNormal ) * ( texture2D( displacementMap, uv ).a * displacementScale + displacementBias );
 
-    #endif`);
+      #endif`
+    );
   }
 
   el.sceneEl.systems.material.loadTexture(map, {src: map}, mapTexture => {

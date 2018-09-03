@@ -60,6 +60,8 @@
   var setProperty = window.AFRAME.utils.entity.setComponentProperty;
   mapEl.addEventListener('tangram-terrain-loaded', function () {
     //12.687492370605469, lng: 47.18805873684999} // center of map
+    console.log("Unproject test", mapEl.components["tangram-static-terrain"].unproject(1,0))
+    console.log("Height test", mapEl.components["tangram-static-terrain"].unprojectHeight(0,0))
     setProperty(markerEl, 'position', mapEl.components["tangram-static-terrain"].project(12.6875, 47.188));
     setProperty(marker2El, 'position', mapEl.components["tangram-static-terrain"].project(12.65, 47.20));
     setProperty(marker3El, 'position', mapEl.components["tangram-static-terrain"].project(12.691, 47.172));
