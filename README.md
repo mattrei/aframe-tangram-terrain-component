@@ -10,7 +10,7 @@ A [Tangram](https://github.com/tangrams/tangram) terrain component for [A-Frame]
 
 #### `tangram-terrain` component
 
-This component obtains a normalmap from the [Amazon public dataset S3](https://aws.amazon.com/public-datasets/terrain/) servers and applies a overlay texture according the `style` specification. The normlmap is used both as a `displacement` map and if wanted also a a `normalmap`. By using the _GPU picking technique_ everything is done on the shader for height calculation. Renders a depth buffer to an external _scene_, so that the height from the normal map alpha channel is read by the GPU. Offers Level-of-Detail (LOD) using buffer geometry draw ranges.
+This component obtains a terrain normalmap from the [Amazon public dataset S3](https://aws.amazon.com/public-datasets/terrain/) servers and applies a overlay texture according the Tangram _style_ specification. The normlmap can be used both as a _displacement_ map for the geometry and also a a _normal_ map for the material. By using the _GPU picking technique_ for the normal map, the height calculation or hit testing is done on the shader. In addition the component also offers Level-of-Detail (LOD) of the geometry by using fast buffer geometry draw ranges on the vertex shader.
 
 ##### Schema
 | Property | Description | Default Value |
@@ -163,3 +163,5 @@ See also [here](https://github.com/tangrams/tangram-play/wiki/Advanced-Tangram-f
 * To save bandwith and increase speed the elevation data is backed into the [normal map of the tiling webservice](https://s3.amazonaws.com/elevation-tiles-prod/normal/{z}/{x}/{y}.png), which is all done in a shader by the _Tangram_ library. _Three.JS_ does not support normals with displacement alpha channels so I use the `onBeforeCompile` hook on the `MeshStandardMaterial` to handle this texture format. 
 
 * The commond functions are all within the `tangram-terrain` system.
+
+* This is done by rendering a depth buffer to an external THREE.JS _scene_, so that the height from the normal map alpha channel is read by the GPU.

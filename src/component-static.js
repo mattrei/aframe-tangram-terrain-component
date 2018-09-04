@@ -60,7 +60,6 @@ AFRAME.registerComponent('tangram-static-terrain', {
       this.depthBuffer = buffer;
       this.el.emit(TERRAIN_LOADED_EVENT);
     })
-
   },
   update: function (oldData) {
     const data = this.data;

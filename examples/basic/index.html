@@ -7,6 +7,7 @@
   <script src="https://aframe.io/releases/0.8.2/aframe.min.js"></script>
   <script src="../../dist/aframe-tangram-terrain-component.min.js"></script>
   <script src="./sphere-matrix.js"></script>
+  <script src="https://unpkg.com/aframe-animation-component/dist/aframe-animation-component.min.js"></script>
 </head>
 
 <body>
@@ -21,11 +22,12 @@
 
 
     <a-entity id="terrain" visible="true" 
-      geometry="width: 40; height: 40; 
-      segmentsWidth: 80; segmentsHeight: 80; 
-      primitive: plane;" 
+      geometry="
+        width: 40; height: 40; 
+        segmentsWidth: 80; segmentsHeight: 80; 
+        primitive: plane;" 
       material="side: double; wireframe: true;
-      displacementScale: 30; displacementBias: 0;"
+        displacementScale: 30; displacementBias: 0;"
       tangram-terrain="
         style: #yamlElevation;
         center: 15.8056, 47.7671;
@@ -35,6 +37,8 @@
         " 
       rotation="-90 0 0" position="0 -10 0"
       sphere-matrix
+
+      animation="property: material.displacementScale; dur: 9000; from: 0; to: 30; startEvents: tangram-terrain-loaded;"
     >
 
       <a-sphere id="marker"  color="red" radius="0.1"></a-sphere>

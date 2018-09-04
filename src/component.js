@@ -78,6 +78,15 @@ AFRAME.registerComponent('tangram-terrain', {
 
     this.createGeometryLODs();
     this.onKeyDown = this.onKeyDown.bind(this);
+
+    this.el.addEventListener('componentchanged', (evt) => {
+      if (evt.detail.name === 'material') {
+        const mesh = this.el.getObject3D('mesh');
+        const matData = evt.target.getAttribute('material');
+        mesh.material.displacementScale = matData.displacementScale;
+        mesh.material.displacementBias = matData.displacementBias;
+      }
+    });
   },
   update: function (oldData) {
     const data = this.data;
