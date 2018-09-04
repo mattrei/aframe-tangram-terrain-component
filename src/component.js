@@ -26,10 +26,7 @@ AFRAME.registerComponent('tangram-terrain', {
     },
     center: {
       default: [0, 0],
-      type: 'array',
-      parse: function (value) {
-        return value.split(',').map(f => parseFloat(f));
-      }
+      type: 'array'
     },
     zoom: {
       default: 13
@@ -60,10 +57,9 @@ AFRAME.registerComponent('tangram-terrain', {
   multiple: false,
 
   init: function () {
+    const el = this.el;
     const data = this.data;
-    const geomData = this.el.components.geometry.data;
-
-
+    const geomData = el.components.geometry.data;
 
     this.handleHeightmapCanvas = this.handleHeightmapCanvas.bind(this);
     this.handleOverlayCanvas = this.handleOverlayCanvas.bind(this);
