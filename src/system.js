@@ -17,8 +17,8 @@ const elevationStyle = require('./styles/normal-alpha-elevation.yaml');
 
 const REMOVETANGRAM_TIMEOUT = 300;
 
-const DEBUG_HM_CANVAS_OFFSET = 99;
-const DEBUG_CANVAS_OFFSET = 99999;
+const DEBUG_HM_CANVAS_OFFSET = 99999;
+const DEBUG_CANVAS_OFFSET = DEBUG_HM_CANVAS_OFFSET + 100;
 
 const HM_RESOLUTION_FACTOR = 2;
 

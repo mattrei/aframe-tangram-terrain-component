@@ -147,3 +147,14 @@ module.exports.applyMaterial = function (el, data, map, normalmap) {
   })
 }
 
+module.exports.watchMaterialData = function (el) {
+
+    el.addEventListener('componentchanged', (evt) => {
+      if (evt.detail.name === 'material') {
+        const mesh = el.getObject3D('mesh');
+        const matData = evt.target.getAttribute('material');
+        mesh.material.displacementScale = matData.displacementScale;
+        mesh.material.displacementBias = matData.displacementBias;
+      }
+    });
+}
