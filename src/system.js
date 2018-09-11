@@ -22,7 +22,6 @@ const DEBUG_CANVAS_OFFSET = DEBUG_HM_CANVAS_OFFSET + 100;
 
 const HM_RESOLUTION_FACTOR = 2;
 
-const POOL_SIZE = 2;
 
 AFRAME.registerSystem('tangram-terrain', {
   init: function () {
@@ -30,9 +29,6 @@ AFRAME.registerSystem('tangram-terrain', {
     this.heightmapLayer = null;
     this.overlaymap = null;
     this.overlaymapLayer = null;
-
-    this.mapPool = [];
-    this.poolSize = POOL_SIZE;
   },
   getOrCreateHeightmap: function (data, geomData, onComplete) {
     const self = this;
@@ -100,30 +96,10 @@ AFRAME.registerSystem('tangram-terrain', {
     function viewComplete(tangram) {
       const canvas = tangram.layer.scene.canvas;
       onComplete(canvas);
-      tangram.used = false;
     }
 
-    if (this.mapPool.length < this.poolSize) {
-      const tangram = this._createTangram(data, geomData, viewComplete);
-      tangram.used = true;
-      tangram.id = this.mapPool.length;
-      this.mapPool.push(tangram);
-      return tangram.map;
-    } else {
-      for (let tangram of this.mapPool) {
-        if (!tangram.used) {
-          tangram.map._loaded = false;
-          tangram.layer.scene.unsubscribeAll();
-          tangram.layer.scene.subscribe({
-            view_complete: function () {
-              viewComplete(tangram);
-            }
-          });
-          tangram.used = true;
-          return tangram.map;
-        }
-      }
-    }
+    const tangram = this._createTangram(data, geomData, viewComplete);
+    return tangram;
   },
   _createTangram: function (data, geomData, onComplete) {
     const width = geomData.width * data.pxToWorldRatio;

@@ -66,7 +66,9 @@ AFRAME.registerComponent('tangram-terrain', {
 
     this.heightmap = this.system.getOrCreateHeightmap(data, geomData, this.handleHeightmapCanvas);
     this.heightmapDisposed = false;
-    this.overlaymap = this.system.getOrCreateMap(data, geomData, this.handleOverlayCanvas);
+    const map = this.system.getOrCreateMap(data, geomData, this.handleOverlayCanvas);
+    this.overlaylayer = map.layer;
+    this.overlaymap = map.map;
     this.overlaymapDisposed = false;
 
     this.depthBuffer = null;
@@ -121,6 +123,17 @@ AFRAME.registerComponent('tangram-terrain', {
       if (data.lod >= 1 && data.lod <= data.lodCount) {
         this.applyLOD(data.lod);
       }
+    }
+    if (data.style !== oldData.style) {
+      console.log('change style', data.style)
+      const cfg = {
+        import: data.style,
+        global: {
+          sdk_api_key: data.apiKey
+          // language
+        }
+      }
+      this.overlaylayer.scene.load(cfg)
     }
   },
   handleOverlayCanvas: function (canvas) {
