@@ -110,7 +110,12 @@ AFRAME.registerComponent('tangram-terrain', {
       this.overlaymap.fitBounds(this.bounds);
 
       if (this.heightmap) {
+        console.log('set heightmap')
         this.setHeightmap = true;
+        this.heightmap.fitBounds(this.overlaymap.getBounds());
+        this.heightmap.invalidateSize({
+          animate: false
+        });
         this.heightmap.fitBounds(this.overlaymap.getBounds());
         this.heightmap.invalidateSize({
           animate: false
@@ -125,7 +130,6 @@ AFRAME.registerComponent('tangram-terrain', {
       }
     }
     if (data.style !== oldData.style) {
-      console.log('change style', data.style)
       const cfg = {
         import: data.style,
         global: {
@@ -136,6 +140,14 @@ AFRAME.registerComponent('tangram-terrain', {
       this.overlaylayer.scene.load(cfg)
     }
   },
+
+  renderDepthBuffer: function() {
+    if (this.depthBuffer) {
+      // if we have a depthbuffer and the scene is just updated
+      this.system.renderDepthBuffer(this.depthBuffer);
+    }
+  },
+
   handleOverlayCanvas: function (canvas) {
     if (!this.setMap) {
       return;
@@ -171,18 +183,18 @@ AFRAME.registerComponent('tangram-terrain', {
     this.lods = lods.lods;
   },
   handleHeightmapCanvas: function (canvas) {
-
+    console.log('handle heightmapy')
     if (!this.setHeightmap) return;
     this.setHeightmap = false;
 
-    this.normalmap = this.data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
+    //this.normalmap = this.data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
+    this.normalmap = canvas;
 
     this.system.createDepthBuffer(this.normalmap).then(buffer => {
       this.depthBuffer = buffer
+      this._fire();
     });
 
-
-    this._fire();
   },
   remove: function () {
     this.system.dispose(this.heightmap);
@@ -190,6 +202,7 @@ AFRAME.registerComponent('tangram-terrain', {
     this.system.dispose(this.overlaymap);
     this.overlaymapDisposed = true;
   },
+
   _fire: function () {
     this._count = this._count || 0;
     this._count += 1;

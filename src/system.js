@@ -31,21 +31,6 @@ AFRAME.registerSystem('tangram-terrain', {
     this.overlaymapLayer = null;
   },
   getOrCreateHeightmap: function (data, geomData, onComplete) {
-    const self = this;
-
-    const viewComplete = function () {
-      const canvas = self.heightmapLayer.scene.canvas;
-      onComplete(canvas);
-    };
-
-    if (/*data.singleton &&*/ this.heightmap) {
-      this.heightmap._loaded = false;
-      this.heightmapLayer.scene.unsubscribeAll();
-      this.heightmapLayer.scene.subscribe({
-        view_complete: viewComplete
-      });
-      return this.heightmap;
-    }
 
     const width = geomData.segmentsWidth * HM_RESOLUTION_FACTOR + 1;
     const height = geomData.segmentsHeight * HM_RESOLUTION_FACTOR + 1;
@@ -82,26 +67,23 @@ AFRAME.registerSystem('tangram-terrain', {
     this.heightmapLayer = layer;
 
     layer.scene.subscribe({
-      load: function () {
+      load: () => {
         layer.scene.config.styles.combo.shaders.defines.USE_NORMALS = data.vertexNormals;
         Utils.processCanvasElement(canvasContainer);
       },
-      view_complete: viewComplete
+      post_update: (will_render) => {
+      },
+      view_complete: () => {
+        const canvas = this.heightmapLayer.scene.canvas;
+        onComplete(canvas);
+      }
     });
     layer.addTo(map);
 
     return map;
   },
   getOrCreateMap: function (data, geomData, onComplete) {
-    function viewComplete(tangram) {
-      const canvas = tangram.layer.scene.canvas;
-      onComplete(canvas);
-    }
 
-    const tangram = this._createTangram(data, geomData, viewComplete);
-    return tangram;
-  },
-  _createTangram: function (data, geomData, onComplete) {
     const width = geomData.width * data.pxToWorldRatio;
     const height = geomData.height * data.pxToWorldRatio;
 
@@ -136,11 +118,12 @@ AFRAME.registerSystem('tangram-terrain', {
     };
 
     layer.scene.subscribe({
-      load: function () {
+      load: () => {
         Utils.processCanvasElement(canvasContainer);
       },
-      view_complete: function () {
-        onComplete(tangram);
+      view_complete: () => {
+        const canvas = tangram.layer.scene.canvas;
+        onComplete(canvas);
       }
     });
 
@@ -150,7 +133,6 @@ AFRAME.registerSystem('tangram-terrain', {
     const container = map.getContainer();
     container.style.width = (width) + 'px';
     container.style.height = (height) + 'px';
-    // console.log("Changing container size to", container.style.width);
 
     const bounds = map.getBounds();
 
@@ -161,51 +143,7 @@ AFRAME.registerSystem('tangram-terrain', {
     // tangram reload?
     // this.overlaymap.layer.scene.immediateRedraw();
   },
-  createDepthBufferOLD: function (canvas) {
-    // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
 
-    const imageWidth = canvas.width;
-    const imageHeight = canvas.height;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(
-      imageWidth / -2,
-      imageWidth / 2,
-      imageHeight / 2,
-      imageHeight / -2, -1, 1);
-
-    const texture = new THREE.WebGLRenderTarget(imageWidth, imageHeight, {
-      minFilter: THREE.NearestFilter,
-      magFilter: THREE.NearestFilter,
-      type: THREE.UnsignedByteType
-    });
-
-    // TODO?
-    //this.el.systems.material.loadTexture(normalmap, {src: normalmap}, normalmapTexture => {
-
-    const canvasTexture = new THREE.CanvasTexture(canvas);
-    // canvasTexture.generateMipmaps = false;
-
-    canvas.width = imageWidth;
-    canvas.height = imageHeight;
-
-    const mesh = new THREE.Mesh(
-      new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
-      new THREE.MeshBasicMaterial({
-        map: canvasTexture,
-        transparent: true
-      })
-    );
-    scene.add(mesh);
-
-    return {
-      scene: scene,
-      camera: camera,
-      mesh: mesh,
-      texture: texture,
-      canvasTexture: canvasTexture
-    };
-  },
   createDepthBuffer: function (canvas) {
 
     // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
@@ -293,7 +231,7 @@ AFRAME.registerSystem('tangram-terrain', {
     return copy;
   },
   renderDepthBuffer: function (depthBuffer) {
-    // depthBuffer.canvasTexture.needsUpdate = true;
+    depthBuffer.canvasTexture.needsUpdate = true;
     this.el.renderer.render(depthBuffer.scene, depthBuffer.camera, depthBuffer.texture);
   },
   dispose: function (obj) {
