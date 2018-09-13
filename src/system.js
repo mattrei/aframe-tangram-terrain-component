@@ -25,12 +25,8 @@ const HM_RESOLUTION_FACTOR = 2;
 
 AFRAME.registerSystem('tangram-terrain', {
   init: function () {
-    this.heightmap = null;
-    this.heightmapLayer = null;
-    this.overlaymap = null;
-    this.overlaymapLayer = null;
   },
-  getOrCreateHeightmap: function (data, geomData, onComplete) {
+  createHeightmap: function (data, geomData, onComplete) {
 
     const width = geomData.segmentsWidth * HM_RESOLUTION_FACTOR + 1;
     const height = geomData.segmentsHeight * HM_RESOLUTION_FACTOR + 1;
@@ -43,15 +39,10 @@ AFRAME.registerSystem('tangram-terrain', {
       width, height, DEBUG_HM_CANVAS_OFFSET);
 
     const map = L.map(canvasContainer, Utils.leafletOptions);
-    this.heightmap = map;
 
     const layer = Tangram.leafletLayer({
       scene: {
-        import: elevationStyle,
-        global: {
-          sdk_api_key: data.apiKey
-          // language
-        }
+        import: elevationStyle
       },
       webGLContextOptions: {
         preserveDrawingBuffer: PRESERVE_DRAWING_BUFFER,
@@ -64,25 +55,27 @@ AFRAME.registerSystem('tangram-terrain', {
       attribution: ''
     });
 
-    this.heightmapLayer = layer;
+    const tangram = {
+      map: map,
+      layer: layer
+    };
 
     layer.scene.subscribe({
-      load: () => {
+      load: (event) => {
+//        this.injectAPIKey(event.config, data.apiKey);
         layer.scene.config.styles.combo.shaders.defines.USE_NORMALS = data.vertexNormals;
         Utils.processCanvasElement(canvasContainer);
       },
-      post_update: (will_render) => {
-      },
       view_complete: () => {
-        const canvas = this.heightmapLayer.scene.canvas;
+        const canvas = tangram.layer.scene.canvas;
         onComplete(canvas);
       }
     });
     layer.addTo(map);
 
-    return map;
+    return tangram;
   },
-  getOrCreateMap: function (data, geomData, onComplete) {
+  createMap: function (data, geomData, onComplete) {
 
     const width = geomData.width * data.pxToWorldRatio;
     const height = geomData.height * data.pxToWorldRatio;
@@ -95,11 +88,7 @@ AFRAME.registerSystem('tangram-terrain', {
 
     const layer = Tangram.leafletLayer({
       scene: {
-        import: data.style,
-        global: {
-          sdk_api_key: data.apiKey
-          // language
-        }
+        import: data.style
       },
       numWorkers: 4,
       highDensityDisplay: false,
@@ -118,8 +107,11 @@ AFRAME.registerSystem('tangram-terrain', {
     };
 
     layer.scene.subscribe({
-      load: () => {
+      load: (event) => {
+        this.injectAPIKey(event.config, data.apiKey);
         Utils.processCanvasElement(canvasContainer);
+      },
+      post_update: (will_render) => {
       },
       view_complete: () => {
         const canvas = tangram.layer.scene.canvas;
@@ -239,5 +231,45 @@ AFRAME.registerSystem('tangram-terrain', {
     Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
       obj.layer.remove();
     });
+  },
+  injectAPIKey(config, apiKey) {
+    const URL_PATTERN = /((https?:)?\/\/tiles?.nextzen.org([a-z]|[A-Z]|[0-9]|\/|\{|\}|\.|\||:)+(topojson|geojson|mvt|png|tif|gz))/;
+
+    let didInjectKey = false;
+
+    Object.entries(config.sources).forEach((entry) => {
+      const [key, value] = entry;
+      let valid = false;
+
+      // Only operate on the URL if it's a Mapzen-hosted vector tile service
+      if (!value.url.match(URL_PATTERN)) return;
+
+      // Check for valid API keys in the source.
+      // First, check the url_params.api_key field
+      // Tangram.js compatibility note: Tangram >= v0.11.7 fires the `load`
+      // event after `global` property substitution, so we don't need to manually
+      // check global properties here.
+      if (value.url_params && value.url_params.api_key) {
+        valid = true;
+      // Next, check if there is an api_key param in the query string
+      } else if (value.url.match(/(\?|&)api_key=[-a-z]+-[0-9a-zA-Z_-]{7}/)) {
+        valid = true;
+      }
+
+      if (!valid) {
+        // Add a default API key as a url_params setting.
+        // Preserve existing url_params if present.
+        const params = Object.assign({}, config.sources[key].url_params, {
+          api_key: apiKey,
+        });
+
+        // Mutate the original on purpose.
+        // eslint-disable-next-line no-param-reassign
+        config.sources[key].url_params = params;
+        didInjectKey = true;
+      }
+    });
+
+    return didInjectKey;
   }
 });

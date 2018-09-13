@@ -9,7 +9,7 @@
 
   </head>
   <body>
-    <a-scene statss>
+    <a-scene>
       <a-assets>
         <a-asset-item id="yaml-austria" src="assets/austria-airborne.yaml" />
         <a-asset-item id="yaml-esri" src="assets/esri-airborne.yaml" />
@@ -21,7 +21,7 @@
       geometry="primitive: plane; buffer: true; 
         width: 20; height: 20; 
         segmentsWidth: 80; segmentsHeight: 80;"
-      material="wireframe: false; displacementScale: 20;"
+      material="wireframe: false; displacementScale: 10;"
 
 
       tangram-terrain="
@@ -29,9 +29,8 @@
         center: 12.6875, 47.188056;
         zoom: 13;
         pxToWorldRatio: 80;
-        lodCount: 4;
-        lod: 1;
-        vertexNormals: false;
+        lodCount: 1;
+        lod: 1
       " 
 
       lod-controls

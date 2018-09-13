@@ -37,11 +37,6 @@ AFRAME.registerComponent('tangram-terrain', {
     pxToWorldRatio: {
       default: 10
     },
-    // TODO delete? is really needed?
-    useBuffer: {
-      type: 'boolean',
-      default: false
-    },
     lodCount: {
       default: 1,
       oneOf: [1, 2, 3, 4]
@@ -50,6 +45,9 @@ AFRAME.registerComponent('tangram-terrain', {
       default: 1
     },
     vertexNormals: {
+      default: true
+    },
+    production: {
       default: true
     }
   },
@@ -64,13 +62,17 @@ AFRAME.registerComponent('tangram-terrain', {
     this.handleHeightmapCanvas = this.handleHeightmapCanvas.bind(this);
     this.handleOverlayCanvas = this.handleOverlayCanvas.bind(this);
 
-    this.heightmap = this.system.getOrCreateHeightmap(data, geomData, this.handleHeightmapCanvas);
+    const heightmap = this.system.createHeightmap(data, geomData, this.handleHeightmapCanvas);
+    this.heightmaplayer = heightmap.layer;
+    this.heightmap = heightmap.map
     this.heightmapDisposed = false;
-    const map = this.system.getOrCreateMap(data, geomData, this.handleOverlayCanvas);
+
+    const map = this.system.createMap(data, geomData, this.handleOverlayCanvas);
     this.overlaylayer = map.layer;
     this.overlaymap = map.map;
     this.overlaymapDisposed = false;
 
+    // references for the API
     this.depthBuffer = null;
     this.map = null;
     this.normalmap = null;
@@ -78,7 +80,9 @@ AFRAME.registerComponent('tangram-terrain', {
     this.lods = [];
 
     this.createGeometryLODs();
-    this.onKeyDown = this.onKeyDown.bind(this);
+    if (!data.production) {
+      this.onKeyDown = this.onKeyDown.bind(this);
+    }
 
     Utils.watchMaterialData(el);
 
@@ -102,7 +106,6 @@ AFRAME.registerComponent('tangram-terrain', {
       this.bounds = new L.LatLngBounds(sw, ne);
     }
     if (setView /* || data.lod !== oldData.lod*/ ) {
-      this.setMap = true;
       this.overlaymap.fitBounds(this.bounds);
       this.overlaymap.invalidateSize({
         animate: false
@@ -110,16 +113,8 @@ AFRAME.registerComponent('tangram-terrain', {
       this.overlaymap.fitBounds(this.bounds);
 
       if (this.heightmap) {
-        console.log('set heightmap')
-        this.setHeightmap = true;
         this.heightmap.fitBounds(this.overlaymap.getBounds());
-        this.heightmap.invalidateSize({
-          animate: false
-        });
-        this.heightmap.fitBounds(this.overlaymap.getBounds());
-        this.heightmap.invalidateSize({
-          animate: false
-        });
+        this.heightmap.invalidateSize({animate: false});
         this.heightmap.fitBounds(this.overlaymap.getBounds());
       }
     }
@@ -129,15 +124,12 @@ AFRAME.registerComponent('tangram-terrain', {
         this.applyLOD(data.lod);
       }
     }
-    if (data.style !== oldData.style) {
+    if (data.style !== oldData.style && oldData.style) {
       const cfg = {
-        import: data.style,
-        global: {
-          sdk_api_key: data.apiKey
-          // language
-        }
+        import: data.style
       }
-      this.overlaylayer.scene.load(cfg)
+      this.overlaylayer.scene.load(cfg);
+      //this.overlaylayer.scene.immediateRedraw();
     }
   },
 
@@ -149,12 +141,10 @@ AFRAME.registerComponent('tangram-terrain', {
   },
 
   handleOverlayCanvas: function (canvas) {
-    if (!this.setMap) {
-      return;
-    }
-    this.setMap = false;
+    console.log('handle overlay')
 
-    this.map = this.data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
+    //this.map = this.data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
+    this.map = canvas;
 
     this.applyLOD(this.data.lod);
 
@@ -183,9 +173,6 @@ AFRAME.registerComponent('tangram-terrain', {
     this.lods = lods.lods;
   },
   handleHeightmapCanvas: function (canvas) {
-    console.log('handle heightmapy')
-    if (!this.setHeightmap) return;
-    this.setHeightmap = false;
 
     //this.normalmap = this.data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
     this.normalmap = canvas;
@@ -193,6 +180,7 @@ AFRAME.registerComponent('tangram-terrain', {
     this.system.createDepthBuffer(this.normalmap).then(buffer => {
       this.depthBuffer = buffer
       this._fire();
+      console.log('handle heightmapy')
     });
 
   },
@@ -210,6 +198,7 @@ AFRAME.registerComponent('tangram-terrain', {
     if (this._count === 0) {
       Utils.applyMaterial(this.el, this.data, this.map, this.normalmap);
       this.el.emit(TERRAIN_LOADED_EVENT);
+      console.log('loaded')
     }
   },
   project: function (lon, lat) {
