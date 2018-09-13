@@ -55,21 +55,14 @@ AFRAME.registerComponent('tangram-terrain', {
   multiple: false,
 
   init: function () {
-    const el = this.el;
     const data = this.data;
-    const geomData = el.components.geometry.data;
+    this.loaded = false;
 
     this.handleHeightmapCanvas = this.handleHeightmapCanvas.bind(this);
     this.handleOverlayCanvas = this.handleOverlayCanvas.bind(this);
 
-    const heightmap = this.system.createHeightmap(data, geomData, this.handleHeightmapCanvas);
-    this.heightmaplayer = heightmap.layer;
-    this.heightmap = heightmap.map
     this.heightmapDisposed = false;
 
-    const map = this.system.createMap(data, geomData, this.handleOverlayCanvas);
-    this.overlaylayer = map.layer;
-    this.overlaymap = map.map;
     this.overlaymapDisposed = false;
 
     // references for the API
@@ -84,17 +77,40 @@ AFRAME.registerComponent('tangram-terrain', {
       this.onKeyDown = this.onKeyDown.bind(this);
     }
 
-    Utils.watchMaterialData(el);
+    Utils.watchMaterialData(this.el);
 
   },
   update: function (oldData) {
     const data = this.data;
+    const el = this.el;
+    const geomData = el.components.geometry.data;
 
+    if (!data.style) return;
     // Nothing changed
     if (AFRAME.utils.deepEqual(oldData, data)) {
       return;
     }
 
+    if (data.style !== oldData.style) {
+      this.loaded = false;
+
+      if (!this.heightmap) {
+        const heightmap = this.system.createHeightmap(data, geomData, this.handleHeightmapCanvas);
+        this.heightmaplayer = heightmap.layer;
+        this.heightmap = heightmap.map
+      }
+      if (!this.overlaymap) {
+        const map = this.system.createMap(data, geomData, this.handleOverlayCanvas);
+        this.overlaylayer = map.layer;
+        this.overlaymap = map.map;
+      } else {
+        const cfg = {
+          import: data.style
+        }
+        this.overlaylayer.scene.load(cfg);
+        this.overlaylayer.scene.immediateRedraw();
+      }
+    }
 
     var setView = false;
 
@@ -123,13 +139,6 @@ AFRAME.registerComponent('tangram-terrain', {
       if (data.lod >= 1 && data.lod <= data.lodCount) {
         this.applyLOD(data.lod);
       }
-    }
-    if (data.style !== oldData.style && oldData.style) {
-      const cfg = {
-        import: data.style
-      }
-      this.overlaylayer.scene.load(cfg);
-      //this.overlaylayer.scene.immediateRedraw();
     }
   },
 
@@ -198,7 +207,7 @@ AFRAME.registerComponent('tangram-terrain', {
     if (this._count === 0) {
       Utils.applyMaterial(this.el, this.data, this.map, this.normalmap);
       this.el.emit(TERRAIN_LOADED_EVENT);
-      console.log('loaded')
+      this.loaded = true;
     }
   },
   project: function (lon, lat) {
@@ -337,6 +346,10 @@ AFRAME.registerComponent('tangram-terrain', {
         document.body.removeChild(linkEl);
       }, 1);
     }, 'image/' + imgType);
+  },
+
+  hasLoaded: function() {
+    return this.loaded;
   }
 
 });
