@@ -78,8 +78,8 @@ AFRAME.registerComponent('tangram-terrain', {
 
     this.once = true;
     Utils.watchMaterialData(this.el);
-
   },
+
   update: function (oldData) {
     const data = this.data;
     const el = this.el;
@@ -93,7 +93,6 @@ AFRAME.registerComponent('tangram-terrain', {
 
     let setStyle = false;
     if (data.style !== oldData.style) {
-      this.hasLoaded = false;
 
       setStyle = true;
       if (!this.heightmap && !this.overlaymap) {
@@ -167,8 +166,6 @@ AFRAME.registerComponent('tangram-terrain', {
   },
 
   handleOverlayCanvas: function (canvas) {
-    console.log('handle overlay')
-
     //this.map = this.data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
     this.map = canvas;
 
@@ -203,7 +200,6 @@ AFRAME.registerComponent('tangram-terrain', {
     //this.normalmap = this.data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
     this.normalmap = canvas;
 
-    console.log('handle heightmapy')
     this.system.createDepthBuffer(this.normalmap).then(buffer => {
       this.depthBuffer = buffer
       this.renderDepthBuffer(this.depthBuffer);

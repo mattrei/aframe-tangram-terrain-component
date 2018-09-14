@@ -166,7 +166,9 @@ AFRAME.registerSystem('tangram-terrain', {
           new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
           new THREE.MeshBasicMaterial({
             map: mapTexture,
-            transparent: true
+            lights: false,
+            fog: false,
+            //transparent: true
           })
         );
         scene.add(mesh);
