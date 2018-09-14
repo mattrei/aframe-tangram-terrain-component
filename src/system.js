@@ -17,8 +17,8 @@ const elevationStyle = require('./styles/normal-alpha-elevation.yaml');
 
 const REMOVETANGRAM_TIMEOUT = 300;
 
-const DEBUG_HM_CANVAS_OFFSET = 99999;
-const DEBUG_CANVAS_OFFSET = DEBUG_HM_CANVAS_OFFSET + 100;
+const DEBUG_CANVAS_OFFSET =     99999;
+const DEBUG_HM_CANVAS_OFFSET =  9;
 
 const HM_RESOLUTION_FACTOR = 2;
 
@@ -154,6 +154,7 @@ AFRAME.registerSystem('tangram-terrain', {
       minFilter: THREE.NearestFilter,
       magFilter: THREE.NearestFilter,
       type: THREE.UnsignedByteType
+      //type: THREE.FloatType
     });
 
     return new Promise((resolve, reject) => {
@@ -177,9 +178,6 @@ AFRAME.registerSystem('tangram-terrain', {
           texture: texture,
           canvasTexture: mapTexture
         }
-
-        this.renderDepthBuffer(depthBuffer);
-
         resolve(depthBuffer);
       })
     })
