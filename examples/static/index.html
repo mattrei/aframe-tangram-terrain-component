@@ -24,14 +24,15 @@
       
       geometry="primitive: plane; buffer: true;
       width: 20; height: 20; 
-      segmentsWidth: 50; segmentsHeight: 50;"
-      material="wireframe: false; displacementScale: 20;"
+      segmentsWidth: 100; segmentsHeight: 100;"
 
+      material="wireframe: false; displacementScale: 20;"
 
       tangram-static-terrain="
         map: #map;
         normalmap: #normalmap;
         bounds: 12.61882781982422,47.14139472293294,12.756156921386719,47.23472275076704;
+        pxToWorldRatio: 80;
         lodCount: 4;
         lod: 1;
         vertexNormals: true;
@@ -62,11 +63,15 @@
   var marker3El = document.querySelector('#marker3');
   var setProperty = window.AFRAME.utils.entity.setComponentProperty;
   mapEl.addEventListener('tangram-terrain-loaded', function () {
-    //12.687492370605469, lng: 47.18805873684999} // center of map
-    console.log("Unproject test", mapEl.components["tangram-static-terrain"].unproject(1,0))
-    console.log("Height test", mapEl.components["tangram-static-terrain"].unprojectHeight(0,0))
-    setProperty(markerEl, 'position', mapEl.components["tangram-static-terrain"].project(12.6875, 47.188));
-    setProperty(marker2El, 'position', mapEl.components["tangram-static-terrain"].project(12.65, 47.20));
+    //lat: 12.687492370605469, lng: 47.18805873684999} // center of map
+
+    console.log("Unproject test at lat 0 lon 0", mapEl.components["tangram-static-terrain"].unproject(0,0))
+    console.log("Height test ", mapEl.components["tangram-static-terrain"].unprojectHeight(0,0))
+
+    setProperty(markerEl, 'position', mapEl.components["tangram-static-terrain"].project(12.687492370605469, 47.18805873684999));
+
+    setProperty(marker2El, 'position', mapEl.components["tangram-static-terrain"].project(12.687492370605469, 47.20));
+
     setProperty(marker3El, 'position', mapEl.components["tangram-static-terrain"].project(12.691, 47.172));
   });
 </script>

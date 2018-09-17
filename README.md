@@ -60,6 +60,15 @@ Those two maps must be provided as assets to the _map_ and _normalmap_ attribute
 | lod | See `tangram-terrain` component | 1 |
 | vertexNormals | See `tangram-terrain` component | true |
 
+##### API
+| Name | Data | Description |
+| -------- | ----------- | ------------- |
+| project | _lon_, _lat_| Returns the pixel x and y and z (depth) coordinates of the given longitude and latitude. Return `null` if the given coordinates are outside the bounds. |
+| unproject | _x_, _y_| Gives the longitude and latitude of the world coordinates at the given pixel points. Returns `null` if the given coordinates are outside the bounds. |
+| unprojectHeight | _x_, _y_| Gives the depth value (GPU picked from the heightmap) from the pixel coordinates. Value is scaled according to the `displacementScale` scale and added the `displacementBias` value. |
+| unprojectHeightInMeters | _x_, _y_| Gives the height value in meters. No physical exact values are possible though. Range between 0 and 8900 (Mount Everest) or -7000 and 8900 meters when `includeOceans` is set to true |
+| renderDepthBuffer | | Renders the heightmap depth buffer. Needs to be only called manually if the heigtmap is panned programmtically |
+
 ### Styling
 The Tangram map is styled within a (set) of YAML files. See the [Tangram documentation](https://mapzen.com/documentation/tangram/) for details. 
 

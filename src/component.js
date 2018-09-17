@@ -239,7 +239,7 @@ AFRAME.registerComponent('tangram-terrain', {
     // y-coord is inverted (positive up in world space, positive down in pixel space)
     const worldY = -(px.y / data.pxToWorldRatio) + (geomData.height / 2);
     
-    var z = this._hitTest(px.x, px.y);
+    let z = this._hitTest(px.x, px.y);
 
     z *= matData.displacementScale;
     z += matData.displacementBias;
@@ -271,6 +271,7 @@ AFRAME.registerComponent('tangram-terrain', {
       return pixelBuffer[3] / 255;
     }
   })(),
+
   unproject: function (x, y) {
     const data = this.data;
     const geomData = this.el.components.geometry.data;
@@ -286,29 +287,32 @@ AFRAME.registerComponent('tangram-terrain', {
       lat: latLng.lat
     };
   },
+
   _getHeight: function (x, y) {
     const geomData = this.el.components.geometry.data;
 
     const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
     const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
 
-    const data = this.data;
-
     return this._hitTest(pxX, pxY);
   },
+
   unprojectHeight: function (x, y) {
     const matData = this.el.components.material.data;
     return this._getHeight(x, y) * matData.displacementScale + matData.displacementBias;
   },
+
   unprojectHeightInMeters: function (x, y) {
     return this._getHeight(x, y) * 19900 - 11000;
   },
+
   getMap: function () {
     if (this.overlaymapDisposed) {
       throw new Error('Overlaymap disposed.');
     }
     return this.overlaymap;
   },
+
   getHeightmap: function () {
     if (this.heightmapDisposed) {
       throw new Error('Heightmap disposed.');
