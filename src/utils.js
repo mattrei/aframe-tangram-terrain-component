@@ -153,8 +153,11 @@ module.exports.watchMaterialData = function (el) {
       if (evt.detail.name === 'material') {
         const mesh = el.getObject3D('mesh');
         const matData = evt.target.getAttribute('material');
+        // can we make this better?
         mesh.material.displacementScale = matData.displacementScale;
         mesh.material.displacementBias = matData.displacementBias;
+        mesh.material.opacity = matData.opacity;
+        mesh.material.transparent = matData.transparent;
       }
     });
 }

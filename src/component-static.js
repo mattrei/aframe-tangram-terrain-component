@@ -165,6 +165,6 @@ AFRAME.registerComponent('tangram-static-terrain', {
     return this._getHeight(x, y) * matData.displacementScale + matData.displacementBias;
   },
   unprojectHeightInMeters: function (x, y) {
-    return this._getHeight(x, y) * 8900;
+    return this._getHeight(x, y) * 8900; // TODO
   }
 })

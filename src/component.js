@@ -45,9 +45,6 @@ AFRAME.registerComponent('tangram-terrain', {
     },
     vertexNormals: {
       default: true
-    },
-    production: {
-      default: true
     }
   },
 
@@ -72,9 +69,7 @@ AFRAME.registerComponent('tangram-terrain', {
     this.lods = [];
 
     this.createGeometryLODs();
-    if (!data.production) {
-      this.onKeyDown = this.onKeyDown.bind(this);
-    }
+    this.onKeyDown = this.onKeyDown.bind(this);
 
     this.once = true;
     Utils.watchMaterialData(this.el);
