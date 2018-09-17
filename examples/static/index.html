@@ -4,7 +4,7 @@
     <meta name="description" content="Static example for Tangram component."></meta>
     <script src="https://aframe.io/releases/0.8.2/aframe.min.js"></script>
     <script src="../../dist/aframe-tangram-terrain-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-animation-component/dist/aframe-animation-component.min.js"></script>
+    <script src="./sphere-matrix.js"></script>
   </head>
   <body>
     <a-scene statss>
@@ -40,6 +40,8 @@
 
       rotation="-90 0 0"
       position="0 -15 -10"
+
+      sphere-matrix
 
       NOanimation="property: material.displacementScale; dur: 4000; from: 0; to: 20; startEvents: tangram-terrain-loaded;"
       >

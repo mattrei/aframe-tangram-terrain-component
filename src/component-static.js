@@ -118,20 +118,23 @@ AFRAME.registerComponent('tangram-static-terrain', {
     const height = geomData.height// * data.pxToWorldRatio;
 
     // convert to world space
-    const worldX = (width / deltaLng * (data.bounds[2] - lon)) - (width / 2);
+    //const worldX = (width / deltaLng * (data.bounds[2] - lon)) - (width / 2);
+    const worldX = -(width / deltaLng * (data.bounds[2] - lon)) + (width / 2);
+
     // y-coord is inverted (positive up in world space, positive down in pixel space)
     const worldY = -(height / deltaLat * (data.bounds[3] - lat)) + (height / 2);
 
-    const normalmapWidth = data.normalmap.width //* data.pxToWorldRatio; //THREE.Math.floorPowerOfTwo(data.normalmap.width);
-    const normalmapHeight = data.normalmap.height// * data.pxToWorldRatio; //THREE.Math.floorPowerOfTwo(data.normalmap.height);
+    const normalmapWidth = data.normalmap.width; 
+    const normalmapHeight = data.normalmap.height;
 
     const px = {
-      x: normalmapWidth / deltaLng * (data.bounds[2] - lon),
-      y: normalmapHeight / deltaLat * (data.bounds[3] - lat)
+      x: normalmapWidth / deltaLng * (data.bounds[2] - lon), //- (normalmapWidth / 2),
+      y: normalmapHeight / deltaLat * (data.bounds[3] - lat) // + (normalmapHeight / 2)
     }
 
     // read alpha value
     let z = this._hitTestPlain(px.x, px.y);
+    console.log(px.x, px.y, z)
 
     z *= matData.displacementScale;
     z += matData.displacementBias;
@@ -152,6 +155,7 @@ AFRAME.registerComponent('tangram-static-terrain', {
 
   _hitTest: (function () {
     const pixelBuffer = new Uint8Array(4);//Float32Array(4);
+
     return function(x, y) {
       const data = this.data;
       const geomData = this.el.components.geometry.data;
@@ -161,7 +165,6 @@ AFRAME.registerComponent('tangram-static-terrain', {
       const width = geomData.width * data.pxToWorldRatio;
       const height = geomData.height * data.pxToWorldRatio;
 
-      console.log(x,y)
       // converting pixel space to texture space
       const hitX = Math.round((x) / width * depthTexture.width);
       const hitY = Math.round((height - y) / height * depthTexture.height);
@@ -173,16 +176,24 @@ AFRAME.registerComponent('tangram-static-terrain', {
     }
   })(),
 
-  _hitTestPlain: function (x, y) {
-    const data = this.data;
-    const geomData = this.el.components.geometry.data;
-    const pixelBuffer = new Uint8Array(4);
+  _hitTestPlain: (function () {
+    const pixelBuffer = new Uint8Array(4);//Float32Array(4);
 
-    this.el.sceneEl.renderer.readRenderTargetPixels(this.depthBuffer.texture, x, y, 1, 1, pixelBuffer);
+    return function(x, y) {
+      const data = this.data;
+      const geomData = this.el.components.geometry.data;
+      const pixelBuffer = new Uint8Array(4);
 
-    // read alpha value
-    return pixelBuffer[3] / 255;
-  },
+      const depthTexture = this.depthBuffer.texture;
+
+      const hitX = depthTexture.width - x;
+      const hitY = depthTexture.height - y;
+      this.el.sceneEl.renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
+
+      // read alpha value
+      return pixelBuffer[3] / 255;
+    }
+  })(),
 
   // TODO
   unproject: function (x, y) {
