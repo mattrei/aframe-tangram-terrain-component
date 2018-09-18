@@ -17,7 +17,6 @@ This component obtains a terrain normalmap from the [Amazon public dataset S3](h
 | -------- | ----------- | ------------- |
 | apiKey | Sets the global API key of the overlay map. May be empty if the style needs no API. | "" |
 | style | The style definition document for the ovleray style. Must point to a custom style or to a [basemap style](https://www.nextzen.org/). May need an API key set. | "" |
-| includeOceans | Include Ocean heightmap data between. To be implemented. | false |
 | center | Center of the map, in the form of [longitude, latitude] | [0, 0] |
 | zoom | The zoom level of the map. | 13 |
 | pxToWorldRatio | The multiplication factor between meters in A-Frame and the pixels of the map. ie; when set to 100, will display 100 pixels per 1 meter in world space. (see [a note on fidelity](#a-note-on-fidelity)) | 100 |
@@ -43,12 +42,15 @@ This component obtains a terrain normalmap from the [Amazon public dataset S3](h
 
 ##### Notes
 
-To download the maps from the terrain press `<ctrl> + <alt> + t` on the keyboard to download the normalmap. To take the styled map, press `<ctrl> + <alt> + <shift> + t` on the keyboard. The bounds of the terrain area will be printed to the console. This comes in handy if you want to provide the assets rathern than pulling it from a tile server directly. See the following component for using those assets.
+You can also download the map data to your machine and use the component below to display and work with the terrain. This comes in handy if you want to provide the assets rathern than pulling it from a tile server directly. 
+To download the normalmap from the current terrain press `<ctrl> + <alt> + t` on the keyboard. To download the styled map press `<ctrl> + <alt> + <shift> + t` on the keyboard. The bounds of the terrain area will be printed to the console which is need for the static terrain as an argument. See the following component for using those assets.
 
 #### `tangram-static-terrain` component
 
-This component does not pull data from a tile server but uses image assets, that may be produced manually by downloading them from the component before. 
-Those two maps must be provided as assets to the _map_ and _normalmap_ attributes. Also pass in the _bounds_ string.
+This component does not pull data from a tile server but uses image assets, that may be produced manually by downloading them from the _tangram-terrain_ component. 
+Those two maps must be provided as assets to the _map_ and _normalmap_ attributes and the original _pxtoWroldRatio_ value as well as the _bounds_ string from the `console.log` in order to be able to project data on the static terrain.
+
+The geometry's _width_ and _height_ and _segments_ detail settings and materials detail may of course differ from the reference terrain.
 
 ##### Schema
 | Property | Description | Default Value |
@@ -56,6 +58,7 @@ Those two maps must be provided as assets to the _map_ and _normalmap_ attribute
 | map | Reference to the visible texture. | "" |
 | normalmap | Reference to the normalmap texture. | "" |
 | bounds | String of four elements obtained from the console log after taking the normalmap screenshot. | "0, 0, 0, 0" |
+| pxToWorldRatio | This value must be the same as in the original _tangram-terrain_ component where the assets have been taken from  | 100 |
 | lodCount | See `tangram-terrain` component | 1 |
 | lod | See `tangram-terrain` component | 1 |
 | vertexNormals | See `tangram-terrain` component | true |
@@ -67,7 +70,6 @@ Those two maps must be provided as assets to the _map_ and _normalmap_ attribute
 | unproject | _x_, _y_| Gives the longitude and latitude of the world coordinates at the given pixel points. Returns `null` if the given coordinates are outside the bounds. |
 | unprojectHeight | _x_, _y_| Gives the depth value (GPU picked from the heightmap) from the pixel coordinates. Value is scaled according to the `displacementScale` scale and added the `displacementBias` value. |
 | unprojectHeightInMeters | _x_, _y_| Gives the height value in meters. No physical exact values are possible though. Range between 0 and 8900 (Mount Everest) or -7000 and 8900 meters when `includeOceans` is set to true |
-| renderDepthBuffer | | Renders the heightmap depth buffer. Needs to be only called manually if the heigtmap is panned programmtically |
 
 ### Styling
 The Tangram map is styled within a (set) of YAML files. See the [Tangram documentation](https://mapzen.com/documentation/tangram/) for details. 
