@@ -28,11 +28,8 @@ AFRAME.registerSystem('tangram-terrain', {
   },
   createHeightmap: function (data, geomData, onComplete) {
 
-    const width = geomData.segmentsWidth * HM_RESOLUTION_FACTOR + 1;
-    const height = geomData.segmentsHeight * HM_RESOLUTION_FACTOR + 1;
-
-    // const width = geomData.width * data.pxToWorldRatio;
-    // const height = geomData.height * data.pxToWorldRatio;
+    const width = geomData.segmentsWidth * data.heightmapFactor + 1;
+    const height = geomData.segmentsHeight * data.heightmapFactor + 1;
 
     const canvasContainer = Utils.getCanvasContainerAssetElement(
       cuid(),

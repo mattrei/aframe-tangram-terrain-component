@@ -33,6 +33,9 @@ AFRAME.registerComponent('tangram-terrain', {
     includeOceans: {
       default: false
     },
+    heightmapFactor: {
+      default :2
+    },
     pxToWorldRatio: {
       default: 10
     },

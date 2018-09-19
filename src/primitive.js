@@ -31,6 +31,7 @@ AFRAME.registerPrimitive('a-tangram-terrain', {
     center: 'tangram-terrain.center',
     'map-style': 'tangram-terrain.style',
     zoom: 'tangram-terrain.zoom',
+    'heightmap-factor': 'tangram-terrain.heightmapFactor',
     'px-world-ratio': 'tangram-terrain.pxToWorldRatio',
     'height-scale': 'material.displacementScale',
     wireframe: 'material.wireframe',

@@ -19,6 +19,7 @@ This component obtains a terrain normalmap from the [Amazon public dataset S3](h
 | style | The style definition document for the ovleray style. Must point to a custom style or to a [basemap style](https://www.nextzen.org/). May need an API key set. | "" |
 | center | Center of the map, in the form of [longitude, latitude] | [0, 0] |
 | zoom | The zoom level of the map. | 13 |
+| heightmapFactor | Multiplication factor of the geometry's _segmentsWidth_ and _segmentsHeight_ for the heightmap. Higher factor will fetch more detailed heightmaps however will also increase bandwith and texture memory | 2 |
 | pxToWorldRatio | The multiplication factor between meters in A-Frame and the pixels of the map. ie; when set to 100, will display 100 pixels per 1 meter in world space. (see [a note on fidelity](#a-note-on-fidelity)) | 100 |
 | lodCount | Number of level of details for _geometry_. Set to 1 of no LOD is needed. | 1 |
 | lod | Level-Of-Detail in the range between 1 and _lodCount_. May be set during runtime. | 1 |
