@@ -185,8 +185,12 @@ AFRAME.registerSystem('tangram-terrain', {
   },
 
   renderDepthBuffer: function (depthBuffer) {
-    depthBuffer.canvasTexture.needsUpdate = true;
-    this.el.renderer.render(depthBuffer.scene, depthBuffer.camera, depthBuffer.texture);
+    const renderer = this.el.sceneEl.renderer;
+
+    const isVREnabled = renderer.vr.enabled;
+    renderer.vr.enabled = false;
+    renderer.render(depthBuffer.scene, depthBuffer.camera, depthBuffer.texture);
+    renderer.vr.enabled = isVREnabled;
   },
 
   dispose: function (obj) {

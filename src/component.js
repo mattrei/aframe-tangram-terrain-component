@@ -239,12 +239,13 @@ AFRAME.registerComponent('tangram-terrain', {
     const worldY = -(px.y / data.pxToWorldRatio) + (geomData.height / 2);
 
     const z = this._hitTest(px.x, px.y) * matData.displacementScale + matData.displacementBias;
-    const z2 = this._hitTestNew(lon, lat) * matData.displacementScale + matData.displacementBias;
+    // TODO check
+    //const z2 = this._hitTestNew(lon, lat) * matData.displacementScale + matData.displacementBias;
 
     return {
       x: worldX,
       y: worldY,
-      z: z
+      z: z2
     };
   },
 
@@ -260,7 +261,11 @@ AFRAME.registerComponent('tangram-terrain', {
       const hitX = px.x;
       const hitY = depthTexture.height - px.y;
 
-      this.el.sceneEl.renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
+      const renderer = this.el.sceneEl.renderer;
+      const isVREnabled = renderer.vr.enabled;
+      renderer.vr.enabled = false;
+      renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
+      renderer.vr.enabled = isVREnabled;
 
       // read alpha value
       return pixelBuffer[3] / 255;
@@ -282,7 +287,11 @@ AFRAME.registerComponent('tangram-terrain', {
       const hitX = Math.round((x) / width * depthTexture.width);
       const hitY = Math.round((height - y) / height * depthTexture.height);
 
-      this.el.sceneEl.renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
+      const renderer = this.el.sceneEl.renderer;
+      const isVREnabled = renderer.vr.enabled;
+      renderer.vr.enabled = false;
+      renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
+      renderer.vr.enabled = isVREnabled;
 
       // read alpha value
       return pixelBuffer[3] / 255;

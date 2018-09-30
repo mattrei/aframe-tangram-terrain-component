@@ -168,7 +168,11 @@ AFRAME.registerComponent('tangram-static-terrain', {
       const hitX = Math.round((x) / width * depthTexture.width);
       const hitY = Math.round((height - y) / height * depthTexture.height);
 
-      this.el.sceneEl.renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
+      const renderer = this.el.sceneEl.renderer;
+      const isVREnabled = renderer.vr.enabled;
+      renderer.vr.enabled = false;
+      renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
+      renderer.vr.enabled = isVREnabled;
 
       // read alpha value
       return pixelBuffer[3] / 255;
@@ -187,7 +191,12 @@ AFRAME.registerComponent('tangram-static-terrain', {
 
       const hitX = depthTexture.width - x;
       const hitY = depthTexture.height - y;
-      this.el.sceneEl.renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
+
+      const renderer = this.el.sceneEl.renderer;
+      const isVREnabled = renderer.vr.enabled;
+      renderer.vr.enabled = false;
+      renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
+      renderer.vr.enabled = isVREnabled;
 
       // read alpha value
       return pixelBuffer[3] / 255;
