@@ -60,10 +60,6 @@ AFRAME.registerComponent('tangram-terrain', {
     this.handleHeightmapCanvas = this.handleHeightmapCanvas.bind(this);
     this.handleOverlayCanvas = this.handleOverlayCanvas.bind(this);
 
-    this.heightmapDisposed = false;
-
-    this.overlaymapDisposed = false;
-
     // references for the API
     this.depthBuffer = null;
     this.map = null;
@@ -90,13 +86,16 @@ AFRAME.registerComponent('tangram-terrain', {
     }
 
     let setStyle = false;
-    if (data.style !== oldData.style) {
+    if (data.style !== oldData.style || data.pxToWorldRatio !== oldData.pxToWorldRatio) {
 
       setStyle = true;
-      if (!this.heightmap && !this.overlaymap) {
+      if (!this.heightmap) {
         const heightmap = this.system.createHeightmap(data, geomData, this.handleHeightmapCanvas);
         this.heightmaplayer = heightmap.layer;
         this.heightmap = heightmap.map
+
+      }
+      if (!this.overlaymap || data.pxToWorldRatio !== oldData.pxToWorldRatio) {
 
         const map = this.system.createMap(data, geomData, this.handleOverlayCanvas);
         this.overlaylayer = map.layer;
@@ -195,7 +194,6 @@ AFRAME.registerComponent('tangram-terrain', {
   },
   handleHeightmapCanvas: function (canvas) {
 
-    //this.normalmap = this.data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
     this.normalmap = canvas;
 
     this.system.createDepthBuffer(this.normalmap).then(buffer => {
@@ -207,9 +205,7 @@ AFRAME.registerComponent('tangram-terrain', {
   },
   remove: function () {
     this.system.dispose(this.heightmap);
-    this.heightmapDisposed = true;
     this.system.dispose(this.overlaymap);
-    this.overlaymapDisposed = true;
   },
 
   _fire: function () {
@@ -235,17 +231,15 @@ AFRAME.registerComponent('tangram-terrain', {
     const matData = this.el.components.material.data;
 
     // pixel space from leaflet
-    var px = this.overlaymap.latLngToLayerPoint([lat, lon]);
+    const px = this.overlaymap.latLngToLayerPoint([lat, lon]);
 
     // convert to world space
     const worldX = (px.x / data.pxToWorldRatio) - (geomData.width / 2);
     // y-coord is inverted (positive up in world space, positive down in pixel space)
     const worldY = -(px.y / data.pxToWorldRatio) + (geomData.height / 2);
-    
-    let z = this._hitTest(px.x, px.y);
 
-    z *= matData.displacementScale;
-    z += matData.displacementBias;
+    const z = this._hitTest(px.x, px.y) * matData.displacementScale + matData.displacementBias;
+    const z2 = this._hitTestNew(lon, lat) * matData.displacementScale + matData.displacementBias;
 
     return {
       x: worldX,
@@ -253,6 +247,26 @@ AFRAME.registerComponent('tangram-terrain', {
       z: z
     };
   },
+
+
+  _hitTestNew: (function () {
+    const pixelBuffer = new Uint8Array(4);//Float32Array(4);
+    return function(lon, lat) {
+
+      const px = this.heightmap.latLngToLayerPoint([lat, lon]);
+      const depthTexture = this.depthBuffer.texture;
+
+      // converting pixel space to texture space
+      const hitX = px.x;
+      const hitY = depthTexture.height - px.y;
+
+      this.el.sceneEl.renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
+
+      // read alpha value
+      return pixelBuffer[3] / 255;
+    }
+  })(),
+
   _hitTest: (function () {
     const pixelBuffer = new Uint8Array(4);//Float32Array(4);
     return function(x, y) {
@@ -308,21 +322,6 @@ AFRAME.registerComponent('tangram-terrain', {
   unprojectHeightInMeters: function (x, y) {
     return this._getHeight(x, y) * 19900 - 11000;
   },
-
-  getMap: function () {
-    if (this.overlaymapDisposed) {
-      throw new Error('Overlaymap disposed.');
-    }
-    return this.overlaymap;
-  },
-
-  getHeightmap: function () {
-    if (this.heightmapDisposed) {
-      throw new Error('Heightmap disposed.');
-    }
-    return this.heightmap;
-  },
-
 
   play: function () {
     window.addEventListener('keydown', this.onKeyDown);

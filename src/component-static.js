@@ -134,7 +134,6 @@ AFRAME.registerComponent('tangram-static-terrain', {
 
     // read alpha value
     let z = this._hitTestPlain(px.x, px.y);
-    console.log(px.x, px.y, z)
 
     z *= matData.displacementScale;
     z += matData.displacementBias;
@@ -210,7 +209,6 @@ AFRAME.registerComponent('tangram-static-terrain', {
       x: x * lngRatio,
       y: y * latRatio
     }
-    console.log(px)
     return {
       lon: px.x + (deltaLng/2) + parseFloat(data.bounds[0]),
       lat: px.y + (deltaLat/2) + parseFloat(data.bounds[1])

@@ -27,7 +27,7 @@
         segmentsWidth: 80; segmentsHeight: 80; 
         primitive: plane;" 
       material="side: double; wireframe: true;
-        displacementScale: 30; displacementBias: 0;"
+        displacementScale: 30; displacementBias: -20;"
       tangram-terrain="
         style: #yamlElevation;
         center: 15.8056, 47.7671;
@@ -38,7 +38,7 @@
       rotation="-90 0 0" position="0 -10 0"
       sphere-matrix
 
-      animation="property: material.displacementScale; dur: 9000; from: 0; to: 30; startEvents: tangram-terrain-loaded;"
+      Banimation="property: material.displacementScale; dur: 9000; from: 0; to: 30; startEvents: tangram-terrain-loaded;"
     >
 
       <a-sphere id="marker"  color="red" radius="0.1"></a-sphere>

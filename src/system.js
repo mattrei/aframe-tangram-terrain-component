@@ -183,22 +183,6 @@ AFRAME.registerSystem('tangram-terrain', {
 
 
   },
-  copyCanvas: function (canvas, x, y, width, height) {
-    const copy = document.createElement('canvas');
-    copy.setAttribute('id', cuid());
-
-    const w = width || canvas.width;
-    const h = height || canvas.height;
-
-    copy.setAttribute('width', w);
-    copy.setAttribute('height', h);
-    const ctx = copy.getContext('2d', {
-      alpha: true
-    });
-
-    ctx.drawImage(canvas, x || 0, y || 0, w, h);
-    return copy;
-  },
 
   renderDepthBuffer: function (depthBuffer) {
     depthBuffer.canvasTexture.needsUpdate = true;
