@@ -349,7 +349,7 @@ AFRAME.registerComponent('tangram-terrain', {
     if (!this.data || !shortcutPressed) {
       return;
     }
-    var type = evt.shiftKey ? 'map' : 'normalmap';
+    var type = evt.shiftKey ? 'map' : (this.data.vertexNormals ? 'normalmap' : 'displacementmap');
     this.capture(type);
   },
 
