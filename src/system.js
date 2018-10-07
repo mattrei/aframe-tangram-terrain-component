@@ -12,7 +12,6 @@ const PRESERVE_DRAWING_BUFFER = true; // AFRAME.utils.device.isMobile();
 
 const cuid = require('cuid');
 
-// const elevationStyle = require('./styles/elevation-tiles.yaml');
 const elevationStyle = require('./styles/normal-alpha-elevation.yaml');
 
 const REMOVETANGRAM_TIMEOUT = 300;
@@ -20,16 +19,14 @@ const REMOVETANGRAM_TIMEOUT = 300;
 const DEBUG_CANVAS_OFFSET =     99999;
 const DEBUG_HM_CANVAS_OFFSET =  999999;
 
-const HM_RESOLUTION_FACTOR = 2;
-
 
 AFRAME.registerSystem('tangram-terrain', {
   init: function () {
   },
   createHeightmap: function (data, geomData, onComplete) {
 
-    const width = geomData.segmentsWidth * data.heightmapFactor + 1;
-    const height = geomData.segmentsHeight * data.heightmapFactor + 1;
+    const width = geomData.segmentsWidth * data.heightmapFactor; //+ 1;
+    const height = geomData.segmentsHeight * data.heightmapFactor; //+ 1;
 
     const canvasContainer = Utils.getCanvasContainerAssetElement(
       cuid(),
@@ -124,13 +121,10 @@ AFRAME.registerSystem('tangram-terrain', {
     container.style.height = (height) + 'px';
 
     const bounds = map.getBounds();
+    const opts = {animate:false, reset: true};
 
-    map.invalidateSize({
-      animate: false
-    });
-    map.fitBounds(bounds);
-    // tangram reload?
-    // this.overlaymap.layer.scene.immediateRedraw();
+    map.invalidateSize(opts);
+    map.fitBounds(bounds, opts);
   },
 
   createDepthBuffer: function (canvas) {

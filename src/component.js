@@ -127,13 +127,17 @@ AFRAME.registerComponent('tangram-terrain', {
       //this.hasLoaded = false;
       //if (!setStyle) this.el.emit(TERRAIN_LOADING_EVENT);
 
-      this.overlaymap.fitBounds(this.bounds);
-      this.overlaymap.invalidateSize({animate: false});
+      const opts = {animate: false, reset: true};
+
+      //this.overlaymap.fitBounds(this.bounds, opts);
+      //this.overlaymap.invalidateSize(opts);
       this.overlaymap.fitBounds(this.bounds);
 
-      this.heightmap.fitBounds(this.overlaymap.getBounds());
-      this.heightmap.invalidateSize({animate: false});
-      this.heightmap.fitBounds(this.overlaymap.getBounds());
+      //needs to be like that
+      this.heightmap.fitBounds(this.overlaymap.getBounds(), opts);
+      this.heightmap.invalidateSize(opts);
+      this.heightmap.fitBounds(this.overlaymap.getBounds(), opts);
+      console.log(this.heightmap.getZoom(), this.overlaymap.getZoom())
 
       // HACK: render depth buffer after a very safe timeout, 
       // because the view_complete is not always called if tiles are in cache
@@ -238,19 +242,19 @@ AFRAME.registerComponent('tangram-terrain', {
     // y-coord is inverted (positive up in world space, positive down in pixel space)
     const worldY = -(px.y / data.pxToWorldRatio) + (geomData.height / 2);
 
-    const z = this._hitTest(px.x, px.y) * matData.displacementScale + matData.displacementBias;
+    //const z = this._hitTest(px.x, px.y) * matData.displacementScale + matData.displacementBias;
     // TODO check
-    //const z2 = this._hitTestNew(lon, lat) * matData.displacementScale + matData.displacementBias;
+    const z = this._hitTestLonLat(lon, lat) * matData.displacementScale + matData.displacementBias;
 
     return {
       x: worldX,
       y: worldY,
-      z: z2
+      z: z
     };
   },
 
 
-  _hitTestNew: (function () {
+  _hitTestLonLat: (function () {
     const pixelBuffer = new Uint8Array(4);//Float32Array(4);
     return function(lon, lat) {
 
