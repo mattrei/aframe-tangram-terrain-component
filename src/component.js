@@ -152,6 +152,8 @@ AFRAME.registerComponent('tangram-terrain', {
       }, 6000);
     }
 
+    const mesh = el.getObject3D('mesh');
+    mesh.frustumCulled=false;
     if (data.lod !== oldData.lod) {
       if (data.lod >= 1 && data.lod <= data.lodCount) {
         this.applyLOD(data.lod);
