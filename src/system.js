@@ -127,31 +127,30 @@ AFRAME.registerSystem('tangram-terrain', {
     map.fitBounds(bounds, opts);
   },
 
-  createDepthBuffer: function (canvas) {
-
-    // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
-
-    const imageWidth = canvas.width;
-    const imageHeight = canvas.height;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(
-      imageWidth / -2,
-      imageWidth / 2,
-      imageHeight / 2,
-      imageHeight / -2, -1, 1);
-
-    const texture = new THREE.WebGLRenderTarget(imageWidth, imageHeight, {
-      minFilter: THREE.NearestFilter,
-      magFilter: THREE.NearestFilter,
-      type: THREE.UnsignedByteType
-      //type: THREE.FloatType
-    });
+  createDepthBuffer: function (depthMap) {
 
     return new Promise((resolve, reject) => {
-      this.el.systems.material.loadTexture(canvas, {
-        src: canvas
+      this.el.systems.material.loadTexture(depthMap, {
+        src: depthMap
       }, mapTexture => {
+        // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
+
+        const imageWidth = mapTexture.image.width;
+        const imageHeight = mapTexture.image.height;
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.OrthographicCamera(
+          imageWidth / -2,
+          imageWidth / 2,
+          imageHeight / 2,
+          imageHeight / -2, -1, 1);
+
+        const texture = new THREE.WebGLRenderTarget(imageWidth, imageHeight, {
+          minFilter: THREE.NearestFilter,
+          magFilter: THREE.NearestFilter,
+          type: THREE.UnsignedByteType
+          //type: THREE.FloatType
+        });
 
         const mesh = new THREE.Mesh(
           new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
