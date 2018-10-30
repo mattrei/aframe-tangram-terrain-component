@@ -137,7 +137,7 @@ AFRAME.registerComponent('tangram-terrain', {
       this.heightmap.fitBounds(this.overlaymap.getBounds(), opts);
       this.heightmap.invalidateSize(opts);
       this.heightmap.fitBounds(this.overlaymap.getBounds(), opts);
-      console.log(this.heightmap.getZoom(), this.overlaymap.getZoom())
+      //console.log(this.heightmap.getZoom(), this.overlaymap.getZoom())
 
       // HACK: render depth buffer after a very safe timeout, 
       // because the view_complete is not always called if tiles are in cache

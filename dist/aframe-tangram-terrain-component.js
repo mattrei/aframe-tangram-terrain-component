@@ -33,6 +33,9 @@
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
 /******/
+/******/ 	// identity function for calling harmony imports with the correct context
+/******/ 	__webpack_require__.i = function(value) { return value; };
+/******/
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
@@ -60,15 +63,25 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 4);
+/******/ 	return __webpack_require__(__webpack_require__.s = 11);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const BufferGeometryUtils = __webpack_require__(2);
-const cuid = __webpack_require__(3);
+__webpack_require__(10);
+__webpack_require__(8);
+__webpack_require__(7);
+__webpack_require__(9);
+
+
+/***/ }),
+/* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const BufferGeometryUtils = __webpack_require__(3);
+const cuid = __webpack_require__(2);
 
 module.exports.leafletOptions = {
   'preferCanvas': true,
@@ -233,17 +246,123 @@ module.exports.watchMaterialData = function (el) {
 
 
 /***/ }),
-/* 1 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(5);
-__webpack_require__(9);
-__webpack_require__(10);
-__webpack_require__(11);
+/**
+ * cuid.js
+ * Collision-resistant UID generator for browsers and node.
+ * Sequential for fast db lookups and recency sorting.
+ * Safe for element IDs and server-side lookups.
+ *
+ * Extracted from CLCTR
+ *
+ * Copyright (c) Eric Elliott 2012
+ * MIT License
+ */
+
+/*global window, navigator, document, require, process, module */
+(function (app) {
+  'use strict';
+  var namespace = 'cuid',
+    c = 0,
+    blockSize = 4,
+    base = 36,
+    discreteValues = Math.pow(base, blockSize),
+
+    pad = function pad(num, size) {
+      var s = "000000000" + num;
+      return s.substr(s.length-size);
+    },
+
+    randomBlock = function randomBlock() {
+      return pad((Math.random() *
+            discreteValues << 0)
+            .toString(base), blockSize);
+    },
+
+    safeCounter = function () {
+      c = (c < discreteValues) ? c : 0;
+      c++; // this is not subliminal
+      return c - 1;
+    },
+
+    api = function cuid() {
+      // Starting with a lowercase letter makes
+      // it HTML element ID friendly.
+      var letter = 'c', // hard-coded allows for sequential access
+
+        // timestamp
+        // warning: this exposes the exact date and time
+        // that the uid was created.
+        timestamp = (new Date().getTime()).toString(base),
+
+        // Prevent same-machine collisions.
+        counter,
+
+        // A few chars to generate distinct ids for different
+        // clients (so different computers are far less
+        // likely to generate the same id)
+        fingerprint = api.fingerprint(),
+
+        // Grab some more chars from Math.random()
+        random = randomBlock() + randomBlock();
+
+        counter = pad(safeCounter().toString(base), blockSize);
+
+      return  (letter + timestamp + counter + fingerprint + random);
+    };
+
+  api.slug = function slug() {
+    var date = new Date().getTime().toString(36),
+      counter,
+      print = api.fingerprint().slice(0,1) +
+        api.fingerprint().slice(-1),
+      random = randomBlock().slice(-2);
+
+      counter = safeCounter().toString(36).slice(-4);
+
+    return date.slice(-2) +
+      counter + print + random;
+  };
+
+  api.globalCount = function globalCount() {
+    // We want to cache the results of this
+    var cache = (function calc() {
+        var i,
+          count = 0;
+
+        for (i in window) {
+          count++;
+        }
+
+        return count;
+      }());
+
+    api.globalCount = function () { return cache; };
+    return cache;
+  };
+
+  api.fingerprint = function browserPrint() {
+    return pad((navigator.mimeTypes.length +
+      navigator.userAgent.length).toString(36) +
+      api.globalCount().toString(36), 4);
+  };
+
+  // don't change anything from here down.
+  if (app.register) {
+    app.register(namespace, api);
+  } else if (true) {
+    module.exports = api;
+  } else {
+    app[namespace] = api;
+  }
+
+}(this.applitude || this));
 
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports) {
 
 /**
@@ -572,373 +691,7 @@ module.exports = {
 
 
 /***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * cuid.js
- * Collision-resistant UID generator for browsers and node.
- * Sequential for fast db lookups and recency sorting.
- * Safe for element IDs and server-side lookups.
- *
- * Extracted from CLCTR
- *
- * Copyright (c) Eric Elliott 2012
- * MIT License
- */
-
-/*global window, navigator, document, require, process, module */
-(function (app) {
-  'use strict';
-  var namespace = 'cuid',
-    c = 0,
-    blockSize = 4,
-    base = 36,
-    discreteValues = Math.pow(base, blockSize),
-
-    pad = function pad(num, size) {
-      var s = "000000000" + num;
-      return s.substr(s.length-size);
-    },
-
-    randomBlock = function randomBlock() {
-      return pad((Math.random() *
-            discreteValues << 0)
-            .toString(base), blockSize);
-    },
-
-    safeCounter = function () {
-      c = (c < discreteValues) ? c : 0;
-      c++; // this is not subliminal
-      return c - 1;
-    },
-
-    api = function cuid() {
-      // Starting with a lowercase letter makes
-      // it HTML element ID friendly.
-      var letter = 'c', // hard-coded allows for sequential access
-
-        // timestamp
-        // warning: this exposes the exact date and time
-        // that the uid was created.
-        timestamp = (new Date().getTime()).toString(base),
-
-        // Prevent same-machine collisions.
-        counter,
-
-        // A few chars to generate distinct ids for different
-        // clients (so different computers are far less
-        // likely to generate the same id)
-        fingerprint = api.fingerprint(),
-
-        // Grab some more chars from Math.random()
-        random = randomBlock() + randomBlock();
-
-        counter = pad(safeCounter().toString(base), blockSize);
-
-      return  (letter + timestamp + counter + fingerprint + random);
-    };
-
-  api.slug = function slug() {
-    var date = new Date().getTime().toString(36),
-      counter,
-      print = api.fingerprint().slice(0,1) +
-        api.fingerprint().slice(-1),
-      random = randomBlock().slice(-2);
-
-      counter = safeCounter().toString(36).slice(-4);
-
-    return date.slice(-2) +
-      counter + print + random;
-  };
-
-  api.globalCount = function globalCount() {
-    // We want to cache the results of this
-    var cache = (function calc() {
-        var i,
-          count = 0;
-
-        for (i in window) {
-          count++;
-        }
-
-        return count;
-      }());
-
-    api.globalCount = function () { return cache; };
-    return cache;
-  };
-
-  api.fingerprint = function browserPrint() {
-    return pad((navigator.mimeTypes.length +
-      navigator.userAgent.length).toString(36) +
-      api.globalCount().toString(36), 4);
-  };
-
-  // don't change anything from here down.
-  if (app.register) {
-    app.register(namespace, api);
-  } else if (true) {
-    module.exports = api;
-  } else {
-    app[namespace] = api;
-  }
-
-}(this.applitude || this));
-
-
-/***/ }),
 /* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-__webpack_require__(1);
-module.exports = __webpack_require__(1);
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-
-const L = __webpack_require__(6);
-const Tangram = __webpack_require__(7);
-
-const Utils = __webpack_require__(0);
-
-if (typeof AFRAME === 'undefined') {
-  throw new Error('Component attempted to register before AFRAME was available.');
-}
-
-const PRESERVE_DRAWING_BUFFER = true; // AFRAME.utils.device.isMobile();
-
-const cuid = __webpack_require__(3);
-
-const elevationStyle = __webpack_require__(8);
-
-const REMOVETANGRAM_TIMEOUT = 300;
-
-const DEBUG_CANVAS_OFFSET =     99999;
-const DEBUG_HM_CANVAS_OFFSET =  999999;
-
-
-AFRAME.registerSystem('tangram-terrain', {
-  init: function () {
-  },
-  createHeightmap: function (data, geomData, onComplete) {
-
-    const width = geomData.segmentsWidth * data.heightmapFactor; //+ 1;
-    const height = geomData.segmentsHeight * data.heightmapFactor; //+ 1;
-
-    const canvasContainer = Utils.getCanvasContainerAssetElement(
-      cuid(),
-      width, height, DEBUG_HM_CANVAS_OFFSET);
-
-    const map = L.map(canvasContainer, Utils.leafletOptions);
-
-    const layer = Tangram.leafletLayer({
-      scene: {
-        import: elevationStyle
-      },
-      webGLContextOptions: {
-        preserveDrawingBuffer: PRESERVE_DRAWING_BUFFER,
-        alpha: true,
-        premultipliedAlpha: false // very important for transparent tiles
-      },
-      highDensityDisplay: false,
-      continuousZoom: false,
-      noWrap: true,
-      attribution: ''
-    });
-
-    const tangram = {
-      map: map,
-      layer: layer
-    };
-
-    layer.scene.subscribe({
-      load: (event) => {
-//        this.injectAPIKey(event.config, data.apiKey);
-        layer.scene.config.styles.combo.shaders.defines.USE_NORMALS = data.vertexNormals;
-        Utils.processCanvasElement(canvasContainer);
-      },
-      view_complete: () => {
-        const canvas = tangram.layer.scene.canvas;
-        onComplete(canvas);
-      }
-    });
-    layer.addTo(map);
-
-    return tangram;
-  },
-  createMap: function (data, geomData, onComplete) {
-
-    const width = geomData.width * data.pxToWorldRatio;
-    const height = geomData.height * data.pxToWorldRatio;
-
-    const canvasContainer = Utils.getCanvasContainerAssetElement(
-      cuid(),
-      width, height, DEBUG_CANVAS_OFFSET + 100);
-
-    const map = L.map(canvasContainer, Utils.leafletOptions);
-
-    const layer = Tangram.leafletLayer({
-      scene: {
-        import: data.style
-      },
-      numWorkers: 4,
-      highDensityDisplay: false,
-      webGLContextOptions: {
-        preserveDrawingBuffer: PRESERVE_DRAWING_BUFFER
-      },
-      continuousZoom: false,
-      noWrap: true,
-      attribution: ''
-    });
-    layer.addTo(map);
-
-    const tangram = {
-      map: map,
-      layer: layer
-    };
-
-    layer.scene.subscribe({
-      load: (event) => {
-        this.injectAPIKey(event.config, data.apiKey);
-        Utils.processCanvasElement(canvasContainer);
-      },
-      post_update: (will_render) => {
-      },
-      view_complete: () => {
-        const canvas = tangram.layer.scene.canvas;
-        onComplete(canvas);
-      }
-    });
-
-    return tangram;
-  },
-  resize: function (map, width, height) {
-    const container = map.getContainer();
-    container.style.width = (width) + 'px';
-    container.style.height = (height) + 'px';
-
-    const bounds = map.getBounds();
-    const opts = {animate:false, reset: true};
-
-    map.invalidateSize(opts);
-    map.fitBounds(bounds, opts);
-  },
-
-  createDepthBuffer: function (canvas) {
-
-    // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
-
-    const imageWidth = canvas.width;
-    const imageHeight = canvas.height;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(
-      imageWidth / -2,
-      imageWidth / 2,
-      imageHeight / 2,
-      imageHeight / -2, -1, 1);
-
-    const texture = new THREE.WebGLRenderTarget(imageWidth, imageHeight, {
-      minFilter: THREE.NearestFilter,
-      magFilter: THREE.NearestFilter,
-      type: THREE.UnsignedByteType
-      //type: THREE.FloatType
-    });
-
-    return new Promise((resolve, reject) => {
-      this.el.systems.material.loadTexture(canvas, {
-        src: canvas
-      }, mapTexture => {
-
-        const mesh = new THREE.Mesh(
-          new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
-          new THREE.MeshBasicMaterial({
-            map: mapTexture,
-            lights: false,
-            fog: false,
-            //transparent: true
-          })
-        );
-        scene.add(mesh);
-
-        const depthBuffer = {
-          scene: scene,
-          camera: camera,
-          mesh: mesh,
-          texture: texture,
-          canvasTexture: mapTexture
-        }
-        resolve(depthBuffer);
-      })
-    })
-
-
-  },
-
-  renderDepthBuffer: function (depthBuffer) {
-    const renderer = this.el.sceneEl.renderer;
-
-    const isVREnabled = renderer.vr.enabled;
-    renderer.vr.enabled = false;
-    renderer.render(depthBuffer.scene, depthBuffer.camera, depthBuffer.texture);
-    renderer.vr.enabled = isVREnabled;
-  },
-
-  dispose: function (obj) {
-    // removing all ressources layer after a safe timeout
-    Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
-      obj.layer.remove();
-    });
-  },
-  injectAPIKey(config, apiKey) {
-    const URL_PATTERN = /((https?:)?\/\/tiles?.nextzen.org([a-z]|[A-Z]|[0-9]|\/|\{|\}|\.|\||:)+(topojson|geojson|mvt|png|tif|gz))/;
-
-    let didInjectKey = false;
-
-    Object.entries(config.sources).forEach((entry) => {
-      const [key, value] = entry;
-      let valid = false;
-
-      // Only operate on the URL if it's a Mapzen-hosted vector tile service
-      if (!value.url.match(URL_PATTERN)) return;
-
-      // Check for valid API keys in the source.
-      // First, check the url_params.api_key field
-      // Tangram.js compatibility note: Tangram >= v0.11.7 fires the `load`
-      // event after `global` property substitution, so we don't need to manually
-      // check global properties here.
-      if (value.url_params && value.url_params.api_key) {
-        valid = true;
-      // Next, check if there is an api_key param in the query string
-      } else if (value.url.match(/(\?|&)api_key=[-a-z]+-[0-9a-zA-Z_-]{7}/)) {
-        valid = true;
-      }
-
-      if (!valid) {
-        // Add a default API key as a url_params setting.
-        // Preserve existing url_params if present.
-        const params = Object.assign({}, config.sources[key].url_params, {
-          api_key: apiKey,
-        });
-
-        // Mutate the original on purpose.
-        // eslint-disable-next-line no-param-reassign
-        config.sources[key].url_params = params;
-        didInjectKey = true;
-      }
-    });
-
-    return didInjectKey;
-  }
-});
-
-
-/***/ }),
-/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* @preserve
@@ -14814,7 +14567,7 @@ window.L = exports;
 
 
 /***/ }),
-/* 7 */
+/* 5 */
 /***/ (function(module, exports) {
 
 !function(){if(("undefined"==typeof self||!("undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope))&&("undefined"!=typeof module&&module.exports||"undefined"!=typeof window))var e=arguments.callee.toString(),t="undefined"!=typeof document&&document.currentScript?document.currentScript.src:"",r="";!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var t;t="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:this,t.Tangram=e()}}(function(){var n;return function e(t,r,n){function i(a,s){if(!r[a]){if(!t[a]){var l="function"==typeof require&&require;if(!s&&l)return l(a,!0);if(o)return o(a,!0);var u=new Error("Cannot find module '"+a+"'");throw u.code="MODULE_NOT_FOUND",u}var c=r[a]={exports:{}};t[a][0].call(c.exports,function(e){var r=t[a][1][e];return i(r||e)},c,c.exports,e,t,r,n)}return r[a].exports}for(var o="function"==typeof require&&require,a=0;a<n.length;a++)i(n[a]);return i}({1:[function(e,t,r){"use strict";function n(e,t){this.x=e,this.y=t}t.exports=n,n.prototype={clone:function(){return new n(this.x,this.y)},add:function(e){return this.clone()._add(e)},sub:function(e){return this.clone()._sub(e)},multByPoint:function(e){return this.clone()._multByPoint(e)},divByPoint:function(e){return this.clone()._divByPoint(e)},mult:function(e){return this.clone()._mult(e)},div:function(e){return this.clone()._div(e)},rotate:function(e){return this.clone()._rotate(e)},rotateAround:function(e,t){return this.clone()._rotateAround(e,t)},matMult:function(e){return this.clone()._matMult(e)},unit:function(){return this.clone()._unit()},perp:function(){return this.clone()._perp()},round:function(){return this.clone()._round()},mag:function(){return Math.sqrt(this.x*this.x+this.y*this.y)},equals:function(e){return this.x===e.x&&this.y===e.y},dist:function(e){return Math.sqrt(this.distSqr(e))},distSqr:function(e){var t=e.x-this.x,r=e.y-this.y;return t*t+r*r},angle:function(){return Math.atan2(this.y,this.x)},angleTo:function(e){return Math.atan2(this.y-e.y,this.x-e.x)},angleWith:function(e){return this.angleWithSep(e.x,e.y)},angleWithSep:function(e,t){return Math.atan2(this.x*t-this.y*e,this.x*e+this.y*t)},_matMult:function(e){var t=e[0]*this.x+e[1]*this.y,r=e[2]*this.x+e[3]*this.y;return this.x=t,this.y=r,this},_add:function(e){return this.x+=e.x,this.y+=e.y,this},_sub:function(e){return this.x-=e.x,this.y-=e.y,this},_mult:function(e){return this.x*=e,this.y*=e,this},_div:function(e){return this.x/=e,this.y/=e,this},_multByPoint:function(e){return this.x*=e.x,this.y*=e.y,this},_divByPoint:function(e){return this.x/=e.x,this.y/=e.y,this},_unit:function(){return this._div(this.mag()),this},_perp:function(){var e=this.y;return this.y=this.x,this.x=-e,this},_rotate:function(e){var t=Math.cos(e),r=Math.sin(e),n=t*this.x-r*this.y,i=r*this.x+t*this.y;return this.x=n,this.y=i,this},_rotateAround:function(e,t){var r=Math.cos(e),n=Math.sin(e),i=t.x+r*(this.x-t.x)-n*(this.y-t.y),o=t.y+n*(this.x-t.x)+r*(this.y-t.y);return this.x=i,this.y=o,this},_round:function(){return this.x=Math.round(this.x),this.y=Math.round(this.y),this}},n.convert=function(e){return e instanceof n?e:Array.isArray(e)?new n(e[0],e[1]):e}},{}],2:[function(e,t,r){t.exports.VectorTile=e("./lib/vectortile.js"),t.exports.VectorTileFeature=e("./lib/vectortilefeature.js"),t.exports.VectorTileLayer=e("./lib/vectortilelayer.js")},{"./lib/vectortile.js":3,"./lib/vectortilefeature.js":4,"./lib/vectortilelayer.js":5}],3:[function(e,t,r){"use strict";function n(e,t){this.layers=e.readFields(i,{},t)}function i(e,t,r){if(3===e){var n=new o(r,r.readVarint()+r.pos);n.length&&(t[n.name]=n)}}var o=e("./vectortilelayer");t.exports=n},{"./vectortilelayer":5}],4:[function(e,t,r){"use strict";function n(e,t,r,n,o){this.properties={},this.extent=r,this.type=0,this._pbf=e,this._geometry=-1,this._keys=n,this._values=o,e.readFields(i,this,t)}function i(e,t,r){1==e?t.id=r.readVarint():2==e?o(r,t):3==e?t.type=r.readVarint():4==e&&(t._geometry=r.pos)}function o(e,t){for(var r=e.readVarint()+e.pos;e.pos<r;){var n=t._keys[e.readVarint()],i=t._values[e.readVarint()];t.properties[n]=i}}function a(e){var t=e.length;if(t<=1)return[e];for(var r,n,i=[],o=0;o<t;o++){var a=s(e[o]);0!==a&&(void 0===n&&(n=a<0),n===a<0?(r&&i.push(r),r=[e[o]]):r.push(e[o]))}return r&&i.push(r),i}function s(e){for(var t,r,n=0,i=0,o=e.length,a=o-1;i<o;a=i++)t=e[i],r=e[a],n+=(r.x-t.x)*(t.y+r.y);return n}var l=e("@mapbox/point-geometry");t.exports=n,n.types=["Unknown","Point","LineString","Polygon"],n.prototype.loadGeometry=function(){var e=this._pbf;e.pos=this._geometry;for(var t,r=e.readVarint()+e.pos,n=1,i=0,o=0,a=0,s=[];e.pos<r;){if(!i){var u=e.readVarint();n=7&u,i=u>>3}if(i--,1===n||2===n)o+=e.readSVarint(),a+=e.readSVarint(),1===n&&(t&&s.push(t),t=[]),t.push(new l(o,a));else{if(7!==n)throw new Error("unknown command "+n);t&&t.push(t[0].clone())}}return t&&s.push(t),s},n.prototype.bbox=function(){var e=this._pbf;e.pos=this._geometry;for(var t=e.readVarint()+e.pos,r=1,n=0,i=0,o=0,a=1/0,s=-1/0,l=1/0,u=-1/0;e.pos<t;){if(!n){var c=e.readVarint();r=7&c,n=c>>3}if(n--,1===r||2===r)i+=e.readSVarint(),o+=e.readSVarint(),i<a&&(a=i),i>s&&(s=i),o<l&&(l=o),o>u&&(u=o);else if(7!==r)throw new Error("unknown command "+r)}return[a,l,s,u]},n.prototype.toGeoJSON=function(e,t,r){function i(e){for(var t=0;t<e.length;t++){var r=e[t],n=180-360*(r.y+c)/l;e[t]=[360*(r.x+u)/l-180,360/Math.PI*Math.atan(Math.exp(n*Math.PI/180))-90]}}var o,s,l=this.extent*Math.pow(2,r),u=this.extent*e,c=this.extent*t,f=this.loadGeometry(),h=n.types[this.type];switch(this.type){case 1:var d=[];for(o=0;o<f.length;o++)d[o]=f[o][0];f=d,i(f);break;case 2:for(o=0;o<f.length;o++)i(f[o]);break;case 3:for(f=a(f),o=0;o<f.length;o++)for(s=0;s<f[o].length;s++)i(f[o][s])}1===f.length?f=f[0]:h="Multi"+h;var p={type:"Feature",geometry:{type:h,coordinates:f},properties:this.properties};return"id"in this&&(p.id=this.id),p}},{"@mapbox/point-geometry":1}],5:[function(e,t,r){"use strict";function n(e,t){this.version=1,this.name=null,this.extent=4096,this.length=0,this._pbf=e,this._keys=[],this._values=[],this._features=[],e.readFields(i,this,t),this.length=this._features.length}function i(e,t,r){15===e?t.version=r.readVarint():1===e?t.name=r.readString():5===e?t.extent=r.readVarint():2===e?t._features.push(r.pos):3===e?t._keys.push(r.readString()):4===e&&t._values.push(o(r))}function o(e){for(var t=null,r=e.readVarint()+e.pos;e.pos<r;){var n=e.readVarint()>>3;t=1===n?e.readString():2===n?e.readFloat():3===n?e.readDouble():4===n?e.readVarint64():5===n?e.readVarint():6===n?e.readSVarint():7===n?e.readBoolean():null}return t}var a=e("./vectortilefeature.js");t.exports=n,n.prototype.feature=function(e){if(e<0||e>=this._features.length)throw new Error("feature index out of bounds");this._pbf.pos=this._features[e];var t=this._pbf.readVarint()+this._pbf.pos;return new a(this._pbf,t,this.extent,this._keys,this._values)}},{"./vectortilefeature.js":4}],6:[function(e,t,r){"use strict";function n(){if(l.length)throw l.shift()}function i(e){var t;t=s.length?s.pop():new o,t.task=e,a(t)}function o(){this.task=null}var a=e("./raw"),s=[],l=[],u=a.makeRequestCallFromTimer(n);t.exports=i,o.prototype.call=function(){try{this.task.call()}catch(e){i.onerror?i.onerror(e):(l.push(e),u())}finally{this.task=null,s[s.length]=this}}},{"./raw":7}],7:[function(e,t,r){(function(e){"use strict";function r(e){a.length||(o(),s=!0),a[a.length]=e}function n(){for(;l<a.length;){var e=l;if(l+=1,a[e].call(),l>u){for(var t=0,r=a.length-l;t<r;t++)a[t]=a[t+l];a.length-=l,l=0}}a.length=0,l=0,s=!1}function i(e){return function(){function t(){clearTimeout(r),clearInterval(n),e()}var r=setTimeout(t,0),n=setInterval(t,50)}}t.exports=r;var o,a=[],s=!1,l=0,u=1024,c=void 0!==e?e:self,f=c.MutationObserver||c.WebKitMutationObserver;o="function"==typeof f?function(e){var t=1,r=new f(e),n=document.createTextNode("");return r.observe(n,{characterData:!0}),function(){t=-t,n.data=t}}(n):i(n),r.requestFlush=o,r.makeRequestCallFromTimer=i}).call(this,"undefined"!=typeof global?global:"undefined"!=typeof self?self:"undefined"!=typeof window?window:{})},{}],8:[function(e,t,r){"use strict";function n(e){var t=e.length;if(t%4>0)throw new Error("Invalid string. Length must be a multiple of 4");return"="===e[t-2]?2:"="===e[t-1]?1:0}function i(e){return 3*e.length/4-n(e)}function o(e){var t,r,i,o,a,s=e.length;o=n(e),a=new f(3*s/4-o),r=o>0?s-4:s;var l=0;for(t=0;t<r;t+=4)i=c[e.charCodeAt(t)]<<18|c[e.charCodeAt(t+1)]<<12|c[e.charCodeAt(t+2)]<<6|c[e.charCodeAt(t+3)],a[l++]=i>>16&255,a[l++]=i>>8&255,a[l++]=255&i;return 2===o?(i=c[e.charCodeAt(t)]<<2|c[e.charCodeAt(t+1)]>>4,a[l++]=255&i):1===o&&(i=c[e.charCodeAt(t)]<<10|c[e.charCodeAt(t+1)]<<4|c[e.charCodeAt(t+2)]>>2,a[l++]=i>>8&255,a[l++]=255&i),a}function a(e){return u[e>>18&63]+u[e>>12&63]+u[e>>6&63]+u[63&e]}function s(e,t,r){for(var n,i=[],o=t;o<r;o+=3)n=(e[o]<<16)+(e[o+1]<<8)+e[o+2],i.push(a(n));return i.join("")}function l(e){for(var t,r=e.length,n=r%3,i="",o=[],a=0,l=r-n;a<l;a+=16383)o.push(s(e,a,a+16383>l?l:a+16383));return 1===n?(t=e[r-1],i+=u[t>>2],i+=u[t<<4&63],i+="=="):2===n&&(t=(e[r-2]<<8)+e[r-1],i+=u[t>>10],i+=u[t>>4&63],i+=u[t<<2&63],i+="="),o.push(i),o.join("")}r.byteLength=i,r.toByteArray=o,r.fromByteArray=l;for(var u=[],c=[],f="undefined"!=typeof Uint8Array?Uint8Array:Array,h="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",d=0,p=h.length;d<p;++d)u[d]=h[d],c[h.charCodeAt(d)]=d;c["-".charCodeAt(0)]=62,c["_".charCodeAt(0)]=63},{}],9:[function(e,t,r){},{}],10:[function(e,t,r){"use strict";function n(e){if(e>J)throw new RangeError("Invalid typed array length");var t=new Uint8Array(e);return t.__proto__=i.prototype,t}function i(e,t,r){if("number"==typeof e){if("string"==typeof t)throw new Error("If encoding is specified then the first argument must be a string");return l(e)}return o(e,t,r)}function o(e,t,r){if("number"==typeof e)throw new TypeError('"value" argument must not be a number');return W(e)?f(e,t,r):"string"==typeof e?u(e,t):h(e)}function a(e){if("number"!=typeof e)throw new TypeError('"size" argument must be a number');if(e<0)throw new RangeError('"size" argument must not be negative')}function s(e,t,r){return a(e),e<=0?n(e):void 0!==t?"string"==typeof r?n(e).fill(t,r):n(e).fill(t):n(e)}function l(e){return a(e),n(e<0?0:0|d(e))}function u(e,t){if("string"==typeof t&&""!==t||(t="utf8"),!i.isEncoding(t))throw new TypeError('"encoding" must be a valid string encoding');var r=0|_(e,t),o=n(r),a=o.write(e,t);return a!==r&&(o=o.slice(0,a)),o}function c(e){for(var t=e.length<0?0:0|d(e.length),r=n(t),i=0;i<t;i+=1)r[i]=255&e[i];return r}function f(e,t,r){if(t<0||e.byteLength<t)throw new RangeError("'offset' is out of bounds");if(e.byteLength<t+(r||0))throw new RangeError("'length' is out of bounds");var n;return n=void 0===t&&void 0===r?new Uint8Array(e):void 0===r?new Uint8Array(e,t):new Uint8Array(e,t,r),n.__proto__=i.prototype,n}function h(e){if(i.isBuffer(e)){var t=0|d(e.length),r=n(t);return 0===r.length?r:(e.copy(r,0,0,t),r)}if(e){if(Z(e)||"length"in e)return"number"!=typeof e.length||H(e.length)?n(0):c(e);if("Buffer"===e.type&&Array.isArray(e.data))return c(e.data)}throw new TypeError("First argument must be a string, Buffer, ArrayBuffer, Array, or array-like object.")}function d(e){if(e>=J)throw new RangeError("Attempt to allocate Buffer larger than maximum size: 0x"+J.toString(16)+" bytes");return 0|e}function p(e){return+e!=e&&(e=0),i.alloc(+e)}function _(e,t){if(i.isBuffer(e))return e.length;if(Z(e)||W(e))return e.byteLength;"string"!=typeof e&&(e=""+e);var r=e.length;if(0===r)return 0;for(var n=!1;;)switch(t){case"ascii":case"latin1":case"binary":return r;case"utf8":case"utf-8":case void 0:return U(e).length;case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return 2*r;case"hex":return r>>>1;case"base64":return V(e).length;default:if(n)return U(e).length;t=(""+t).toLowerCase(),n=!0}}function m(e,t,r){var n=!1;if((void 0===t||t<0)&&(t=0),t>this.length)return"";if((void 0===r||r>this.length)&&(r=this.length),r<=0)return"";if(r>>>=0,t>>>=0,r<=t)return"";for(e||(e="utf8");;)switch(e){case"hex":return O(this,t,r);case"utf8":case"utf-8":return S(this,t,r);case"ascii":return M(this,t,r);case"latin1":case"binary":return z(this,t,r);case"base64":return E(this,t,r);case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return P(this,t,r);default:if(n)throw new TypeError("Unknown encoding: "+e);e=(e+"").toLowerCase(),n=!0}}function g(e,t,r){var n=e[t];e[t]=e[r],e[r]=n}function v(e,t,r,n,o){if(0===e.length)return-1;if("string"==typeof r?(n=r,r=0):r>2147483647?r=2147483647:r<-2147483648&&(r=-2147483648),r=+r,H(r)&&(r=o?0:e.length-1),r<0&&(r=e.length+r),r>=e.length){if(o)return-1;r=e.length-1}else if(r<0){if(!o)return-1;r=0}if("string"==typeof t&&(t=i.from(t,n)),i.isBuffer(t))return 0===t.length?-1:y(e,t,r,n,o);if("number"==typeof t)return t&=255,"function"==typeof Uint8Array.prototype.indexOf?o?Uint8Array.prototype.indexOf.call(e,t,r):Uint8Array.prototype.lastIndexOf.call(e,t,r):y(e,[t],r,n,o);throw new TypeError("val must be string, number or Buffer")}function y(e,t,r,n,i){function o(e,t){return 1===a?e[t]:e.readUInt16BE(t*a)}var a=1,s=e.length,l=t.length;if(void 0!==n&&("ucs2"===(n=String(n).toLowerCase())||"ucs-2"===n||"utf16le"===n||"utf-16le"===n)){if(e.length<2||t.length<2)return-1;a=2,s/=2,l/=2,r/=2}var u;if(i){var c=-1;for(u=r;u<s;u++)if(o(e,u)===o(t,-1===c?0:u-c)){if(-1===c&&(c=u),u-c+1===l)return c*a}else-1!==c&&(u-=u-c),c=-1}else for(r+l>s&&(r=s-l),u=r;u>=0;u--){for(var f=!0,h=0;h<l;h++)if(o(e,u+h)!==o(t,h)){f=!1;break}if(f)return u}return-1}function b(e,t,r,n){r=Number(r)||0;var i=e.length-r;n?(n=Number(n))>i&&(n=i):n=i;var o=t.length;if(o%2!=0)throw new TypeError("Invalid hex string");n>o/2&&(n=o/2);for(var a=0;a<n;++a){var s=parseInt(t.substr(2*a,2),16);if(H(s))return a;e[r+a]=s}return a}function x(e,t,r,n){return q(U(t,e.length-r),e,r,n)}function w(e,t,r,n){return q(B(t),e,r,n)}function k(e,t,r,n){return w(e,t,r,n)}function A(e,t,r,n){return q(V(t),e,r,n)}function T(e,t,r,n){return q(G(t,e.length-r),e,r,n)}function E(e,t,r){return 0===t&&r===e.length?X.fromByteArray(e):X.fromByteArray(e.slice(t,r))}function S(e,t,r){r=Math.min(e.length,r);for(var n=[],i=t;i<r;){var o=e[i],a=null,s=o>239?4:o>223?3:o>191?2:1;if(i+s<=r){var l,u,c,f;switch(s){case 1:o<128&&(a=o);break;case 2:l=e[i+1],128==(192&l)&&(f=(31&o)<<6|63&l)>127&&(a=f);break;case 3:l=e[i+1],u=e[i+2],128==(192&l)&&128==(192&u)&&(f=(15&o)<<12|(63&l)<<6|63&u)>2047&&(f<55296||f>57343)&&(a=f);break;case 4:l=e[i+1],u=e[i+2],c=e[i+3],128==(192&l)&&128==(192&u)&&128==(192&c)&&(f=(15&o)<<18|(63&l)<<12|(63&u)<<6|63&c)>65535&&f<1114112&&(a=f)}}null===a?(a=65533,s=1):a>65535&&(a-=65536,n.push(a>>>10&1023|55296),a=56320|1023&a),n.push(a),i+=s}return R(n)}function R(e){var t=e.length;if(t<=K)return String.fromCharCode.apply(String,e);for(var r="",n=0;n<t;)r+=String.fromCharCode.apply(String,e.slice(n,n+=K));return r}function M(e,t,r){var n="";r=Math.min(e.length,r);for(var i=t;i<r;++i)n+=String.fromCharCode(127&e[i]);return n}function z(e,t,r){var n="";r=Math.min(e.length,r);for(var i=t;i<r;++i)n+=String.fromCharCode(e[i]);return n}function O(e,t,r){var n=e.length;(!t||t<0)&&(t=0),(!r||r<0||r>n)&&(r=n);for(var i="",o=t;o<r;++o)i+=D(e[o]);return i}function P(e,t,r){for(var n=e.slice(t,r),i="",o=0;o<n.length;o+=2)i+=String.fromCharCode(n[o]+256*n[o+1]);return i}function N(e,t,r){if(e%1!=0||e<0)throw new RangeError("offset is not uint");if(e+t>r)throw new RangeError("Trying to access beyond buffer length")}function j(e,t,r,n,o,a){if(!i.isBuffer(e))throw new TypeError('"buffer" argument must be a Buffer instance');if(t>o||t<a)throw new RangeError('"value" argument is out of bounds');if(r+n>e.length)throw new RangeError("Index out of range")}function L(e,t,r,n,i,o){if(r+n>e.length)throw new RangeError("Index out of range");if(r<0)throw new RangeError("Index out of range")}function C(e,t,r,n,i){return t=+t,r>>>=0,i||L(e,t,r,4,3.4028234663852886e38,-3.4028234663852886e38),Y.write(e,t,r,n,23,4),r+4}function I(e,t,r,n,i){return t=+t,r>>>=0,i||L(e,t,r,8,1.7976931348623157e308,-1.7976931348623157e308),Y.write(e,t,r,n,52,8),r+8}function F(e){if(e=e.trim().replace($,""),e.length<2)return"";for(;e.length%4!=0;)e+="=";return e}function D(e){return e<16?"0"+e.toString(16):e.toString(16)}function U(e,t){t=t||1/0;for(var r,n=e.length,i=null,o=[],a=0;a<n;++a){if((r=e.charCodeAt(a))>55295&&r<57344){if(!i){if(r>56319){(t-=3)>-1&&o.push(239,191,189);continue}if(a+1===n){(t-=3)>-1&&o.push(239,191,189);continue}i=r;continue}if(r<56320){(t-=3)>-1&&o.push(239,191,189),i=r;continue}r=65536+(i-55296<<10|r-56320)}else i&&(t-=3)>-1&&o.push(239,191,189);if(i=null,r<128){if((t-=1)<0)break;o.push(r)}else if(r<2048){if((t-=2)<0)break;o.push(r>>6|192,63&r|128)}else if(r<65536){if((t-=3)<0)break;o.push(r>>12|224,r>>6&63|128,63&r|128)}else{if(!(r<1114112))throw new Error("Invalid code point");if((t-=4)<0)break;o.push(r>>18|240,r>>12&63|128,r>>6&63|128,63&r|128)}}return o}function B(e){for(var t=[],r=0;r<e.length;++r)t.push(255&e.charCodeAt(r));return t}function G(e,t){for(var r,n,i,o=[],a=0;a<e.length&&!((t-=2)<0);++a)r=e.charCodeAt(a),n=r>>8,i=r%256,o.push(i),o.push(n);return o}function V(e){return X.toByteArray(F(e))}function q(e,t,r,n){for(var i=0;i<n&&!(i+r>=t.length||i>=e.length);++i)t[i+r]=e[i];return i}function W(e){return e instanceof ArrayBuffer||null!=e&&null!=e.constructor&&"ArrayBuffer"===e.constructor.name&&"number"==typeof e.byteLength}function Z(e){return"function"==typeof ArrayBuffer.isView&&ArrayBuffer.isView(e)}function H(e){return e!==e}var X=e("base64-js"),Y=e("ieee754");r.Buffer=i,r.SlowBuffer=p,r.INSPECT_MAX_BYTES=50;var J=2147483647;r.kMaxLength=J,i.TYPED_ARRAY_SUPPORT=function(){try{var e=new Uint8Array(1);return e.__proto__={__proto__:Uint8Array.prototype,foo:function(){return 42}},42===e.foo()}catch(e){return!1}}(),i.TYPED_ARRAY_SUPPORT||"undefined"==typeof console||"function"!=typeof console.error||console.error("This browser lacks typed array (Uint8Array) support which is required by `buffer` v5.x. Use `buffer` v4.x if you require old browser support."),"undefined"!=typeof Symbol&&Symbol.species&&i[Symbol.species]===i&&Object.defineProperty(i,Symbol.species,{value:null,configurable:!0,enumerable:!1,writable:!1}),i.poolSize=8192,i.from=function(e,t,r){return o(e,t,r)},i.prototype.__proto__=Uint8Array.prototype,i.__proto__=Uint8Array,i.alloc=function(e,t,r){return s(e,t,r)},i.allocUnsafe=function(e){return l(e)},i.allocUnsafeSlow=function(e){return l(e)},i.isBuffer=function(e){return null!=e&&!0===e._isBuffer},i.compare=function(e,t){if(!i.isBuffer(e)||!i.isBuffer(t))throw new TypeError("Arguments must be Buffers");if(e===t)return 0;for(var r=e.length,n=t.length,o=0,a=Math.min(r,n);o<a;++o)if(e[o]!==t[o]){r=e[o],n=t[o];break}return r<n?-1:n<r?1:0},i.isEncoding=function(e){switch(String(e).toLowerCase()){case"hex":case"utf8":case"utf-8":case"ascii":case"latin1":case"binary":case"base64":case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return!0;default:return!1}},i.concat=function(e,t){if(!Array.isArray(e))throw new TypeError('"list" argument must be an Array of Buffers');if(0===e.length)return i.alloc(0);var r;if(void 0===t)for(t=0,r=0;r<e.length;++r)t+=e[r].length;var n=i.allocUnsafe(t),o=0;for(r=0;r<e.length;++r){var a=e[r];if(!i.isBuffer(a))throw new TypeError('"list" argument must be an Array of Buffers');a.copy(n,o),o+=a.length}return n},i.byteLength=_,i.prototype._isBuffer=!0,i.prototype.swap16=function(){var e=this.length;if(e%2!=0)throw new RangeError("Buffer size must be a multiple of 16-bits");for(var t=0;t<e;t+=2)g(this,t,t+1);return this},i.prototype.swap32=function(){var e=this.length;if(e%4!=0)throw new RangeError("Buffer size must be a multiple of 32-bits");for(var t=0;t<e;t+=4)g(this,t,t+3),g(this,t+1,t+2);return this},i.prototype.swap64=function(){var e=this.length;if(e%8!=0)throw new RangeError("Buffer size must be a multiple of 64-bits");for(var t=0;t<e;t+=8)g(this,t,t+7),g(this,t+1,t+6),g(this,t+2,t+5),g(this,t+3,t+4);return this},i.prototype.toString=function(){var e=this.length;return 0===e?"":0===arguments.length?S(this,0,e):m.apply(this,arguments)},i.prototype.equals=function(e){if(!i.isBuffer(e))throw new TypeError("Argument must be a Buffer");return this===e||0===i.compare(this,e)},i.prototype.inspect=function(){var e="",t=r.INSPECT_MAX_BYTES;return this.length>0&&(e=this.toString("hex",0,t).match(/.{2}/g).join(" "),this.length>t&&(e+=" ... ")),"<Buffer "+e+">"},i.prototype.compare=function(e,t,r,n,o){if(!i.isBuffer(e))throw new TypeError("Argument must be a Buffer");if(void 0===t&&(t=0),void 0===r&&(r=e?e.length:0),void 0===n&&(n=0),void 0===o&&(o=this.length),t<0||r>e.length||n<0||o>this.length)throw new RangeError("out of range index");if(n>=o&&t>=r)return 0;if(n>=o)return-1;if(t>=r)return 1;if(t>>>=0,r>>>=0,n>>>=0,o>>>=0,this===e)return 0;for(var a=o-n,s=r-t,l=Math.min(a,s),u=this.slice(n,o),c=e.slice(t,r),f=0;f<l;++f)if(u[f]!==c[f]){a=u[f],s=c[f];break}return a<s?-1:s<a?1:0},i.prototype.includes=function(e,t,r){return-1!==this.indexOf(e,t,r)},i.prototype.indexOf=function(e,t,r){return v(this,e,t,r,!0)},i.prototype.lastIndexOf=function(e,t,r){return v(this,e,t,r,!1)},i.prototype.write=function(e,t,r,n){if(void 0===t)n="utf8",r=this.length,t=0;else if(void 0===r&&"string"==typeof t)n=t,r=this.length,t=0;else{if(!isFinite(t))throw new Error("Buffer.write(string, encoding, offset[, length]) is no longer supported");t>>>=0,isFinite(r)?(r>>>=0,void 0===n&&(n="utf8")):(n=r,r=void 0)}var i=this.length-t;if((void 0===r||r>i)&&(r=i),e.length>0&&(r<0||t<0)||t>this.length)throw new RangeError("Attempt to write outside buffer bounds");n||(n="utf8");for(var o=!1;;)switch(n){case"hex":return b(this,e,t,r);case"utf8":case"utf-8":return x(this,e,t,r);case"ascii":return w(this,e,t,r);case"latin1":case"binary":return k(this,e,t,r);case"base64":return A(this,e,t,r);case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return T(this,e,t,r);default:if(o)throw new TypeError("Unknown encoding: "+n);n=(""+n).toLowerCase(),o=!0}},i.prototype.toJSON=function(){return{type:"Buffer",data:Array.prototype.slice.call(this._arr||this,0)}};var K=4096;i.prototype.slice=function(e,t){var r=this.length;e=~~e,t=void 0===t?r:~~t,e<0?(e+=r)<0&&(e=0):e>r&&(e=r),t<0?(t+=r)<0&&(t=0):t>r&&(t=r),t<e&&(t=e);var n=this.subarray(e,t);return n.__proto__=i.prototype,n},i.prototype.readUIntLE=function(e,t,r){e>>>=0,t>>>=0,r||N(e,t,this.length);for(var n=this[e],i=1,o=0;++o<t&&(i*=256);)n+=this[e+o]*i;return n},i.prototype.readUIntBE=function(e,t,r){e>>>=0,t>>>=0,r||N(e,t,this.length);for(var n=this[e+--t],i=1;t>0&&(i*=256);)n+=this[e+--t]*i;return n},i.prototype.readUInt8=function(e,t){return e>>>=0,t||N(e,1,this.length),this[e]},i.prototype.readUInt16LE=function(e,t){return e>>>=0,t||N(e,2,this.length),this[e]|this[e+1]<<8},i.prototype.readUInt16BE=function(e,t){return e>>>=0,t||N(e,2,this.length),this[e]<<8|this[e+1]},i.prototype.readUInt32LE=function(e,t){return e>>>=0,t||N(e,4,this.length),(this[e]|this[e+1]<<8|this[e+2]<<16)+16777216*this[e+3]},i.prototype.readUInt32BE=function(e,t){return e>>>=0,t||N(e,4,this.length),16777216*this[e]+(this[e+1]<<16|this[e+2]<<8|this[e+3])},i.prototype.readIntLE=function(e,t,r){e>>>=0,t>>>=0,r||N(e,t,this.length);for(var n=this[e],i=1,o=0;++o<t&&(i*=256);)n+=this[e+o]*i;return i*=128,n>=i&&(n-=Math.pow(2,8*t)),n},i.prototype.readIntBE=function(e,t,r){e>>>=0,t>>>=0,r||N(e,t,this.length);for(var n=t,i=1,o=this[e+--n];n>0&&(i*=256);)o+=this[e+--n]*i;return i*=128,o>=i&&(o-=Math.pow(2,8*t)),o},i.prototype.readInt8=function(e,t){return e>>>=0,t||N(e,1,this.length),128&this[e]?-1*(255-this[e]+1):this[e]},i.prototype.readInt16LE=function(e,t){e>>>=0,t||N(e,2,this.length);var r=this[e]|this[e+1]<<8;return 32768&r?4294901760|r:r},i.prototype.readInt16BE=function(e,t){e>>>=0,t||N(e,2,this.length);var r=this[e+1]|this[e]<<8;return 32768&r?4294901760|r:r},i.prototype.readInt32LE=function(e,t){return e>>>=0,t||N(e,4,this.length),this[e]|this[e+1]<<8|this[e+2]<<16|this[e+3]<<24},i.prototype.readInt32BE=function(e,t){return e>>>=0,t||N(e,4,this.length),this[e]<<24|this[e+1]<<16|this[e+2]<<8|this[e+3]},i.prototype.readFloatLE=function(e,t){return e>>>=0,t||N(e,4,this.length),Y.read(this,e,!0,23,4)},i.prototype.readFloatBE=function(e,t){return e>>>=0,t||N(e,4,this.length),Y.read(this,e,!1,23,4)},i.prototype.readDoubleLE=function(e,t){return e>>>=0,t||N(e,8,this.length),Y.read(this,e,!0,52,8)},i.prototype.readDoubleBE=function(e,t){return e>>>=0,t||N(e,8,this.length),Y.read(this,e,!1,52,8)},i.prototype.writeUIntLE=function(e,t,r,n){if(e=+e,t>>>=0,r>>>=0,!n){j(this,e,t,r,Math.pow(2,8*r)-1,0)}var i=1,o=0;for(this[t]=255&e;++o<r&&(i*=256);)this[t+o]=e/i&255;return t+r},i.prototype.writeUIntBE=function(e,t,r,n){if(e=+e,t>>>=0,r>>>=0,!n){j(this,e,t,r,Math.pow(2,8*r)-1,0)}var i=r-1,o=1;for(this[t+i]=255&e;--i>=0&&(o*=256);)this[t+i]=e/o&255;return t+r},i.prototype.writeUInt8=function(e,t,r){return e=+e,t>>>=0,r||j(this,e,t,1,255,0),this[t]=255&e,t+1},i.prototype.writeUInt16LE=function(e,t,r){return e=+e,t>>>=0,r||j(this,e,t,2,65535,0),this[t]=255&e,this[t+1]=e>>>8,t+2},i.prototype.writeUInt16BE=function(e,t,r){return e=+e,t>>>=0,r||j(this,e,t,2,65535,0),this[t]=e>>>8,this[t+1]=255&e,t+2},i.prototype.writeUInt32LE=function(e,t,r){return e=+e,t>>>=0,r||j(this,e,t,4,4294967295,0),this[t+3]=e>>>24,this[t+2]=e>>>16,this[t+1]=e>>>8,this[t]=255&e,t+4},i.prototype.writeUInt32BE=function(e,t,r){return e=+e,t>>>=0,r||j(this,e,t,4,4294967295,0),this[t]=e>>>24,this[t+1]=e>>>16,this[t+2]=e>>>8,this[t+3]=255&e,t+4},i.prototype.writeIntLE=function(e,t,r,n){if(e=+e,t>>>=0,!n){var i=Math.pow(2,8*r-1);j(this,e,t,r,i-1,-i)}var o=0,a=1,s=0;for(this[t]=255&e;++o<r&&(a*=256);)e<0&&0===s&&0!==this[t+o-1]&&(s=1),this[t+o]=(e/a>>0)-s&255;return t+r},i.prototype.writeIntBE=function(e,t,r,n){if(e=+e,t>>>=0,!n){var i=Math.pow(2,8*r-1);j(this,e,t,r,i-1,-i)}var o=r-1,a=1,s=0;for(this[t+o]=255&e;--o>=0&&(a*=256);)e<0&&0===s&&0!==this[t+o+1]&&(s=1),this[t+o]=(e/a>>0)-s&255;return t+r},i.prototype.writeInt8=function(e,t,r){return e=+e,t>>>=0,r||j(this,e,t,1,127,-128),e<0&&(e=255+e+1),this[t]=255&e,t+1},i.prototype.writeInt16LE=function(e,t,r){return e=+e,t>>>=0,r||j(this,e,t,2,32767,-32768),this[t]=255&e,this[t+1]=e>>>8,t+2},i.prototype.writeInt16BE=function(e,t,r){return e=+e,t>>>=0,r||j(this,e,t,2,32767,-32768),this[t]=e>>>8,this[t+1]=255&e,t+2},i.prototype.writeInt32LE=function(e,t,r){return e=+e,t>>>=0,r||j(this,e,t,4,2147483647,-2147483648),this[t]=255&e,this[t+1]=e>>>8,this[t+2]=e>>>16,this[t+3]=e>>>24,t+4},i.prototype.writeInt32BE=function(e,t,r){return e=+e,t>>>=0,r||j(this,e,t,4,2147483647,-2147483648),e<0&&(e=4294967295+e+1),this[t]=e>>>24,this[t+1]=e>>>16,this[t+2]=e>>>8,this[t+3]=255&e,t+4},i.prototype.writeFloatLE=function(e,t,r){return C(this,e,t,!0,r)},i.prototype.writeFloatBE=function(e,t,r){return C(this,e,t,!1,r)},i.prototype.writeDoubleLE=function(e,t,r){return I(this,e,t,!0,r)},i.prototype.writeDoubleBE=function(e,t,r){return I(this,e,t,!1,r)},i.prototype.copy=function(e,t,r,n){if(r||(r=0),n||0===n||(n=this.length),t>=e.length&&(t=e.length),t||(t=0),n>0&&n<r&&(n=r),n===r)return 0;if(0===e.length||0===this.length)return 0;if(t<0)throw new RangeError("targetStart out of bounds");if(r<0||r>=this.length)throw new RangeError("sourceStart out of bounds");if(n<0)throw new RangeError("sourceEnd out of bounds");n>this.length&&(n=this.length),e.length-t<n-r&&(n=e.length-t+r);var i,o=n-r;if(this===e&&r<t&&t<n)for(i=o-1;i>=0;--i)e[i+t]=this[i+r];else if(o<1e3)for(i=0;i<o;++i)e[i+t]=this[i+r];else Uint8Array.prototype.set.call(e,this.subarray(r,r+o),t);return o},i.prototype.fill=function(e,t,r,n){if("string"==typeof e){if("string"==typeof t?(n=t,t=0,r=this.length):"string"==typeof r&&(n=r,r=this.length),1===e.length){var o=e.charCodeAt(0);o<256&&(e=o)}if(void 0!==n&&"string"!=typeof n)throw new TypeError("encoding must be a string");if("string"==typeof n&&!i.isEncoding(n))throw new TypeError("Unknown encoding: "+n)}else"number"==typeof e&&(e&=255);if(t<0||this.length<t||this.length<r)throw new RangeError("Out of range index");if(r<=t)return this;t>>>=0,r=void 0===r?this.length:r>>>0,e||(e=0);var a;if("number"==typeof e)for(a=t;a<r;++a)this[a]=e;else{var s=i.isBuffer(e)?e:new i(e,n),l=s.length;for(a=0;a<r-t;++a)this[a+t]=s[a%l]}return this};var $=/[^+\/0-9A-Za-z-_]/g},{"base64-js":8,ieee754:98}],11:[function(e,t,r){e("../modules/es6.object.to-string"),e("../modules/es6.string.iterator"),e("../modules/web.dom.iterable"),e("../modules/es6.promise"),t.exports=e("../modules/_core").Promise},{"../modules/_core":19,"../modules/es6.object.to-string":71,"../modules/es6.promise":72,"../modules/es6.string.iterator":73,"../modules/web.dom.iterable":74}],12:[function(e,t,r){t.exports=function(e){if("function"!=typeof e)throw TypeError(e+" is not a function!");return e}},{}],13:[function(e,t,r){var n=e("./_wks")("unscopables"),i=Array.prototype;void 0==i[n]&&e("./_hide")(i,n,{}),t.exports=function(e){i[n][e]=!0}},{"./_hide":30,"./_wks":68}],14:[function(e,t,r){t.exports=function(e,t,r,n){if(!(e instanceof t)||void 0!==n&&n in e)throw TypeError(r+": incorrect invocation!");return e}},{}],15:[function(e,t,r){var n=e("./_is-object");t.exports=function(e){if(!n(e))throw TypeError(e+" is not an object!");return e}},{"./_is-object":36}],16:[function(e,t,r){var n=e("./_to-iobject"),i=e("./_to-length"),o=e("./_to-index");t.exports=function(e){return function(t,r,a){var s,l=n(t),u=i(l.length),c=o(a,u);if(e&&r!=r){for(;u>c;)if((s=l[c++])!=s)return!0}else for(;u>c;c++)if((e||c in l)&&l[c]===r)return e||c||0;return!e&&-1}}},{"./_to-index":61,"./_to-iobject":63,"./_to-length":64}],17:[function(e,t,r){var n=e("./_cof"),i=e("./_wks")("toStringTag"),o="Arguments"==n(function(){return arguments}()),a=function(e,t){try{return e[t]}catch(e){}};t.exports=function(e){var t,r,s;return void 0===e?"Undefined":null===e?"Null":"string"==typeof(r=a(t=Object(e),i))?r:o?n(t):"Object"==(s=n(t))&&"function"==typeof t.callee?"Arguments":s}},{"./_cof":18,"./_wks":68}],18:[function(e,t,r){var n={}.toString;t.exports=function(e){return n.call(e).slice(8,-1)}},{}],19:[function(e,t,r){var n=t.exports={version:"2.4.0"};"number"==typeof __e&&(__e=n)},{}],20:[function(e,t,r){var n=e("./_a-function");t.exports=function(e,t,r){if(n(e),void 0===t)return e;switch(r){case 1:return function(r){return e.call(t,r)};case 2:return function(r,n){return e.call(t,r,n)};case 3:return function(r,n,i){return e.call(t,r,n,i)}}return function(){return e.apply(t,arguments)}}},{"./_a-function":12}],21:[function(e,t,r){t.exports=function(e){if(void 0==e)throw TypeError("Can't call method on  "+e);return e}},{}],22:[function(e,t,r){t.exports=!e("./_fails")(function(){return 7!=Object.defineProperty({},"a",{get:function(){return 7}}).a})},{"./_fails":26}],23:[function(e,t,r){var n=e("./_is-object"),i=e("./_global").document,o=n(i)&&n(i.createElement);t.exports=function(e){return o?i.createElement(e):{}}},{"./_global":28,"./_is-object":36}],24:[function(e,t,r){t.exports="constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,toLocaleString,toString,valueOf".split(",")},{}],25:[function(e,t,r){var n=e("./_global"),i=e("./_core"),o=e("./_hide"),a=e("./_redefine"),s=e("./_ctx"),l=function(e,t,r){var u,c,f,h,d=e&l.F,p=e&l.G,_=e&l.S,m=e&l.P,g=e&l.B,v=p?n:_?n[t]||(n[t]={}):(n[t]||{}).prototype,y=p?i:i[t]||(i[t]={}),b=y.prototype||(y.prototype={});p&&(r=t);for(u in r)c=!d&&v&&void 0!==v[u],f=(c?v:r)[u],h=g&&c?s(f,n):m&&"function"==typeof f?s(Function.call,f):f,v&&a(v,u,f,e&l.U),y[u]!=f&&o(y,u,h),m&&b[u]!=f&&(b[u]=f)};n.core=i,l.F=1,l.G=2,l.S=4,l.P=8,l.B=16,l.W=32,l.U=64,l.R=128,t.exports=l},{"./_core":19,"./_ctx":20,"./_global":28,"./_hide":30,"./_redefine":53}],26:[function(e,t,r){t.exports=function(e){try{return!!e()}catch(e){
@@ -14840,7 +14593,7 @@ this.perpAxes()}}],[{key:"projectToAxis",value:function(e,t){for(var r=1/0,n=-1/
 
 
 /***/ }),
-/* 8 */
+/* 6 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -14891,12 +14644,263 @@ module.exports = {
 };
 
 /***/ }),
-/* 9 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* global AFRAME THREE */
 
-const Utils = __webpack_require__(0);
+const BufferGeometryUtils = __webpack_require__(3);
+const Utils = __webpack_require__(1);
+
+const TERRAIN_LOADED_EVENT = 'tangram-terrain-loaded';
+
+
+AFRAME.registerComponent('tangram-static-terrain', {
+  dependencies: [
+    'geometry',
+    'material'
+  ],
+
+  schema: {
+    map: {
+      type: 'map'
+    },
+    normalmap: {
+      type: 'map'
+    },
+    bounds: {
+      default: '0, 0, 0, 0',
+      parse: function (value) {
+        return value.split(',').map(f => parseFloat(f));
+      }
+    },
+    pxToWorldRatio: {
+      default: 10
+    },
+    lod: {
+      default: 1
+    },
+    lodCount: {
+      default: 1,
+      oneOf: [1, 2, 3, 4]
+    },
+    vertexNormals: {
+      default: true
+    }
+  },
+
+  multiple: false,
+
+  init: function () {
+    const data = this.data;
+    const el = this.el;
+    this.system = el.sceneEl.systems['tangram-terrain'];
+
+    this.hasLoaded = false;
+
+    this.depthBuffer = null;
+
+    this.lods = [];
+
+    const lods = Utils.createGeometryLODs(el, data);
+    const mesh = el.getObject3D('mesh');
+    mesh.geometry = lods.geometry;
+    this.lods = lods.lods;
+
+    Utils.watchMaterialData(el);
+  },
+
+  update: function (oldData) {
+    const el = this.el;
+    const data = this.data;
+
+    // Nothing changed
+    if (AFRAME.utils.deepEqual(oldData, data)) return;
+    
+    if (data.map !== oldData.map || data.normalmap !== oldData.normalmap) {
+
+      Utils.applyMaterial(el, data, data.map, data.normalmap);
+      this.system.createDepthBuffer(data.normalmap).then(buffer => {
+        this.depthBuffer = buffer;
+        this.renderDepthBuffer(this.depthBuffer);
+        this.el.emit(TERRAIN_LOADED_EVENT);
+        this.hasLoaded = true;
+      })
+    }
+
+    if (data.lod !== oldData.lod) {
+      if (data.lod >= 1 && data.lod <= data.lodCount) {
+        this.applyLOD(data.lod);
+      }
+    }
+  },
+
+  applyLOD: function (lod) {
+    const el = this.el;
+    const data = this.data;
+    const matData = this.el.components.material.data;
+
+    let foundLOD = null;
+    for (let lodObj of this.lods) {
+      if (lodObj.lod === lod) {
+        foundLOD = lodObj;
+      }
+    }
+
+    const mesh = el.getObject3D('mesh');
+    mesh.geometry.setDrawRange(foundLOD.geometry.start, foundLOD.geometry.count);
+  },
+
+  project: function (lon, lat) {
+
+    const data = this.data;
+
+    if (lon < data.bounds[0] || lon > data.bounds[2]) return null;
+    if (lat < data.bounds[1] || lon > data.bounds[3]) return null;
+
+    const geomData = this.el.components.geometry.data;
+    const matData = this.el.components.material.data;
+
+    const deltaLng = data.bounds[2] - data.bounds[0]
+    const deltaLat = data.bounds[3] - data.bounds[1]
+
+    const width = geomData.width //* data.pxToWorldRatio;
+    const height = geomData.height// * data.pxToWorldRatio;
+
+    // convert to world space
+    //const worldX = (width / deltaLng * (data.bounds[2] - lon)) - (width / 2);
+    const worldX = -(width / deltaLng * (data.bounds[2] - lon)) + (width / 2);
+
+    // y-coord is inverted (positive up in world space, positive down in pixel space)
+    const worldY = -(height / deltaLat * (data.bounds[3] - lat)) + (height / 2);
+
+    const normalmapWidth = data.normalmap.width; 
+    const normalmapHeight = data.normalmap.height;
+
+    const px = {
+      x: normalmapWidth / deltaLng * (data.bounds[2] - lon), //- (normalmapWidth / 2),
+      y: normalmapHeight / deltaLat * (data.bounds[3] - lat) // + (normalmapHeight / 2)
+    }
+
+    // read alpha value
+    let z = this._hitTestPlain(px.x, px.y);
+
+    z *= matData.displacementScale;
+    z += matData.displacementBias;
+
+    //console.log(worldX, worldY, z)
+    return {
+      x: worldX,
+      y: worldY,
+      z: z
+    };
+  },
+  renderDepthBuffer: function() {
+    if (this.depthBuffer) {
+      // if we have a depthbuffer and the scene is just updated
+      this.system.renderDepthBuffer(this.depthBuffer);
+    }
+  },
+
+  _hitTest: (function () {
+    const pixelBuffer = new Uint8Array(4);//Float32Array(4);
+
+    return function(x, y) {
+      const data = this.data;
+      const geomData = this.el.components.geometry.data;
+
+      const depthTexture = this.depthBuffer.texture;
+
+      const width = geomData.width * data.pxToWorldRatio;
+      const height = geomData.height * data.pxToWorldRatio;
+
+      // converting pixel space to texture space
+      const hitX = Math.round((x) / width * depthTexture.width);
+      const hitY = Math.round((height - y) / height * depthTexture.height);
+
+      const renderer = this.el.sceneEl.renderer;
+      const isVREnabled = renderer.vr.enabled;
+      renderer.vr.enabled = false;
+      renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
+      renderer.vr.enabled = isVREnabled;
+
+      // read alpha value
+      return pixelBuffer[3] / 255;
+    }
+  })(),
+
+  _hitTestPlain: (function () {
+    const pixelBuffer = new Uint8Array(4);//Float32Array(4);
+
+    return function(x, y) {
+      const data = this.data;
+      const geomData = this.el.components.geometry.data;
+      const pixelBuffer = new Uint8Array(4);
+
+      const depthTexture = this.depthBuffer.texture;
+
+      const hitX = depthTexture.width - x;
+      const hitY = depthTexture.height - y;
+
+      const renderer = this.el.sceneEl.renderer;
+      const isVREnabled = renderer.vr.enabled;
+      renderer.vr.enabled = false;
+      renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
+      renderer.vr.enabled = isVREnabled;
+
+      // read alpha value
+      return pixelBuffer[3] / 255;
+    }
+  })(),
+
+  // TODO
+  unproject: function (x, y) {
+    const data = this.data;
+    const geomData = this.el.components.geometry.data;
+    const matData = this.el.components.material.data;
+
+    const deltaLng = data.bounds[2] - data.bounds[0]
+    const deltaLat = data.bounds[3] - data.bounds[1]
+
+    const lngRatio = deltaLng / geomData.width;
+    const latRatio = deltaLat / geomData.height;
+    const px = {
+      x: x * lngRatio,
+      y: y * latRatio
+    }
+    return {
+      lon: px.x + (deltaLng/2) + parseFloat(data.bounds[0]),
+      lat: px.y + (deltaLat/2) + parseFloat(data.bounds[1])
+    };
+  },
+
+  _getHeight: function (x, y) {
+    const geomData = this.el.components.geometry.data;
+
+    const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
+    const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
+    
+    return this._hitTest(pxX, pxY);
+  },
+
+  unprojectHeight: function (x, y) {
+    const matData = this.el.components.material.data;
+    return this._getHeight(x, y) * matData.displacementScale + matData.displacementBias;
+  },
+
+  unprojectHeightInMeters: function (x, y) {
+    return this._getHeight(x, y) * 19900 - 8900;
+  }
+})
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* global AFRAME THREE */
+
+const Utils = __webpack_require__(1);
 
 
 const TERRAIN_LOADED_EVENT = 'tangram-terrain-loaded';
@@ -15033,7 +15037,7 @@ AFRAME.registerComponent('tangram-terrain', {
       this.heightmap.fitBounds(this.overlaymap.getBounds(), opts);
       this.heightmap.invalidateSize(opts);
       this.heightmap.fitBounds(this.overlaymap.getBounds(), opts);
-      console.log(this.heightmap.getZoom(), this.overlaymap.getZoom())
+      //console.log(this.heightmap.getZoom(), this.overlaymap.getZoom())
 
       // HACK: render depth buffer after a very safe timeout, 
       // because the view_complete is not always called if tiles are in cache
@@ -15287,258 +15291,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
 
 /***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* global AFRAME THREE */
-
-const BufferGeometryUtils = __webpack_require__(2);
-const Utils = __webpack_require__(0);
-
-const TERRAIN_LOADED_EVENT = 'tangram-terrain-loaded';
-
-
-AFRAME.registerComponent('tangram-static-terrain', {
-  dependencies: [
-    'geometry',
-    'material'
-  ],
-
-  schema: {
-    map: {
-      type: 'map'
-    },
-    normalmap: {
-      type: 'map'
-    },
-    bounds: {
-      default: '0, 0, 0, 0',
-      parse: function (value) {
-        return value.split(',').map(f => parseFloat(f));
-      }
-    },
-    pxToWorldRatio: {
-      default: 10
-    },
-    lod: {
-      default: 1
-    },
-    lodCount: {
-      default: 1,
-      oneOf: [1, 2, 3, 4]
-    },
-    vertexNormals: {
-      default: true
-    }
-  },
-
-  multiple: false,
-
-  init: function () {
-    const data = this.data;
-    const el = this.el;
-    this.system = el.sceneEl.systems['tangram-terrain'];
-
-    this.hasLoaded = false;
-
-    this.depthBuffer = null;
-
-    this.lods = [];
-
-    const lods = Utils.createGeometryLODs(el, data);
-    const mesh = el.getObject3D('mesh');
-    mesh.geometry = lods.geometry;
-    this.lods = lods.lods;
-
-    Utils.watchMaterialData(el);
-  },
-
-  update: function (oldData) {
-    const el = this.el;
-    const data = this.data;
-
-    // Nothing changed
-    if (AFRAME.utils.deepEqual(oldData, data)) return;
-    
-    if (data.map !== oldData.map || data.normalmap !== oldData.normalmap) {
-
-      Utils.applyMaterial(el, data, data.map, data.normalmap);
-      this.system.createDepthBuffer(data.normalmap).then(buffer => {
-        this.depthBuffer = buffer;
-        this.renderDepthBuffer(this.depthBuffer);
-        this.el.emit(TERRAIN_LOADED_EVENT);
-        this.hasLoaded = true;
-      })
-    }
-
-    if (data.lod !== oldData.lod) {
-      if (data.lod >= 1 && data.lod <= data.lodCount) {
-        this.applyLOD(data.lod);
-      }
-    }
-  },
-
-  applyLOD: function (lod) {
-    const el = this.el;
-    const data = this.data;
-    const matData = this.el.components.material.data;
-
-    let foundLOD = null;
-    for (let lodObj of this.lods) {
-      if (lodObj.lod === lod) {
-        foundLOD = lodObj;
-      }
-    }
-
-    const mesh = el.getObject3D('mesh');
-    mesh.geometry.setDrawRange(foundLOD.geometry.start, foundLOD.geometry.count);
-  },
-
-  project: function (lon, lat) {
-
-    const data = this.data;
-
-    if (lon < data.bounds[0] || lon > data.bounds[2]) return null;
-    if (lat < data.bounds[1] || lon > data.bounds[3]) return null;
-
-    const geomData = this.el.components.geometry.data;
-    const matData = this.el.components.material.data;
-
-    const deltaLng = data.bounds[2] - data.bounds[0]
-    const deltaLat = data.bounds[3] - data.bounds[1]
-
-    const width = geomData.width //* data.pxToWorldRatio;
-    const height = geomData.height// * data.pxToWorldRatio;
-
-    // convert to world space
-    //const worldX = (width / deltaLng * (data.bounds[2] - lon)) - (width / 2);
-    const worldX = -(width / deltaLng * (data.bounds[2] - lon)) + (width / 2);
-
-    // y-coord is inverted (positive up in world space, positive down in pixel space)
-    const worldY = -(height / deltaLat * (data.bounds[3] - lat)) + (height / 2);
-
-    const normalmapWidth = data.normalmap.width; 
-    const normalmapHeight = data.normalmap.height;
-
-    const px = {
-      x: normalmapWidth / deltaLng * (data.bounds[2] - lon), //- (normalmapWidth / 2),
-      y: normalmapHeight / deltaLat * (data.bounds[3] - lat) // + (normalmapHeight / 2)
-    }
-
-    // read alpha value
-    let z = this._hitTestPlain(px.x, px.y);
-
-    z *= matData.displacementScale;
-    z += matData.displacementBias;
-
-    //console.log(worldX, worldY, z)
-    return {
-      x: worldX,
-      y: worldY,
-      z: z
-    };
-  },
-  renderDepthBuffer: function() {
-    if (this.depthBuffer) {
-      // if we have a depthbuffer and the scene is just updated
-      this.system.renderDepthBuffer(this.depthBuffer);
-    }
-  },
-
-  _hitTest: (function () {
-    const pixelBuffer = new Uint8Array(4);//Float32Array(4);
-
-    return function(x, y) {
-      const data = this.data;
-      const geomData = this.el.components.geometry.data;
-
-      const depthTexture = this.depthBuffer.texture;
-
-      const width = geomData.width * data.pxToWorldRatio;
-      const height = geomData.height * data.pxToWorldRatio;
-
-      // converting pixel space to texture space
-      const hitX = Math.round((x) / width * depthTexture.width);
-      const hitY = Math.round((height - y) / height * depthTexture.height);
-
-      const renderer = this.el.sceneEl.renderer;
-      const isVREnabled = renderer.vr.enabled;
-      renderer.vr.enabled = false;
-      renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
-      renderer.vr.enabled = isVREnabled;
-
-      // read alpha value
-      return pixelBuffer[3] / 255;
-    }
-  })(),
-
-  _hitTestPlain: (function () {
-    const pixelBuffer = new Uint8Array(4);//Float32Array(4);
-
-    return function(x, y) {
-      const data = this.data;
-      const geomData = this.el.components.geometry.data;
-      const pixelBuffer = new Uint8Array(4);
-
-      const depthTexture = this.depthBuffer.texture;
-
-      const hitX = depthTexture.width - x;
-      const hitY = depthTexture.height - y;
-
-      const renderer = this.el.sceneEl.renderer;
-      const isVREnabled = renderer.vr.enabled;
-      renderer.vr.enabled = false;
-      renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
-      renderer.vr.enabled = isVREnabled;
-
-      // read alpha value
-      return pixelBuffer[3] / 255;
-    }
-  })(),
-
-  // TODO
-  unproject: function (x, y) {
-    const data = this.data;
-    const geomData = this.el.components.geometry.data;
-    const matData = this.el.components.material.data;
-
-    const deltaLng = data.bounds[2] - data.bounds[0]
-    const deltaLat = data.bounds[3] - data.bounds[1]
-
-    const lngRatio = deltaLng / geomData.width;
-    const latRatio = deltaLat / geomData.height;
-    const px = {
-      x: x * lngRatio,
-      y: y * latRatio
-    }
-    return {
-      lon: px.x + (deltaLng/2) + parseFloat(data.bounds[0]),
-      lat: px.y + (deltaLat/2) + parseFloat(data.bounds[1])
-    };
-  },
-
-  _getHeight: function (x, y) {
-    const geomData = this.el.components.geometry.data;
-
-    const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
-    const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
-    
-    return this._hitTest(pxX, pxY);
-  },
-
-  unprojectHeight: function (x, y) {
-    const matData = this.el.components.material.data;
-    return this._getHeight(x, y) * matData.displacementScale + matData.displacementBias;
-  },
-
-  unprojectHeightInMeters: function (x, y) {
-    return this._getHeight(x, y) * 19900 - 8900;
-  }
-})
-
-
-/***/ }),
-/* 11 */
+/* 9 */
 /***/ (function(module, exports) {
 
 
@@ -15582,6 +15335,256 @@ AFRAME.registerPrimitive('a-tangram-terrain', {
     lodCount: 'tangram-terrain.lodCount'
   }
 });
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+const L = __webpack_require__(4);
+const Tangram = __webpack_require__(5);
+
+const Utils = __webpack_require__(1);
+
+if (typeof AFRAME === 'undefined') {
+  throw new Error('Component attempted to register before AFRAME was available.');
+}
+
+const PRESERVE_DRAWING_BUFFER = true; // AFRAME.utils.device.isMobile();
+
+const cuid = __webpack_require__(2);
+
+const elevationStyle = __webpack_require__(6);
+
+const REMOVETANGRAM_TIMEOUT = 300;
+
+const DEBUG_CANVAS_OFFSET =     99999;
+const DEBUG_HM_CANVAS_OFFSET =  999999;
+
+
+AFRAME.registerSystem('tangram-terrain', {
+  init: function () {
+  },
+  createHeightmap: function (data, geomData, onComplete) {
+
+    const width = geomData.segmentsWidth * data.heightmapFactor; //+ 1;
+    const height = geomData.segmentsHeight * data.heightmapFactor; //+ 1;
+
+    const canvasContainer = Utils.getCanvasContainerAssetElement(
+      cuid(),
+      width, height, DEBUG_HM_CANVAS_OFFSET);
+
+    const map = L.map(canvasContainer, Utils.leafletOptions);
+
+    const layer = Tangram.leafletLayer({
+      scene: {
+        import: elevationStyle
+      },
+      webGLContextOptions: {
+        preserveDrawingBuffer: PRESERVE_DRAWING_BUFFER,
+        alpha: true,
+        premultipliedAlpha: false // very important for transparent tiles
+      },
+      highDensityDisplay: false,
+      continuousZoom: false,
+      noWrap: true,
+      attribution: ''
+    });
+
+    const tangram = {
+      map: map,
+      layer: layer
+    };
+
+    layer.scene.subscribe({
+      load: (event) => {
+//        this.injectAPIKey(event.config, data.apiKey);
+        layer.scene.config.styles.combo.shaders.defines.USE_NORMALS = data.vertexNormals;
+        Utils.processCanvasElement(canvasContainer);
+      },
+      view_complete: () => {
+        const canvas = tangram.layer.scene.canvas;
+        onComplete(canvas);
+      }
+    });
+    layer.addTo(map);
+
+    return tangram;
+  },
+  createMap: function (data, geomData, onComplete) {
+
+    const width = geomData.width * data.pxToWorldRatio;
+    const height = geomData.height * data.pxToWorldRatio;
+
+    const canvasContainer = Utils.getCanvasContainerAssetElement(
+      cuid(),
+      width, height, DEBUG_CANVAS_OFFSET + 100);
+
+    const map = L.map(canvasContainer, Utils.leafletOptions);
+
+    const layer = Tangram.leafletLayer({
+      scene: {
+        import: data.style
+      },
+      numWorkers: 4,
+      highDensityDisplay: false,
+      webGLContextOptions: {
+        preserveDrawingBuffer: PRESERVE_DRAWING_BUFFER
+      },
+      continuousZoom: false,
+      noWrap: true,
+      attribution: ''
+    });
+    layer.addTo(map);
+
+    const tangram = {
+      map: map,
+      layer: layer
+    };
+
+    layer.scene.subscribe({
+      load: (event) => {
+        this.injectAPIKey(event.config, data.apiKey);
+        Utils.processCanvasElement(canvasContainer);
+      },
+      post_update: (will_render) => {
+      },
+      view_complete: () => {
+        const canvas = tangram.layer.scene.canvas;
+        onComplete(canvas);
+      }
+    });
+
+    return tangram;
+  },
+  resize: function (map, width, height) {
+    const container = map.getContainer();
+    container.style.width = (width) + 'px';
+    container.style.height = (height) + 'px';
+
+    const bounds = map.getBounds();
+    const opts = {animate:false, reset: true};
+
+    map.invalidateSize(opts);
+    map.fitBounds(bounds, opts);
+  },
+
+  createDepthBuffer: function (canvas) {
+
+    // https://stackoverflow.com/questions/21533757/three-js-use-framebuffer-as-texture
+
+    const imageWidth = canvas.width;
+    const imageHeight = canvas.height;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(
+      imageWidth / -2,
+      imageWidth / 2,
+      imageHeight / 2,
+      imageHeight / -2, -1, 1);
+
+    const texture = new THREE.WebGLRenderTarget(imageWidth, imageHeight, {
+      minFilter: THREE.NearestFilter,
+      magFilter: THREE.NearestFilter,
+      type: THREE.UnsignedByteType
+      //type: THREE.FloatType
+    });
+
+    return new Promise((resolve, reject) => {
+      this.el.systems.material.loadTexture(canvas, {
+        src: canvas
+      }, mapTexture => {
+
+        const mesh = new THREE.Mesh(
+          new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
+          new THREE.MeshBasicMaterial({
+            map: mapTexture,
+            lights: false,
+            fog: false,
+            //transparent: true
+          })
+        );
+        scene.add(mesh);
+
+        const depthBuffer = {
+          scene: scene,
+          camera: camera,
+          mesh: mesh,
+          texture: texture,
+          canvasTexture: mapTexture
+        }
+        resolve(depthBuffer);
+      })
+    })
+
+
+  },
+
+  renderDepthBuffer: function (depthBuffer) {
+    const renderer = this.el.sceneEl.renderer;
+
+    const isVREnabled = renderer.vr.enabled;
+    renderer.vr.enabled = false;
+    renderer.render(depthBuffer.scene, depthBuffer.camera, depthBuffer.texture);
+    renderer.vr.enabled = isVREnabled;
+  },
+
+  dispose: function (obj) {
+    // removing all ressources layer after a safe timeout
+    Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
+      obj.layer.remove();
+    });
+  },
+  injectAPIKey(config, apiKey) {
+    const URL_PATTERN = /((https?:)?\/\/tiles?.nextzen.org([a-z]|[A-Z]|[0-9]|\/|\{|\}|\.|\||:)+(topojson|geojson|mvt|png|tif|gz))/;
+
+    let didInjectKey = false;
+
+    Object.entries(config.sources).forEach((entry) => {
+      const [key, value] = entry;
+      let valid = false;
+
+      // Only operate on the URL if it's a Mapzen-hosted vector tile service
+      if (!value.url.match(URL_PATTERN)) return;
+
+      // Check for valid API keys in the source.
+      // First, check the url_params.api_key field
+      // Tangram.js compatibility note: Tangram >= v0.11.7 fires the `load`
+      // event after `global` property substitution, so we don't need to manually
+      // check global properties here.
+      if (value.url_params && value.url_params.api_key) {
+        valid = true;
+      // Next, check if there is an api_key param in the query string
+      } else if (value.url.match(/(\?|&)api_key=[-a-z]+-[0-9a-zA-Z_-]{7}/)) {
+        valid = true;
+      }
+
+      if (!valid) {
+        // Add a default API key as a url_params setting.
+        // Preserve existing url_params if present.
+        const params = Object.assign({}, config.sources[key].url_params, {
+          api_key: apiKey,
+        });
+
+        // Mutate the original on purpose.
+        // eslint-disable-next-line no-param-reassign
+        config.sources[key].url_params = params;
+        didInjectKey = true;
+      }
+    });
+
+    return didInjectKey;
+  }
+});
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(0);
+module.exports = __webpack_require__(0);
 
 
 /***/ })

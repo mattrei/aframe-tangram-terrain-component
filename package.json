@@ -42,7 +42,7 @@
     "devDependencies": {
         "aframe": "*",
         "browserify": "^13.0.0",
-        "budo": "^9.4.7",
+        "budo": "^8.2.2",
         "chai": "^3.4.1",
         "chai-shallow-deep-equal": "^1.3.0",
         "ghpages": "^0.0.8",
@@ -63,7 +63,7 @@
         "sinon-chai": "^2.14.0",
         "snazzy": "^4.0.0",
         "uglify-es": "github:mishoo/UglifyJS2#harmony",
-        "webpack": "^3.12.0",
+        "webpack": "^2.7.0",
         "yamlify": "^0.1.3",
         "yml-loader": "^2.1.0"
     },
