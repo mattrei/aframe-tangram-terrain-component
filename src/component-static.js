@@ -20,8 +20,7 @@ AFRAME.registerComponent('tangram-static-terrain', {
       type: 'map'
     },
     bounds: {
-      default: [0, 0, 0, 0],
-      type: 'array',
+      default: '0, 0, 0, 0',
       parse: function (value) {
         return value.split(',').map(f => parseFloat(f));
       }
@@ -59,25 +58,25 @@ AFRAME.registerComponent('tangram-static-terrain', {
     mesh.geometry = lods.geometry;
     this.lods = lods.lods;
 
-    Utils.applyMaterial(el, data, data.map, data.normalmap);
     Utils.watchMaterialData(el);
-
-    this.system.createDepthBuffer(data.normalmap).then(buffer => {
-      this.depthBuffer = buffer;
-      this.renderDepthBuffer(this.depthBuffer);
-      this.el.emit(TERRAIN_LOADED_EVENT);
-      this.hasLoaded = true;
-    })
-
-
   },
 
   update: function (oldData) {
+    const el = this.el;
     const data = this.data;
 
     // Nothing changed
-    if (AFRAME.utils.deepEqual(oldData, data)) {
-      return;
+    if (AFRAME.utils.deepEqual(oldData, data)) return;
+    
+    if (data.map !== oldData.map || data.normalmap !== oldData.normalmap) {
+
+      Utils.applyMaterial(el, data, data.map, data.normalmap);
+      this.system.createDepthBuffer(data.normalmap).then(buffer => {
+        this.depthBuffer = buffer;
+        this.renderDepthBuffer(this.depthBuffer);
+        this.el.emit(TERRAIN_LOADED_EVENT);
+        this.hasLoaded = true;
+      })
     }
 
     if (data.lod !== oldData.lod) {
@@ -86,6 +85,7 @@ AFRAME.registerComponent('tangram-static-terrain', {
       }
     }
   },
+
   applyLOD: function (lod) {
     const el = this.el;
     const data = this.data;
@@ -101,6 +101,7 @@ AFRAME.registerComponent('tangram-static-terrain', {
     const mesh = el.getObject3D('mesh');
     mesh.geometry.setDrawRange(foundLOD.geometry.start, foundLOD.geometry.count);
   },
+
   project: function (lon, lat) {
 
     const data = this.data;
