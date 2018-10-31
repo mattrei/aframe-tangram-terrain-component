@@ -14991,7 +14991,10 @@ AFRAME.registerComponent('tangram-terrain', {
     if (data.style !== oldData.style || data.pxToWorldRatio !== oldData.pxToWorldRatio) {
 
       setStyle = true;
-      if (!this.heightmap) {
+      if (!this.heightmap || data.pxToWorldRatio !== oldData.pxToWorldRatio) {
+        if (this.heightmaplayer) {
+          this.heightmaplayer.remove()
+        }
         const heightmap = this.system.createHeightmap(data, geomData, this.handleHeightmapCanvas);
         this.heightmaplayer = heightmap.layer;
         this.heightmap = heightmap.map
@@ -14999,6 +15002,10 @@ AFRAME.registerComponent('tangram-terrain', {
       }
       if (!this.overlaymap || data.pxToWorldRatio !== oldData.pxToWorldRatio) {
 
+        this.once = true;
+        if (this.overlaylayer) {
+          this.overlaylayer.remove()
+        }
         const map = this.system.createMap(data, geomData, this.handleOverlayCanvas);
         this.overlaylayer = map.layer;
         this.overlaymap = map.map;
@@ -15032,12 +15039,12 @@ AFRAME.registerComponent('tangram-terrain', {
       const opts = {animate: false, reset: true};
 
       //this.overlaymap.fitBounds(this.bounds, opts);
-      //this.overlaymap.invalidateSize(opts);
-      this.overlaymap.fitBounds(this.bounds);
+      //this.overlaymap.invalidateSize(false);
+      this.overlaymap.fitBounds(this.bounds, opts);
 
       //needs to be like that
       this.heightmap.fitBounds(this.overlaymap.getBounds(), opts);
-      this.heightmap.invalidateSize(opts);
+      this.heightmap.invalidateSize(false);
       this.heightmap.fitBounds(this.overlaymap.getBounds(), opts);
       //console.log(this.heightmap.getZoom(), this.overlaymap.getZoom())
 
@@ -15111,9 +15118,10 @@ AFRAME.registerComponent('tangram-terrain', {
     });
 
   },
+
   remove: function () {
-    this.system.dispose(this.heightmap);
-    this.system.dispose(this.overlaymap);
+    this.heightmaplayer && this.heightmaplayer.remove()
+    this.overlaylayer && this.overlaylayer.remove()
   },
 
   _fire: function () {
@@ -15215,7 +15223,7 @@ AFRAME.registerComponent('tangram-terrain', {
     const pxY = ((geomData.height / 2) - y) * data.pxToWorldRatio;
 
     // Return the lat / long of that pixel on the map
-    var latLng = this.overlaymap.layerPointToLatLng([pxX, pxY]);
+    const latLng = this.overlaymap.layerPointToLatLng([pxX, pxY]);
     return {
       lon: latLng.lng,
       lat: latLng.lat
@@ -15358,8 +15366,6 @@ const PRESERVE_DRAWING_BUFFER = true; // AFRAME.utils.device.isMobile();
 const cuid = __webpack_require__(2);
 
 const elevationStyle = __webpack_require__(6);
-
-const REMOVETANGRAM_TIMEOUT = 300;
 
 const DEBUG_CANVAS_OFFSET =     99999;
 const DEBUG_HM_CANVAS_OFFSET =  999999;
@@ -15531,12 +15537,6 @@ AFRAME.registerSystem('tangram-terrain', {
     renderer.vr.enabled = isVREnabled;
   },
 
-  dispose: function (obj) {
-    // removing all ressources layer after a safe timeout
-    Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
-      obj.layer.remove();
-    });
-  },
   injectAPIKey(config, apiKey) {
     const URL_PATTERN = /((https?:)?\/\/tiles?.nextzen.org([a-z]|[A-Z]|[0-9]|\/|\{|\}|\.|\||:)+(topojson|geojson|mvt|png|tif|gz))/;
 
