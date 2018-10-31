@@ -12,6 +12,8 @@ A [Tangram](https://github.com/tangrams/tangram) terrain component for [A-Frame]
 
 This component obtains a terrain normalmap from the [Amazon public dataset S3](https://aws.amazon.com/public-datasets/terrain/) servers and applies a overlay texture according the Tangram _style_ specification. The normlmap can be used both as a _displacement_ map for the geometry and also a a _normal_ map for the material. By using the _GPU picking technique_ for the normal map, the height calculation or hit testing is done on the shader. In addition the component also offers Level-of-Detail (LOD) of the geometry by using fast buffer geometry draw ranges on the vertex shader.
 
+All properties are updateable!
+
 ##### Schema
 | Property | Description | Default Value |
 | -------- | ----------- | ------------- |
@@ -28,7 +30,7 @@ This component obtains a terrain normalmap from the [Amazon public dataset S3](h
 ##### Events
 | Name | Data | Description |
 | -------- | ----------- | ------------- |
-| tangram-terrain-loaded | None| Fired when the terrain that means the elevation data and the overlay map has finished loading or the corresponding Level-Of-Detail has been loaded. Only by then the public API will be usable. |
+| tangram-terrain-loaded | None| Fired when the terrain that means the elevation data and the overlay map has finished loading or the corresponding Level-Of-Detail has been loaded. Only by then the public API will be usable. For reasons I can't handle the Tangram library does unfortunately not report when an updated center has been fully loaded. Just on the first initial load. |
 
 
 
@@ -52,6 +54,8 @@ This component does not pull data from a tile server but uses image assets, that
 Those two maps must be provided as assets to the _map_ and _normalmap_ attributes and the original _pxtoWroldRatio_ value as well as the _bounds_ string from the `console.log` in order to be able to project data on the static terrain.
 
 The geometry's _width_ and _height_ and _segments_ detail settings and materials detail may of course differ from the reference terrain.
+
+All properties are updateable!
 
 ##### Schema
 | Property | Description | Default Value |

@@ -5,9 +5,6 @@
     "main": "index.js",
     "cdn": "dist/aframe-tangram-terrain-component.min.js",
     "scripts": {
-        "build2": "browserify examples/main.js -t yamlify -o examples/build.js",
-        "dev2": "budo examples/main.js:build.js --dir examples --port 8000 --live -- -t yamlify",
-        "dist2": "webpack index.js dist/aframe-tangram-terrain-component.js && webpack -p index.js dist/aframe-tangram-terrain-component.min.js",
         "build": "webpack index.js dist/aframe-tangram-terrain-component.js",
         "dev": "budo index.js:dist/aframe-tangram-terrain-component.min.js --port 7000 --live -- -t yamlify",
         "dist": "npm run build && uglifyjs dist/aframe-tangram-terrain-component.js > dist/aframe-tangram-terrain-component.min.js",
