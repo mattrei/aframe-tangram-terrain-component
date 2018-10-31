@@ -14,8 +14,6 @@ const cuid = require('cuid');
 
 const elevationStyle = require('./styles/normal-alpha-elevation.yaml');
 
-const REMOVETANGRAM_TIMEOUT = 300;
-
 const DEBUG_CANVAS_OFFSET =     99999;
 const DEBUG_HM_CANVAS_OFFSET =  999999;
 
@@ -186,12 +184,6 @@ AFRAME.registerSystem('tangram-terrain', {
     renderer.vr.enabled = isVREnabled;
   },
 
-  dispose: function (obj) {
-    // removing all ressources layer after a safe timeout
-    Utils.delay(REMOVETANGRAM_TIMEOUT, function () {
-      obj.layer.remove();
-    });
-  },
   injectAPIKey(config, apiKey) {
     const URL_PATTERN = /((https?:)?\/\/tiles?.nextzen.org([a-z]|[A-Z]|[0-9]|\/|\{|\}|\.|\||:)+(topojson|geojson|mvt|png|tif|gz))/;
 
