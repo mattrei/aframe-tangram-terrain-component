@@ -5,7 +5,6 @@ const Utils = require('./utils');
 
 const TERRAIN_LOADED_EVENT = 'tangram-terrain-loaded';
 
-
 AFRAME.registerComponent('tangram-static-terrain', {
   dependencies: [
     'geometry',
@@ -52,7 +51,6 @@ AFRAME.registerComponent('tangram-static-terrain', {
     const el = this.el;
     this.system = el.sceneEl.systems['tangram-terrain'];
 
-
     this.depthBuffer = null;
 
     this.lods = [];
@@ -72,16 +70,15 @@ AFRAME.registerComponent('tangram-static-terrain', {
     // Nothing changed
     if (AFRAME.utils.deepEqual(oldData, data)) return;
     this.hasLoaded = false;
-    
-    if (data.map !== '' && data.normalMap !== '' && (data.map !== oldData.map || data.normalMap !== oldData.normalMap)) {
 
+    if (data.map !== '' && data.normalMap !== '' && (data.map !== oldData.map || data.normalMap !== oldData.normalMap)) {
       Utils.applyMaterial(el, data, data.map, data.normalMap);
       this.system.createDepthBuffer(data.normalMap).then(buffer => {
         this.depthBuffer = buffer;
         this.renderDepthBuffer(this.depthBuffer);
         this.hasLoaded = true;
         this.el.emit(TERRAIN_LOADED_EVENT);
-      })
+      });
     }
 
     if (data.lod !== oldData.lod) {
@@ -108,7 +105,6 @@ AFRAME.registerComponent('tangram-static-terrain', {
   },
 
   project: function (lon, lat) {
-
     const data = this.data;
 
     if (lon < data.bounds[0] || lon > data.bounds[2]) return null;
@@ -117,23 +113,23 @@ AFRAME.registerComponent('tangram-static-terrain', {
     const geomData = this.el.components.geometry.data;
     const matData = this.el.components.material.data;
 
-    const deltaLng = data.bounds[2] - data.bounds[0]
-    const deltaLat = data.bounds[3] - data.bounds[1]
+    const deltaLng = data.bounds[2] - data.bounds[0];
+    const deltaLat = data.bounds[3] - data.bounds[1];
 
-    const width = geomData.width //* data.pxToWorldRatio;
-    const height = geomData.height// * data.pxToWorldRatio;
+    const width = geomData.width; //* data.pxToWorldRatio;
+    const height = geomData.height;// * data.pxToWorldRatio;
 
     // convert to world space
-    //const worldX = (width / deltaLng * (data.bounds[2] - lon)) - (width / 2);
+    // const worldX = (width / deltaLng * (data.bounds[2] - lon)) - (width / 2);
     const worldX = -(width / deltaLng * (data.bounds[2] - lon)) + (width / 2);
 
     // y-coord is inverted (positive up in world space, positive down in pixel space)
     const worldY = -(height / deltaLat * (data.bounds[3] - lat)) + (height / 2);
 
     const px = {
-      x: this.depthBuffer.texture.width / deltaLng * (data.bounds[2] - lon), 
-      y: this.depthBuffer.texture.height / deltaLat * (data.bounds[3] - lat) 
-    }
+      x: this.depthBuffer.texture.width / deltaLng * (data.bounds[2] - lon),
+      y: this.depthBuffer.texture.height / deltaLat * (data.bounds[3] - lat)
+    };
 
     // read alpha value
     let z = this._hitTestPlain(px.x, px.y);
@@ -141,14 +137,14 @@ AFRAME.registerComponent('tangram-static-terrain', {
     z *= matData.displacementScale;
     z += matData.displacementBias;
 
-    //console.log(worldX, worldY, z)
+    // console.log(worldX, worldY, z)
     return {
       x: worldX,
       y: worldY,
       z: z
     };
   },
-  renderDepthBuffer: function() {
+  renderDepthBuffer: function () {
     if (this.depthBuffer) {
       // if we have a depthbuffer and the scene is just updated
       this.system.renderDepthBuffer(this.depthBuffer);
@@ -156,9 +152,9 @@ AFRAME.registerComponent('tangram-static-terrain', {
   },
 
   _hitTest: (function () {
-    const pixelBuffer = new Uint8Array(4);//Float32Array(4);
+    const pixelBuffer = new Uint8Array(4);// Float32Array(4);
 
-    return function(x, y) {
+    return function (x, y) {
       const data = this.data;
       const geomData = this.el.components.geometry.data;
 
@@ -179,13 +175,13 @@ AFRAME.registerComponent('tangram-static-terrain', {
 
       // read alpha value
       return pixelBuffer[3] / 255;
-    }
+    };
   })(),
 
   _hitTestPlain: (function () {
-    const pixelBuffer = new Uint8Array(4);//Float32Array(4);
+    const pixelBuffer = new Uint8Array(4);// Float32Array(4);
 
-    return function(x, y) {
+    return function (x, y) {
       const data = this.data;
       const geomData = this.el.components.geometry.data;
       const pixelBuffer = new Uint8Array(4);
@@ -203,7 +199,7 @@ AFRAME.registerComponent('tangram-static-terrain', {
 
       // read alpha value
       return pixelBuffer[3] / 255;
-    }
+    };
   })(),
 
   // TODO
@@ -212,18 +208,18 @@ AFRAME.registerComponent('tangram-static-terrain', {
     const geomData = this.el.components.geometry.data;
     const matData = this.el.components.material.data;
 
-    const deltaLng = data.bounds[2] - data.bounds[0]
-    const deltaLat = data.bounds[3] - data.bounds[1]
+    const deltaLng = data.bounds[2] - data.bounds[0];
+    const deltaLat = data.bounds[3] - data.bounds[1];
 
     const lngRatio = deltaLng / geomData.width;
     const latRatio = deltaLat / geomData.height;
     const px = {
       x: x * lngRatio,
       y: y * latRatio
-    }
+    };
     return {
-      lon: px.x + (deltaLng/2) + parseFloat(data.bounds[0]),
-      lat: px.y + (deltaLat/2) + parseFloat(data.bounds[1])
+      lon: px.x + (deltaLng / 2) + parseFloat(data.bounds[0]),
+      lat: px.y + (deltaLat / 2) + parseFloat(data.bounds[1])
     };
   },
 
@@ -232,7 +228,7 @@ AFRAME.registerComponent('tangram-static-terrain', {
 
     const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
     const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
-    
+
     return this._hitTest(pxX, pxY);
   },
 
@@ -244,4 +240,4 @@ AFRAME.registerComponent('tangram-static-terrain', {
   unprojectHeightInMeters: function (x, y) {
     return this._getHeight(x, y) * 19900 - 8900;
   }
-})
+});

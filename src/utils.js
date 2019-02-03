@@ -64,18 +64,14 @@ module.exports.delay = function (duration, func) {
 const GEOMETRY_LOD_FACTOR = 2;
 
 module.exports.createGeometryLODs = function (el, data) {
-
-  
   const mesh = el.getObject3D('mesh');
   const geomData = el.components.geometry.data;
-
 
   const lodGeometries = [mesh.geometry];
 
   for (let i = 1; i < data.lodCount; i++) {
     const factor = i * GEOMETRY_LOD_FACTOR;
 
-    
     let lodGeometry = new THREE.PlaneGeometry(
       geomData.width, geomData.height,
       Math.floor(geomData.segmentsWidth / factor), Math.floor(geomData.segmentsHeight / factor)
@@ -85,7 +81,7 @@ module.exports.createGeometryLODs = function (el, data) {
     lodGeometries.push(lodGeometry);
   }
 
-  const lods = []
+  const lods = [];
 
   let start = 0;
   for (let i = 0; i < lodGeometries.length; i++) {
@@ -108,33 +104,31 @@ module.exports.createGeometryLODs = function (el, data) {
     geometry: mergedGeometry,
     lods: lods
   };
-}
+};
 
 module.exports.applyMaterial = function (el, data, map, normalmap) {
-
   const mesh = el.getObject3D('mesh');
   const matData = el.components.material.data;
   const material = new THREE.MeshStandardMaterial();
   material.copy(mesh.material);
-  
+
   material.displacementScale = matData.displacementScale;
   material.displacementBias = matData.displacementBias;
 
   // https://medium.com/@pailhead011/extending-three-js-materials-with-glsl-78ea7bbb9270
   material.onBeforeCompile = shader => {
     shader.vertexShader = shader.vertexShader.replace(
-      `#include <displacementmap_vertex>`, 
+      '#include <displacementmap_vertex>',
       `#ifdef USE_DISPLACEMENTMAP
 
         transformed += normalize( objectNormal ) * ( texture2D( displacementMap, uv ).a * displacementScale + displacementBias );
 
       #endif`
     );
-  }
+  };
 
   el.sceneEl.systems.material.loadTexture(map, {src: map}, mapTexture => {
     el.sceneEl.systems.material.loadTexture(normalmap, {src: normalmap}, normalmapTexture => {
-
       material.displacementMap = normalmapTexture;
       if (data.vertexNormals) {
         material.normalMap = normalmapTexture;
@@ -143,21 +137,20 @@ module.exports.applyMaterial = function (el, data, map, normalmap) {
       material.needsUpdate = true;
 
       mesh.material = material;
-    })
-  })
-}
+    });
+  });
+};
 
 module.exports.watchMaterialData = function (el) {
-
-    el.addEventListener('componentchanged', (evt) => {
-      if (evt.detail.name === 'material') {
-        const mesh = el.getObject3D('mesh');
-        const matData = evt.target.getAttribute('material');
+  el.addEventListener('componentchanged', (evt) => {
+    if (evt.detail.name === 'material') {
+      const mesh = el.getObject3D('mesh');
+      const matData = evt.target.getAttribute('material');
         // can we make this better?
-        mesh.material.displacementScale = matData.displacementScale;
-        mesh.material.displacementBias = matData.displacementBias;
-        mesh.material.opacity = matData.opacity;
-        mesh.material.transparent = matData.transparent;
-      }
-    });
-}
+      mesh.material.displacementScale = matData.displacementScale;
+      mesh.material.displacementBias = matData.displacementBias;
+      mesh.material.opacity = matData.opacity;
+      mesh.material.transparent = matData.transparent;
+    }
+  });
+};

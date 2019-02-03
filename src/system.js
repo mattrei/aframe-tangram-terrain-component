@@ -14,17 +14,15 @@ const cuid = require('cuid');
 
 const elevationStyle = require('./styles/normal-alpha-elevation.yaml');
 
-const DEBUG_CANVAS_OFFSET =     99999;
-const DEBUG_HM_CANVAS_OFFSET =  999999;
-
+const DEBUG_CANVAS_OFFSET = 99999;
+const DEBUG_HM_CANVAS_OFFSET = 999999;
 
 AFRAME.registerSystem('tangram-terrain', {
   init: function () {
   },
   createHeightmap: function (data, geomData, onComplete) {
-
-    const width = geomData.segmentsWidth * data.heightmapFactor; //+ 1;
-    const height = geomData.segmentsHeight * data.heightmapFactor; //+ 1;
+    const width = geomData.segmentsWidth * data.heightmapFactor; // + 1;
+    const height = geomData.segmentsHeight * data.heightmapFactor; // + 1;
 
     const canvasContainer = Utils.getCanvasContainerAssetElement(
       cuid(),
@@ -68,7 +66,6 @@ AFRAME.registerSystem('tangram-terrain', {
     return tangram;
   },
   createMap: function (data, geomData, onComplete) {
-
     const width = geomData.width * data.pxToWorldRatio;
     const height = geomData.height * data.pxToWorldRatio;
 
@@ -119,14 +116,13 @@ AFRAME.registerSystem('tangram-terrain', {
     container.style.height = (height) + 'px';
 
     const bounds = map.getBounds();
-    const opts = {animate:false, reset: true};
+    const opts = {animate: false, reset: true};
 
     map.invalidateSize(opts);
     map.fitBounds(bounds, opts);
   },
 
   createDepthBuffer: function (depthMap) {
-
     return new Promise((resolve, reject) => {
       this.el.systems.material.loadTexture(depthMap, {
         src: depthMap
@@ -147,7 +143,7 @@ AFRAME.registerSystem('tangram-terrain', {
           minFilter: THREE.NearestFilter,
           magFilter: THREE.NearestFilter,
           type: THREE.UnsignedByteType
-          //type: THREE.FloatType
+          // type: THREE.FloatType
         });
 
         const mesh = new THREE.Mesh(
@@ -155,8 +151,8 @@ AFRAME.registerSystem('tangram-terrain', {
           new THREE.MeshBasicMaterial({
             map: mapTexture,
             lights: false,
-            fog: false,
-            //transparent: true
+            fog: false
+            // transparent: true
           })
         );
         scene.add(mesh);
@@ -167,12 +163,10 @@ AFRAME.registerSystem('tangram-terrain', {
           mesh: mesh,
           texture: texture,
           canvasTexture: mapTexture
-        }
+        };
         resolve(depthBuffer);
-      })
-    })
-
-
+      });
+    });
   },
 
   renderDepthBuffer: function (depthBuffer) {
@@ -184,7 +178,7 @@ AFRAME.registerSystem('tangram-terrain', {
     renderer.vr.enabled = isVREnabled;
   },
 
-  injectAPIKey(config, apiKey) {
+  injectAPIKey (config, apiKey) {
     const URL_PATTERN = /((https?:)?\/\/tiles?.nextzen.org([a-z]|[A-Z]|[0-9]|\/|\{|\}|\.|\||:)+(topojson|geojson|mvt|png|tif|gz))/;
 
     let didInjectKey = false;
@@ -212,7 +206,7 @@ AFRAME.registerSystem('tangram-terrain', {
         // Add a default API key as a url_params setting.
         // Preserve existing url_params if present.
         const params = Object.assign({}, config.sources[key].url_params, {
-          api_key: apiKey,
+          api_key: apiKey
         });
 
         // Mutate the original on purpose.

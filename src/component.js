@@ -2,7 +2,6 @@
 
 const Utils = require('./utils');
 
-
 const TERRAIN_LOADED_EVENT = 'tangram-terrain-loaded';
 const TERRAIN_LOADING_EVENT = 'tangram-terrain-loading';
 
@@ -34,7 +33,7 @@ AFRAME.registerComponent('tangram-terrain', {
       default: false
     },
     heightmapFactor: {
-      default :2
+      default: 2
     },
     pxToWorldRatio: {
       default: 10
@@ -87,22 +86,19 @@ AFRAME.registerComponent('tangram-terrain', {
 
     let setStyle = false;
     if (data.style !== oldData.style || data.pxToWorldRatio !== oldData.pxToWorldRatio) {
-
       setStyle = true;
       if (!this.heightmap || data.pxToWorldRatio !== oldData.pxToWorldRatio) {
         if (this.heightmaplayer) {
-          this.heightmaplayer.remove()
+          this.heightmaplayer.remove();
         }
         const heightmap = this.system.createHeightmap(data, geomData, this.handleHeightmapCanvas);
         this.heightmaplayer = heightmap.layer;
-        this.heightmap = heightmap.map
-
+        this.heightmap = heightmap.map;
       }
       if (!this.overlaymap || data.pxToWorldRatio !== oldData.pxToWorldRatio) {
-
         this.once = true;
         if (this.overlaylayer) {
-          this.overlaylayer.remove()
+          this.overlaylayer.remove();
         }
         const map = this.system.createMap(data, geomData, this.handleOverlayCanvas);
         this.overlaylayer = map.layer;
@@ -112,7 +108,7 @@ AFRAME.registerComponent('tangram-terrain', {
       } else {
         const cfg = {
           import: data.style
-        }
+        };
         this.overlaylayer.scene.load(cfg);
         this.overlaylayer.scene.immediateRedraw();
 
@@ -131,22 +127,22 @@ AFRAME.registerComponent('tangram-terrain', {
     }
     if (setView) {
       // do not fire twice
-      //this.hasLoaded = false;
-      //if (!setStyle) this.el.emit(TERRAIN_LOADING_EVENT);
+      // this.hasLoaded = false;
+      // if (!setStyle) this.el.emit(TERRAIN_LOADING_EVENT);
 
       const opts = {animate: false, reset: true};
 
-      //this.overlaymap.fitBounds(this.bounds, opts);
-      //this.overlaymap.invalidateSize(false);
+      // this.overlaymap.fitBounds(this.bounds, opts);
+      // this.overlaymap.invalidateSize(false);
       this.overlaymap.fitBounds(this.bounds, opts);
 
-      //needs to be like that
+      // needs to be like that
       this.heightmap.fitBounds(this.overlaymap.getBounds(), opts);
       this.heightmap.invalidateSize(false);
       this.heightmap.fitBounds(this.overlaymap.getBounds(), opts);
-      //console.log(this.heightmap.getZoom(), this.overlaymap.getZoom())
+      // console.log(this.heightmap.getZoom(), this.overlaymap.getZoom())
 
-      // HACK: render depth buffer after a very safe timeout, 
+      // HACK: render depth buffer after a very safe timeout,
       // because the view_complete is not always called if tiles are in cache
       setTimeout(_ => {
         this.renderDepthBuffer();
@@ -160,7 +156,8 @@ AFRAME.registerComponent('tangram-terrain', {
     }
 
     const mesh = el.getObject3D('mesh');
-    mesh.frustumCulled=false;
+    mesh.frustumCulled = false;
+
     if (data.lod !== oldData.lod) {
       if (data.lod >= 1 && data.lod <= data.lodCount) {
         this.applyLOD(data.lod);
@@ -168,7 +165,7 @@ AFRAME.registerComponent('tangram-terrain', {
     }
   },
 
-  renderDepthBuffer: function() {
+  renderDepthBuffer: function () {
     if (this.depthBuffer) {
       // if we have a depthbuffer and the scene is just updated
       this.system.renderDepthBuffer(this.depthBuffer);
@@ -176,7 +173,7 @@ AFRAME.registerComponent('tangram-terrain', {
   },
 
   handleOverlayCanvas: function (canvas) {
-    //this.map = this.data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
+    // this.map = this.data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
     this.map = canvas;
 
     this.applyLOD(this.data.lod);
@@ -206,24 +203,21 @@ AFRAME.registerComponent('tangram-terrain', {
     this.lods = lods.lods;
   },
   handleHeightmapCanvas: function (canvas) {
-
     this.normalmap = canvas;
 
     this.system.createDepthBuffer(this.normalmap).then(buffer => {
-      this.depthBuffer = buffer
+      this.depthBuffer = buffer;
       this.renderDepthBuffer(this.depthBuffer);
       this._fire();
     });
-
   },
 
   remove: function () {
-    this.heightmaplayer && this.heightmaplayer.remove()
-    this.overlaylayer && this.overlaylayer.remove()
+    this.heightmaplayer && this.heightmaplayer.remove();
+    this.overlaylayer && this.overlaylayer.remove();
   },
 
   _fire: function () {
-
     if (!this.once) return;
 
     this._count = this._count || 0;
@@ -237,7 +231,6 @@ AFRAME.registerComponent('tangram-terrain', {
       this.hasLoaded = true;
       this.el.emit(TERRAIN_LOADED_EVENT);
     }
-
   },
   project: function (lon, lat) {
     const data = this.data;
@@ -252,7 +245,7 @@ AFRAME.registerComponent('tangram-terrain', {
     // y-coord is inverted (positive up in world space, positive down in pixel space)
     const worldY = -(px.y / data.pxToWorldRatio) + (geomData.height / 2);
 
-    //const z = this._hitTest(px.x, px.y) * matData.displacementScale + matData.displacementBias;
+    // const z = this._hitTest(px.x, px.y) * matData.displacementScale + matData.displacementBias;
     // TODO check
     const z = this._hitTestLonLat(lon, lat) * matData.displacementScale + matData.displacementBias;
 
@@ -263,11 +256,9 @@ AFRAME.registerComponent('tangram-terrain', {
     };
   },
 
-
   _hitTestLonLat: (function () {
-    const pixelBuffer = new Uint8Array(4);//Float32Array(4);
-    return function(lon, lat) {
-
+    const pixelBuffer = new Uint8Array(4);// Float32Array(4);
+    return function (lon, lat) {
       const px = this.heightmap.latLngToLayerPoint([lat, lon]);
       const depthTexture = this.depthBuffer.texture;
 
@@ -283,12 +274,12 @@ AFRAME.registerComponent('tangram-terrain', {
 
       // read alpha value
       return pixelBuffer[3] / 255;
-    }
+    };
   })(),
 
   _hitTest: (function () {
-    const pixelBuffer = new Uint8Array(4);//Float32Array(4);
-    return function(x, y) {
+    const pixelBuffer = new Uint8Array(4);// Float32Array(4);
+    return function (x, y) {
       const data = this.data;
       const geomData = this.el.components.geometry.data;
 
@@ -309,7 +300,7 @@ AFRAME.registerComponent('tangram-terrain', {
 
       // read alpha value
       return pixelBuffer[3] / 255;
-    }
+    };
   })(),
 
   unproject: function (x, y) {
@@ -363,7 +354,6 @@ AFRAME.registerComponent('tangram-terrain', {
     this.capture(type);
   },
 
-
   /**
    * Maintained for backwards compatibility.
    */
@@ -378,7 +368,7 @@ AFRAME.registerComponent('tangram-terrain', {
    * Download capture to file.
    */
   saveCapture: function (canvas, type, imgType) {
-    console.log("BoundingBox: ", this.bounds.toBBoxString())
+    console.log('BoundingBox: ', this.bounds.toBBoxString());
     canvas.toBlob(function (blob) {
       var fileName = type + '-' + Date.now() + '.' + imgType;
       var linkEl = document.createElement('a');
