@@ -14,15 +14,15 @@ const cuid = require('cuid');
 
 const elevationStyle = require('./styles/normal-alpha-elevation.yaml');
 
-const DEBUG_CANVAS_OFFSET =    99999;
+const DEBUG_CANVAS_OFFSET = 99999;
 const DEBUG_HM_CANVAS_OFFSET = 9999;
 
 AFRAME.registerSystem('tangram-terrain', {
   init: function () {
   },
   createHeightmap: function (data, geomData, onComplete) {
-    const width = THREE.Math.ceilPowerOfTwo(geomData.segmentsWidth * data.heightmapFactor);
-    const height = THREE.Math.ceilPowerOfTwo(geomData.segmentsHeight * data.heightmapFactor);
+    const width = THREE.Math.floorPowerOfTwo(geomData.segmentsWidth * data.heightmapFactor);
+    const height = THREE.Math.floorPowerOfTwo(geomData.segmentsHeight * data.heightmapFactor);
 
     const canvasContainer = Utils.getCanvasContainerAssetElement(
       cuid(),
@@ -66,8 +66,8 @@ AFRAME.registerSystem('tangram-terrain', {
     return tangram;
   },
   createMap: function (data, geomData, onComplete) {
-    const width = THREE.Math.ceilPowerOfTwo(geomData.width * data.pxToWorldRatio);
-    const height = THREE.Math.ceilPowerOfTwo(geomData.height * data.pxToWorldRatio);
+    const width = THREE.Math.floorPowerOfTwo(geomData.width * data.pxToWorldRatio);
+    const height = THREE.Math.floorPowerOfTwo(geomData.height * data.pxToWorldRatio);
 
     const canvasContainer = Utils.getCanvasContainerAssetElement(
       cuid(),
@@ -104,6 +104,7 @@ AFRAME.registerSystem('tangram-terrain', {
       },
       view_complete: () => {
         const canvas = tangram.layer.scene.canvas;
+        console.log('vc map', canvas);
         onComplete(canvas);
       }
     });

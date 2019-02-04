@@ -69,7 +69,6 @@ AFRAME.registerComponent('tangram-terrain', {
     this.createGeometryLODs();
     this.onKeyDown = this.onKeyDown.bind(this);
 
-    this.once = true;
     Utils.watchMaterialData(this.el);
   },
 
@@ -96,7 +95,6 @@ AFRAME.registerComponent('tangram-terrain', {
         this.heightmap = heightmap.map;
       }
       if (!this.overlaymap || data.pxToWorldRatio !== oldData.pxToWorldRatio) {
-        this.once = true;
         if (this.overlaylayer) {
           this.overlaylayer.remove();
         }
@@ -173,11 +171,9 @@ AFRAME.registerComponent('tangram-terrain', {
   },
 
   handleOverlayCanvas: function (canvas) {
-    // this.map = this.data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
     this.map = canvas;
 
     this.applyLOD(this.data.lod);
-
     this._fire();
   },
   applyLOD: function (lod) {
@@ -218,14 +214,7 @@ AFRAME.registerComponent('tangram-terrain', {
   },
 
   _fire: function () {
-    if (!this.once) return;
-
-    this._count = this._count || 0;
-    this._count += 1;
-    this._count %= 2;
-    if (this._count === 0) {
-      this.once = false;
-
+    if (this.map && this.normalmap) {
       // use new Material for only one time
       Utils.applyMaterial(this.el, this.data, this.map, this.normalmap);
       this.hasLoaded = true;

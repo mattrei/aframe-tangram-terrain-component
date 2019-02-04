@@ -15055,7 +15055,6 @@ AFRAME.registerComponent('tangram-terrain', {
     this.createGeometryLODs();
     this.onKeyDown = this.onKeyDown.bind(this);
 
-    this.once = true;
     Utils.watchMaterialData(this.el);
   },
 
@@ -15082,7 +15081,6 @@ AFRAME.registerComponent('tangram-terrain', {
         this.heightmap = heightmap.map;
       }
       if (!this.overlaymap || data.pxToWorldRatio !== oldData.pxToWorldRatio) {
-        this.once = true;
         if (this.overlaylayer) {
           this.overlaylayer.remove();
         }
@@ -15159,11 +15157,9 @@ AFRAME.registerComponent('tangram-terrain', {
   },
 
   handleOverlayCanvas: function (canvas) {
-    // this.map = this.data.useBuffer ? this.system.copyCanvas(canvas) : canvas;
     this.map = canvas;
 
     this.applyLOD(this.data.lod);
-
     this._fire();
   },
   applyLOD: function (lod) {
@@ -15204,14 +15200,7 @@ AFRAME.registerComponent('tangram-terrain', {
   },
 
   _fire: function () {
-    if (!this.once) return;
-
-    this._count = this._count || 0;
-    this._count += 1;
-    this._count %= 2;
-    if (this._count === 0) {
-      this.once = false;
-
+    if (this.map && this.normalmap) {
       // use new Material for only one time
       Utils.applyMaterial(this.el, this.data, this.map, this.normalmap);
       this.hasLoaded = true;
@@ -15441,15 +15430,15 @@ const cuid = __webpack_require__(2);
 
 const elevationStyle = __webpack_require__(6);
 
-const DEBUG_CANVAS_OFFSET =    99999;
+const DEBUG_CANVAS_OFFSET = 99999;
 const DEBUG_HM_CANVAS_OFFSET = 9999;
 
 AFRAME.registerSystem('tangram-terrain', {
   init: function () {
   },
   createHeightmap: function (data, geomData, onComplete) {
-    const width = THREE.Math.ceilPowerOfTwo(geomData.segmentsWidth * data.heightmapFactor);
-    const height = THREE.Math.ceilPowerOfTwo(geomData.segmentsHeight * data.heightmapFactor);
+    const width = THREE.Math.floorPowerOfTwo(geomData.segmentsWidth * data.heightmapFactor);
+    const height = THREE.Math.floorPowerOfTwo(geomData.segmentsHeight * data.heightmapFactor);
 
     const canvasContainer = Utils.getCanvasContainerAssetElement(
       cuid(),
@@ -15493,8 +15482,8 @@ AFRAME.registerSystem('tangram-terrain', {
     return tangram;
   },
   createMap: function (data, geomData, onComplete) {
-    const width = THREE.Math.ceilPowerOfTwo(geomData.width * data.pxToWorldRatio);
-    const height = THREE.Math.ceilPowerOfTwo(geomData.height * data.pxToWorldRatio);
+    const width = THREE.Math.floorPowerOfTwo(geomData.width * data.pxToWorldRatio);
+    const height = THREE.Math.floorPowerOfTwo(geomData.height * data.pxToWorldRatio);
 
     const canvasContainer = Utils.getCanvasContainerAssetElement(
       cuid(),
@@ -15531,6 +15520,7 @@ AFRAME.registerSystem('tangram-terrain', {
       },
       view_complete: () => {
         const canvas = tangram.layer.scene.canvas;
+        console.log('vc map', canvas);
         onComplete(canvas);
       }
     });
