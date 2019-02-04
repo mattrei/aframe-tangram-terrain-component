@@ -1,16 +1,20 @@
+global:
+    api_key: 'UJcQwnnfQnWcPtKe2aYaEw' # put your nextzen API key here
+    language: en # optional ISO 2-char code
+
 sources:
     nextzen:
         type: MVT
         url: https://tile.nextzen.org/tilezen/vector/v1/256/all/{z}/{x}/{y}.mvt
         url_params:
-            api_key: UJcQwnnfQnWcPtKe2aYaEw
+            api_key: global.api_key
         max_zoom: 8
         rasters: [normals, elevation]
     elevation:
         type: Raster
         url: https://tile.nextzen.org/tilezen/terrain/v1/256/terrarium/{z}/{x}/{y}.png
         url_params:
-            api_key: UJcQwnnfQnWcPtKe2aYaEw
+            api_key: global.api_key
         max_zoom: 15
 
 textures:
