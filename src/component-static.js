@@ -29,9 +29,6 @@ AFRAME.registerComponent('tangram-static-terrain', {
         }
       }
     },
-    pxToWorldRatio: {
-      default: 10
-    },
     lod: {
       default: 1
     },
@@ -66,12 +63,17 @@ AFRAME.registerComponent('tangram-static-terrain', {
   update: function (oldData) {
     const el = this.el;
     const data = this.data;
+    const geomData = el.components.geometry.data;
 
     // Nothing changed
     if (AFRAME.utils.deepEqual(oldData, data)) return;
     this.hasLoaded = false;
 
     if (data.map !== '' && data.normalMap !== '' && (data.map !== oldData.map || data.normalMap !== oldData.normalMap)) {
+
+      this.xPxToWorldRatio = data.map.width / geomData.width;
+      this.yPxToWorldRatio = data.map.height / geomData.height;
+
       Utils.applyMaterial(el, data, data.map, data.normalMap);
       this.system.createDepthBuffer(data.normalMap).then(buffer => {
         this.depthBuffer = buffer;
@@ -160,10 +162,10 @@ AFRAME.registerComponent('tangram-static-terrain', {
 
       const depthTexture = this.depthBuffer.texture;
 
-      const width = geomData.width * data.pxToWorldRatio;
-      const height = geomData.height * data.pxToWorldRatio;
+      const width = geomData.width * this.xPxToWorldRatio;
+      const height = geomData.height * this.yPxToWorldRatio;
 
-      // converting pixel space to texture space
+      // converting overlay space to heightmap space
       const hitX = Math.round((x) / width * depthTexture.width);
       const hitY = Math.round((height - y) / height * depthTexture.height);
 
@@ -226,8 +228,8 @@ AFRAME.registerComponent('tangram-static-terrain', {
   _getHeight: function (x, y) {
     const geomData = this.el.components.geometry.data;
 
-    const pxX = (x + (geomData.width / 2)) * this.data.pxToWorldRatio;
-    const pxY = ((geomData.height / 2) - y) * this.data.pxToWorldRatio;
+    const pxX = (x + (geomData.width / 2)) * this.xPxToWorldRatio;
+    const pxY = ((geomData.height / 2) - y) * this.yPxToWorldRatio;
 
     return this._hitTest(pxX, pxY);
   },

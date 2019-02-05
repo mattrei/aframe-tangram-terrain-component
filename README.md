@@ -63,7 +63,6 @@ All properties are updateable!
 | map | Reference to the visible texture. | "" |
 | normalmap | Reference to the normalmap texture. | "" |
 | bounds | String of four elements obtained from the console log after taking the normalmap screenshot. | "0, 0, 0, 0" |
-| pxToWorldRatio | This value must be the same as in the original _tangram-terrain_ component where the assets have been taken from  | 100 |
 | lodCount | See `tangram-terrain` component | 1 |
 | lod | See `tangram-terrain` component | 1 |
 | vertexNormals | See `tangram-terrain` component | true |
@@ -86,9 +85,8 @@ unit. That canvas has to be translated into a plane in world space. This is
 combined with the width and height in world space (from geometry.width and
 geometry.height on the entity) to set up the plane for rendering in 3D.
 
-The map is rendered as a texture on a 3D plane. For best performance, texture
-sizes should be kept to powers of 2. Keeping this in mind, you should work to
-ensure `width * pxToWorldRatio` and `height * pxToWorldRatio` are powers of 2.
+The map is rendered as a texture on a 3D plane. However in WebGL textures must be 
+a power of two. Therefore internally the _pxToWorldRatio_ is floored to be a power of two.
 
 ### Dependencies
 The Mapzen styling documents are in the YAML format, so you need a possiblity to require those files.
