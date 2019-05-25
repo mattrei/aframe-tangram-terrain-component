@@ -23,8 +23,10 @@ AFRAME.registerComponent('lod-controls', {
   tick: function (time, delta) {
     if (!this.loaded) return;
 
-    const cameraPos = this.el.sceneEl.camera.getWorldPosition();
-    const terrainPos = this.el.object3D.getWorldPosition();
+    const cameraPos = new THREE.Vector3();
+    const terrainPos = new THREE.Vector3();
+    this.el.sceneEl.camera.getWorldPosition(cameraPos);
+    this.el.object3D.getWorldPosition(terrainPos);
 
     const dist = cameraPos.distanceTo(terrainPos);
     console.log(dist);

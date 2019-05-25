@@ -170,7 +170,10 @@ AFRAME.registerSystem('tangram-terrain', {
 
     const isVREnabled = renderer.vr.enabled;
     renderer.vr.enabled = false;
-    renderer.render(depthBuffer.scene, depthBuffer.camera, depthBuffer.texture);
+    renderer.setRenderTarget(depthBuffer.texture);
+    renderer.clear();
+    renderer.render(depthBuffer.scene, depthBuffer.camera);
+    renderer.setRenderTarget(null);
     renderer.vr.enabled = isVREnabled;
   },
 

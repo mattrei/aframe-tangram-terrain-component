@@ -2,7 +2,7 @@
 
 A [Tangram](https://github.com/tangrams/tangram) terrain component for [A-Frame](https://aframe.io) with batteries included. 
 
-> Supports A-Frame 0.8.0.
+> Supports A-Frame 0.9.2.
 
 ![Example](doc/example.jpg)
 
