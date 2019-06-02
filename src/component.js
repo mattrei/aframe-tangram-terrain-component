@@ -89,8 +89,8 @@ AFRAME.registerComponent('tangram-terrain', {
 
       const width = THREE.Math.floorPowerOfTwo(geomData.width * data.pxToWorldRatio);
       const height = THREE.Math.floorPowerOfTwo(geomData.height * data.pxToWorldRatio);
-      //const owidth = geomData.width * data.pxToWorldRatio;
-      //const oheight = geomData.height * data.pxToWorldRatio;
+      // const owidth = geomData.width * data.pxToWorldRatio;
+      // const oheight = geomData.height * data.pxToWorldRatio;
       this.xPxToWorldRatio = width / geomData.width;
       this.yPxToWorldRatio = height / geomData.height;
 
@@ -138,17 +138,16 @@ AFRAME.registerComponent('tangram-terrain', {
       // this.hasLoaded = false;
       // if (!setStyle) this.el.emit(TERRAIN_LOADING_EVENT);
 
-      const opts = {animate: false, reset: true};
+      const opts = {animate: false, reset: true, maxZoom: data.zoom};
 
-      // this.overlaymap.fitBounds(this.bounds, opts);
-      // this.overlaymap.invalidateSize(false);
       this.overlaymap.fitBounds(this.bounds, opts);
+      console.log(this.overlaymap.getBounds());
 
       // needs to be like that
+      // this.heightmap.fitBounds(this.overlaymap.getBounds(), opts);
+      // this.heightmap.invalidateSize(false);
       this.heightmap.fitBounds(this.overlaymap.getBounds(), opts);
-      this.heightmap.invalidateSize(false);
-      this.heightmap.fitBounds(this.overlaymap.getBounds(), opts);
-      // console.log(this.heightmap.getZoom(), this.overlaymap.getZoom())
+      console.log(this.heightmap.getZoom(), this.overlaymap.getZoom());
 
       // HACK: render depth buffer after a very safe timeout,
       // because the view_complete is not always called if tiles are in cache
@@ -158,9 +157,6 @@ AFRAME.registerComponent('tangram-terrain', {
       setTimeout(_ => {
         this.renderDepthBuffer();
       }, 4000);
-      setTimeout(_ => {
-        this.renderDepthBuffer();
-      }, 6000);
     }
 
     const mesh = el.getObject3D('mesh');
@@ -367,7 +363,7 @@ AFRAME.registerComponent('tangram-terrain', {
    */
   saveCapture: function (canvas, type, imgType) {
     console.log('BoundingBox: ', this.bounds.toBBoxString());
-    //console.log('PxToWorldRatio: ', this.xPxToWorldRatio, this.yPxToWorldRatio);
+    // console.log('PxToWorldRatio: ', this.xPxToWorldRatio, this.yPxToWorldRatio);
     canvas.toBlob(function (blob) {
       var fileName = type + '-' + Date.now() + '.' + imgType;
       var linkEl = document.createElement('a');

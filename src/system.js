@@ -49,10 +49,10 @@ AFRAME.registerSystem('tangram-terrain', {
     };
 
     layer.scene.subscribe({
-      load: (event) => {
+      load: async (evt) => {
 //        this.injectAPIKey(event.config, data.apiKey);
         layer.scene.config.styles.combo.shaders.defines.USE_NORMALS = data.vertexNormals;
-        Utils.processCanvasElement(canvasContainer);
+        //Utils.processCanvasElement(canvasContainer);
       },
       view_complete: () => {
         const canvas = tangram.layer.scene.canvas;
@@ -82,9 +82,8 @@ AFRAME.registerSystem('tangram-terrain', {
       },
       continuousZoom: false,
       noWrap: true,
-      attribution: ''
+      attribution: '',
     });
-    layer.addTo(map);
 
     const tangram = {
       map: map,
@@ -92,8 +91,8 @@ AFRAME.registerSystem('tangram-terrain', {
     };
 
     layer.scene.subscribe({
-      load: (event) => {
-        this.injectAPIKey(event.config, data.apiKey);
+      load: async (evt) => {
+        this.injectAPIKey(evt.config, data.apiKey);
         Utils.processCanvasElement(canvasContainer);
       },
       post_update: (will_render) => {
@@ -103,6 +102,7 @@ AFRAME.registerSystem('tangram-terrain', {
         onComplete(canvas);
       }
     });
+    layer.addTo(map);
 
     return tangram;
   },

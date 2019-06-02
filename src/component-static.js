@@ -70,7 +70,6 @@ AFRAME.registerComponent('tangram-static-terrain', {
     this.hasLoaded = false;
 
     if (data.map !== '' && data.normalMap !== '' && (data.map !== oldData.map || data.normalMap !== oldData.normalMap)) {
-
       this.xPxToWorldRatio = data.map.width / geomData.width;
       this.yPxToWorldRatio = data.map.height / geomData.height;
 
