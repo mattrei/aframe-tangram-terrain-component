@@ -3,33 +3,21 @@
     <title>A-Frame Tangram Terrain Component - Lightning</title>
     <meta name="description" content="Airborne example for Tangram component."></meta>
 
-    <script src="https://aframe.io/releases/0.9.2/aframe.min.js"></script>
+    <script src="https://aframe.io/releases/1.0.3/aframe.min.js"></script>
     <script src="../../dist/aframe-tangram-terrain-component.min.js"></script>
 
-    <script src="https://unpkg.com/aframe-sun-sky@3.0.3/dist/aframe-sun-sky.min.js"></script>
+    <script src="https://unpkg.com/aframe-environment-component"></script>
     <script src="./sun-position-setter.js"></script>
   </head>
   <body>
-    <a-scene statss>
+    <a-scene Bstats 
+       environment="preset: default; BlightPosition: 0, 1, -0.2; ground: none"
+       sun-position-setter
+             >
       <a-assets>
         <a-asset-item id="yaml-austria" src="assets/austria-airborne.yaml" />
         <a-asset-item id="yaml-esri" src="assets/esri-airborne.yaml" />
       </a-assets>
-
-
-      <a-sun-sky material="side: back" sun-position-setter>
-        <a-entity id="orbit">
-
-          <a-entity id="sunlight" 
-            light="type: directional; color: #fff; intensity: 1." 
-            ></a-entity>
-          <a-animation attribute="rotation" 
-            from="0 0 0" to="0 360 0" 
-            dur="15000"
-            repeat="indefinite" easing="linear"></a-animation>
-        </a-entity>
-      </a-sun-sky>
- 
 
       <a-entity id="terrain" visible="true"
       
@@ -41,6 +29,19 @@
 
       tangram-terrain="
         style: #yaml-esri;
+        center: 55.7078624, -21.2424846;
+        heightmapFactor: 2;
+        zoom: 15;
+        pxToWorldRatio: 100;
+        lodCount: 4;
+        lod: 1;
+        vertexNormals: true;
+      " 
+
+      rotation="-90 0 0"
+      position="0 -20 -10"
+      >
+      <!--
         centerAut: 12.6875, 47.188056;
         centerEtna: 14.995, 37.755;
         centerVesuv:  14.433333, 40.816667;
@@ -48,18 +49,7 @@
         centerKea:   -155.468066, 19.820664;
         centerKea:   -155.468066, 19.820664;
         centerPiton: 55.7078624, -21.2424846;
-        center: 55.7078624, -21.2424846;
-        heightmapFactor: 2;
-        zoom: 15;
-        pxToWorldRatio: 100;
-        lodCount: 4;
-        lod: 1;
-        vertexNormals: false;
-      " 
-
-      rotation="-90 0 0"
-      position="0 -20 -10"
-      >
+      -->
 
       <!--
         ESRI

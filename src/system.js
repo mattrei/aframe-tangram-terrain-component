@@ -118,6 +118,14 @@ AFRAME.registerSystem('tangram-terrain', {
     map.fitBounds(bounds, opts);
   },
 
+  readDepthTexture: function(texture, x, y, buf) {
+    const renderer = this.el.sceneEl.renderer;
+    const isXREnabled = renderer.xr.enabled;
+    renderer.xr.enabled = false;
+    renderer.readRenderTargetPixels(texture, x, y, 1, 1, buf);
+    renderer.xr.enabled = isXREnabled;
+  },
+
   createDepthBuffer: function (depthMap) {
     return new Promise((resolve, reject) => {
       this.el.systems.material.loadTexture(depthMap, {
@@ -146,7 +154,6 @@ AFRAME.registerSystem('tangram-terrain', {
           new THREE.PlaneBufferGeometry(imageWidth, imageHeight, 1, 1),
           new THREE.MeshBasicMaterial({
             map: mapTexture,
-            lights: false,
             fog: false
             // transparent: true
           })
@@ -168,13 +175,13 @@ AFRAME.registerSystem('tangram-terrain', {
   renderDepthBuffer: function (depthBuffer) {
     const renderer = this.el.sceneEl.renderer;
 
-    const isVREnabled = renderer.vr.enabled;
-    renderer.vr.enabled = false;
+    const isXREnabled = renderer.xr.enabled;
+    renderer.xr.enabled = false;
     renderer.setRenderTarget(depthBuffer.texture);
     renderer.clear();
     renderer.render(depthBuffer.scene, depthBuffer.camera);
     renderer.setRenderTarget(null);
-    renderer.vr.enabled = isVREnabled;
+    renderer.xr.enabled = isXREnabled;
   },
 
   injectAPIKey (config, apiKey) {

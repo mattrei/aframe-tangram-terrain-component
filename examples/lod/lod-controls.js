@@ -31,11 +31,11 @@ AFRAME.registerComponent('lod-controls', {
     const dist = cameraPos.distanceTo(terrainPos);
     // console.log(dist);
 
-    if (dist > 20) {
+    if (dist > 8) {
       this.el.setAttribute('tangram-terrain', 'lod', 4);
-    } else if (dist > 15) {
+    } else if (dist > 5) {
       this.el.setAttribute('tangram-terrain', 'lod', 3);
-    } else if (dist > 10) {
+    } else if (dist > 3) {
       this.el.setAttribute('tangram-terrain', 'lod', 2);
     } else {
       this.el.setAttribute('tangram-terrain', 'lod', 1);

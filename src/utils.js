@@ -1,11 +1,11 @@
-const BufferGeometryUtils = require('./lib/BufferGeometryUtils');
+require('./lib/BufferGeometryUtils');
 const cuid = require('cuid');
 
 module.exports.leafletOptions = {
   'preferCanvas': true,
   'zoomControl': false,
   'closePopupOnClick': false,
-  'zoomSnap': 1,
+  'zoomSnap': 0,
   'trackResize': false,
   'dragging': false,
   'boxZoom': false,
@@ -101,7 +101,7 @@ module.exports.createGeometryLODs = function (el, data) {
     start += count;
   }
 
-  const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(lodGeometries);
+  const mergedGeometry = THREE.BufferGeometryUtils.mergeBufferGeometries(lodGeometries);
 
   return {
     geometry: mergedGeometry,

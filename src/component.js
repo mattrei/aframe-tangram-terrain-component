@@ -141,23 +141,18 @@ AFRAME.registerComponent('tangram-terrain', {
       const opts = {animate: false, reset: true, maxZoom: data.zoom};
 
       this.overlaymap.fitBounds(this.bounds, opts);
-
-      // needs to be like that
-      // this.heightmap.fitBounds(this.overlaymap.getBounds(), opts);
-      // this.heightmap.invalidateSize(false);
       this.heightmap.fitBounds(this.overlaymap.getBounds(), opts);
 
       // HACK: render depth buffer after a very safe timeout,
       // because the view_complete is not always called if tiles are in cache
+      // TODO: still needed?
       setTimeout(_ => {
         this.renderDepthBuffer();
-      }, 2000);
-      setTimeout(_ => {
-        this.renderDepthBuffer();
-      }, 4000);
+      }, 3000);
     }
 
     const mesh = el.getObject3D('mesh');
+    // needs to be set because of displacmenet shader
     mesh.frustumCulled = false;
 
     if (data.lod !== oldData.lod) {
@@ -258,11 +253,7 @@ AFRAME.registerComponent('tangram-terrain', {
       const hitX = px.x;
       const hitY = depthTexture.height - px.y;
 
-      const renderer = this.el.sceneEl.renderer;
-      const isVREnabled = renderer.vr.enabled;
-      renderer.vr.enabled = false;
-      renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
-      renderer.vr.enabled = isVREnabled;
+      this.system.readDepthTexture(depthTexture, hitX, hitY, pixelBuffer);
 
       // read alpha value
       return pixelBuffer[3] / 255;
@@ -284,16 +275,13 @@ AFRAME.registerComponent('tangram-terrain', {
       const hitX = Math.round((x) / width * depthTexture.width);
       const hitY = Math.round((height - y) / height * depthTexture.height);
 
-      const renderer = this.el.sceneEl.renderer;
-      const isVREnabled = renderer.vr.enabled;
-      renderer.vr.enabled = false;
-      renderer.readRenderTargetPixels(depthTexture, hitX, hitY, 1, 1, pixelBuffer);
-      renderer.vr.enabled = isVREnabled;
+      this.system.readDepthTexture(depthTexture, hitX, hitY, pixelBuffer);
 
       // read alpha value
       return pixelBuffer[3] / 255;
     };
   })(),
+
 
   unproject: function (x, y) {
     const data = this.data;
